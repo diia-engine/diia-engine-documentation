@@ -799,7 +799,7 @@
     <span class="nav-text"><em>ШБО "Трембіта"</em></span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="7">
-    <a class="nav-link" href="trembita-bp-invoking.html">Реєстрація сервісів та виклик бізнес-процесів через ШБО "Трембіта"</a>
+    <a class="nav-link" href="trembita-bp-invoking.html">Реєстрація API-ендпоінтів у ШБО "Трембіта": активація та виклик бізнес-процесів</a>
   </li>
   <li class="nav-item is-current-page" data-depth="7">
     <a class="nav-link" href="trembita-data-invoking.html">Реєстрація сервісів та виклик API дата-фабрики через ШБО "Трембіта"</a>
@@ -3320,7 +3320,7 @@
 <p>Увійдіть до адміністративного інтерфейсу ШБО "Трембіта".</p>
 </li>
 <li>
-<p>Відкрийте меню <b style="font-weight: 700">Клієнти Сервера Безпеки<b>.</p>
+<p>Відкрийте меню <strong>Клієнти Сервера Безпеки</strong>.</p>
 <div class="paragraph">
 <p><span class="image"><img src="../../../_images/registry-admin/external-integration/api-publish/data-platform/trembita-add-wsdl-step-1.png" alt="trembita add wsdl step 1"></span></p>
 </div>
@@ -3346,7 +3346,7 @@
 </div>
 </li>
 <li>
-<p>У розділі <em>клієнта-надавача</em> перейдіть до налаштувань <b style="font-weight: 700">Сервіси SOAP<b>, натиснувши відповідну іконку <span class="image"><img src="../../../_images/registry-admin/external-integration/api-publish/data-platform/soap-config.png" alt="soap config" width="25"></span>
+<p>У розділі <em>клієнта-надавача</em> перейдіть до налаштувань <strong>Сервіси SOAP</strong>, натиснувши відповідну іконку <span class="image"><img src="../../../_images/registry-admin/external-integration/api-publish/data-platform/soap-config.png" alt="soap config" width="25"></span>
 та оберіть <code>Додати WSDL</code>.</p>
 <div class="paragraph">
 <p><span class="image"><img src="../../../_images/registry-admin/external-integration/api-publish/bp/trembita-bp-invoking-1.png" alt="trembita bp invoking 1"></span></p>
@@ -3366,8 +3366,24 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>https://bp-webservice-gateway-lowcode-gryffindor-qa.apps.cicd2.mdtu-ddm.projects.epam.com/ws/bpWebservice.wsdl</pre>
+<pre>https://bp-webservice-gateway-example-registry.apps.example.com/ws/bpWebservice.wsdl</pre>
 </div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>bp-webservice-gateway</code>&#8201;&#8212;&#8201;назва API-сервісу, що розгортається разом з реєстром;</p>
+</li>
+<li>
+<p><code>example-registry</code>&#8201;&#8212;&#8201;назва вашого реєстру;</p>
+</li>
+<li>
+<p><code>apps.example.com</code>&#8201;&#8212;&#8201;DNS-wildcard (домен та піддомени сервера);</p>
+</li>
+<li>
+<p><code>/ws/bpWebservice.wsdl</code>&#8201;&#8212;&#8201;ендпоінт, де зберігається WSDL-файл.</p>
+</li>
+</ul>
 </div>
 </td>
 </tr>
@@ -3479,7 +3495,7 @@
 <div class="ulist">
 <ul>
 <li>
-<p><a href="trembita-bp-invoking.html" class="xref page">Реєстрація сервісів та виклик бізнес-процесів через ШБО "Трембіта"</a></p>
+<p><a href="trembita-bp-invoking.html" class="xref page">Реєстрація API-ендпоінтів у ШБО "Трембіта": активація та виклик бізнес-процесів</a></p>
 </li>
 </ul>
 </div>

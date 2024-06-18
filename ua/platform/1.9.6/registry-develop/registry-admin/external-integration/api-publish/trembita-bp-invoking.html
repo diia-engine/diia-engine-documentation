@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Реєстрація сервісів та виклик бізнес-процесів через ШБО "Трембіта" :: Платформа для розгортання та супроводження державних електронних реєстрів</title>
+    <title>Реєстрація API-ендпоінтів у ШБО "Трембіта": активація та виклик бізнес-процесів :: Платформа для розгортання та супроводження державних електронних реєстрів</title>
     <meta name="generator" content="Antora 3.1.1">
     <link rel="stylesheet" href="../../../../../../_/css/site.css">
   </head>
@@ -799,7 +799,7 @@
     <span class="nav-text"><em>ШБО "Трембіта"</em></span>
 <ul class="nav-list">
   <li class="nav-item is-current-page" data-depth="7">
-    <a class="nav-link" href="trembita-bp-invoking.html">Реєстрація сервісів та виклик бізнес-процесів через ШБО "Трембіта"</a>
+    <a class="nav-link" href="trembita-bp-invoking.html">Реєстрація API-ендпоінтів у ШБО "Трембіта": активація та виклик бізнес-процесів</a>
   </li>
   <li class="nav-item" data-depth="7">
     <a class="nav-link" href="trembita-data-invoking.html">Реєстрація сервісів та виклик API дата-фабрики через ШБО "Трембіта"</a>
@@ -3250,7 +3250,7 @@
     <li><a href="index.html">Ваша команда надає API</a></li>
     <li>Приватні дані</li>
     <li><em>ШБО "Трембіта"</em></li>
-    <li><a href="trembita-bp-invoking.html">Реєстрація сервісів та виклик бізнес-процесів через ШБО "Трембіта"</a></li>
+    <li><a href="trembita-bp-invoking.html">Реєстрація API-ендпоінтів у ШБО "Трембіта": активація та виклик бізнес-процесів</a></li>
   </ul>
 </nav>
 <div class="page-languages">
@@ -3265,7 +3265,7 @@
   <div class="toc-menu"></div>
 </aside>
             <article class="doc">
-<h1 class="page">Реєстрація сервісів та виклик бізнес-процесів через ШБО "Трембіта"</h1>
+<h1 class="page">Реєстрація API-ендпоінтів у ШБО "Трембіта": активація та виклик бізнес-процесів</h1>
 <div id="toc" class="toc">
 <div id="toctitle">ЗМІСТ</div>
 <ul class="sectlevel1">
@@ -3344,13 +3344,13 @@
 <p>Увійдіть до адміністративного інтерфейсу ШБО "Трембіта".</p>
 </li>
 <li>
-<p>Відкрийте меню <b style="font-weight: 700">Клієнти Сервера Безпеки<b> та оберіть необхідну підсистему (<strong><code>SUBSYSTEM</code></strong>).</p>
+<p>Відкрийте меню <strong>Клієнти Сервера Безпеки</strong> та оберіть необхідну підсистему (<strong><code>SUBSYSTEM</code></strong>).</p>
 <div class="paragraph">
 <p><span class="image"><img src="../../../_images/registry-admin/external-integration/api-publish/data-platform/trembita-add-wsdl-step-1.png" alt="trembita add wsdl step 1"></span></p>
 </div>
 </li>
 <li>
-<p>У розділі <em>клієнта-надавача</em> перейдіть до налаштувань <b style="font-weight: 700">Сервіси SOAP<b>, натиснувши відповідну іконку <span class="image"><img src="../../../_images/registry-admin/external-integration/api-publish/data-platform/soap-config.png" alt="soap config" width="25"></span>
+<p>У розділі <em>клієнта-надавача</em> перейдіть до налаштувань <strong>Сервіси SOAP</strong>, натиснувши відповідну іконку <span class="image"><img src="../../../_images/registry-admin/external-integration/api-publish/data-platform/soap-config.png" alt="soap config" width="25"></span>
 та оберіть <code>Додати WSDL</code>.</p>
 <div class="paragraph">
 <p><span class="image"><img src="../../../_images/registry-admin/external-integration/api-publish/bp/trembita-bp-invoking-1.png" alt="trembita bp invoking 1"></span></p>
@@ -3370,8 +3370,24 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>https://bp-webservice-gateway-lowcode-gryffindor-qa.apps.cicd2.mdtu-ddm.projects.epam.com/ws/bpWebservice.wsdl</pre>
+<pre>https://bp-webservice-gateway-example-registry.apps.example.com/ws/bpWebservice.wsdl</pre>
 </div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>bp-webservice-gateway</code>&#8201;&#8212;&#8201;назва API-сервісу, що розгортається разом з реєстром;</p>
+</li>
+<li>
+<p><code>example-registry</code>&#8201;&#8212;&#8201;назва вашого реєстру;</p>
+</li>
+<li>
+<p><code>apps.example.com</code>&#8201;&#8212;&#8201;DNS-wildcard (домен та піддомени сервера);</p>
+</li>
+<li>
+<p><code>/ws/bpWebservice.wsdl</code>&#8201;&#8212;&#8201;ендпоінт, де зберігається WSDL-файл.</p>
+</li>
+</ul>
 </div>
 </td>
 </tr>
