@@ -3289,6 +3289,18 @@
 </div>
 <div id="preamble">
 <div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+🌐 Цей документ доступний українською та англійською мовами. Використовуйте перемикач у правому верхньому куті, щоб змінити версію.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>Postgres Operator від Crunchy Data (PGO), який використовується для управління БД реєстру,включає в себе pgBackRest - рішення для резервного копіювання та відновлення з відкритим кодом. PGO робить зручним виконання багатьох поширених дій, необхідних протягом життєвого циклу бази даних, зокрема:</p>
 </div>
@@ -3315,9 +3327,6 @@
 </li>
 <li>
 <p>Клонування даних у новий екземпляр БД</p>
-</li>
-<li>
-<p>та інше.</p>
 </li>
 </ul>
 </div>
@@ -3447,9 +3456,21 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n postgres-operator postgrescluster operational \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n &lt;registry-name&gt; postgrescluster operational \
   postgres-operator.crunchydata.com/pgbackrest-backup="$(date)"</code></pre>
 </div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="ПІДКАЗКА"></i>
+</td>
+<td class="content">
+де <code>&lt;registry-name&gt;</code>&#8201;&#8212;&#8201;назва вашого реєстру/namespace.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>PGO виявить цю анотацію та створить нове одноразове завдання резервного копіювання!</p>
@@ -3462,9 +3483,21 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n postgres-operator postgrescluster operational --overwrite \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n &lt;registry-name&gt; postgrescluster operational --overwrite \
   postgres-operator.crunchydata.com/pgbackrest-backup="$(date)"</code></pre>
 </div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="ПІДКАЗКА"></i>
+</td>
+<td class="content">
+де <code>&lt;registry-name&gt;</code>&#8201;&#8212;&#8201;назва вашого реєстру/namespace.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -3475,7 +3508,7 @@
 <div class="sect2">
 <h3 id="_відновлення_на_момент_часу_чи_на_конкретну_резервну_копію"><a class="anchor" href="#_відновлення_на_момент_часу_чи_на_конкретну_резервну_копію"></a><a class="link" href="#_відновлення_на_момент_часу_чи_на_конкретну_резервну_копію">2.1. Відновлення на момент часу чи на конкретну резервну копію</a></h3>
 <div class="paragraph">
-<p>Для того щоб відновити стан БД на потрібну дату і час в першу чергу в секцію <code>spec.backups.pgbackrest</code> потрібно додати наступне:</p>
+<p>Щоб відновити стан БД на потрібну дату і час, найперше, потрібно у секцію <code>spec.backups.pgbackrest</code> додати наступне:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3487,11 +3520,23 @@
         repoName: repo1
         options:
         - --type=time
-        - --target="2022-06-09 14:15:11-04"</code></pre>
+        - --target="2022-06-09 14:15:11"</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>де <code>--target</code> цільовий час відновлення PITR. Прикладом цілі відновлення є <code>2022-06-09 14:15:11-04</code>.</p>
+<p>де <code>--target</code> цільовий час відновлення PITR. Прикладом часу відновлення є <code>2022-06-09 14:15:11</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+Час відновлення вказується за UTC.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Щоб відновити базу на конкретну резервну копію, в секцію <code>spec.backups.pgbackrest</code> треба додати наступне:</p>
@@ -3510,16 +3555,40 @@
 </div>
 </div>
 <div class="paragraph">
-<p>де <code>--set</code> назва цільової резервної копії. Список доступних резервних копій можно переглянути в бакеті s3 резервного сховища, або виконавши команду pgbackrest info --stanza=db в консолі пода БД.</p>
+<p>де <code>--set</code> назва цільової резервної копії. Список доступних резервних копій можно переглянути в бакеті s3 резервного сховища, або виконавши команду <code>pgbackrest info --stanza=db</code> в консолі поду БД.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="ВАЖЛИВО"></i>
+</td>
+<td class="content">
+Усі дані, створені після цільової дати відновлення (<code>--target="2022-06-09 14:15:11"</code>) і до моменту початку процесу відновлення, будуть втрачені. Тому обов&#8217;язково потрібно врахувати це перед початком відновлення.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>Тепер, щоб ініціювати відновлення, ви повинні додати анотацію <code>postgres-operator.crunchydata.com/pgbackrest-restore</code> наступним чином:</p>
+<p>Щоб ініціювати відновлення, ви повинні додати анотацію <code>postgres-operator.crunchydata.com/pgbackrest-restore</code> наступним чином:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n postgres-operator postgrescluster operational --overwrite \
-  postgres-operator.crunchydata.com/pgbackrest-restore=id1</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n &lt;registry-name&gt; postgrescluster operational --overwrite \
+  postgres-operator.crunchydata.com/pgbackrest-restore="$(date)"</code></pre>
 </div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="ПІДКАЗКА"></i>
+</td>
+<td class="content">
+де <code>&lt;registry-name&gt;</code>&#8201;&#8212;&#8201;назва вашого реєстру/namespace.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Після завершення відновлення додане налаштування можна вимкнути:</p>
@@ -3541,10 +3610,10 @@
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Всі ці операції потрібно провести як на операційній так і на аналітичній базі данних.</p>
+<p>Всі ці операції потрібно провести як на операційній, так і на аналітичній базі даних.</p>
 </div>
 <div class="paragraph">
-<p>Для відновлення відповідності данних між операційною та аналітичною БД виконайте <a href="#_узгодження_данних_на_аналітичному_кластері">Узгодження данних на аналітичному кластері</a></p>
+<p>Для відновлення відповідності даних між операційною та аналітичною БД виконайте <a href="#_узгодження_данних_на_аналітичному_кластері">Узгодження данних на аналітичному кластері</a></p>
 </div>
 </td>
 </tr>
