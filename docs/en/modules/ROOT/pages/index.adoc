@@ -61,4 +61,72 @@ This knowledge base contains the following main sections: ::
 
 * If you are a developer, architect, or just a tech guru, see xref:arch:architecture/overview.adoc[].
 
+== Code of Conduct Diia.Engine Open Source
+
+NOTE: Notice! This software is provided as is, and we are not responsible for how you will use it in your solutions.
+
+=== Section 1. User agreement
+
+==== The Diia.Engine platform is an innovative solution that will help ministries and government agencies to conveniently create and manage registers. This will allow for the orderly and secure storage of data in registers, automation and digitization of public services, thus boosting the launch of online services and digitalization in general. Diia.Engine is an export-ready platform that meets international standards for interoperability and data security.
+
+* Instances. The Diia.Engine platform available as instances that can be deployed on your own infrastructure or used in the cloud.
+* The platform works with open source software, so there are no license fees.
+
+==== Users
+* Ministry of Digital Transformation of Ukraine: supported development of Diia Engine that using to build digital services for citizens.
+* Government agencies: use Diia Engine to create and manage their own digital registers and services.
+* Developers: the product is an open-source solution, so developers can use the platform's open code for development purposes.
+
+==== Code of Conduct outlines the expected behavior for a specific community or platform:
+* Promote a positive and productive environment.
+* Ensure ethical development.
+* Protect users from harmful behavior.
+
+==== The Diia Engine open-source product community consists of:
+* Ministry of Digital Transformation of Ukraine (MDT), Ukrainian State Services and Authorities (Developing services on Diia.Engine).
+* GIZ (Deutsche Gesellschaft für Internationale Zusammenarbeit) (a German development agency that provides technical and financial support to Diia Engine).
+* East Europe Foundation (collaborates with GIZ to support the development of registers on Diia Engine).
+* Public and government organizations (could use Diia Engine to create digital services).
+
+=== Section 2. Expected Behavior
+
+*_Respectful communication._* We expect all participants to treat each other with respect, regardless of background, experience level, or opinion. This includes avoiding discriminatory or offensive language, harassment, and personal attacks.
+*_Diversity and inclusion._* We value diversity of thought and experience. We strive to create a welcoming and inclusive environment for all contributors.
+*_Professionalism._* We encourage professional and constructive communication in discussions and disagreements.
+
+=== Section 3. Contribution Guidelines
+
+*_ Agreeing to the Code of Conduct._* By participating in the project, you agree to abide by this Code of Conduct.
+*_Contribution methods._* Use GitHub's standard features to propose improvements (pull requests), report bugs (issues), and report violations of this Code of Conduct.
+*_Decision-making on contributions._* The project team will review and evaluate all contributions based on technical merit, alignment with project goals, and adherence to coding standards. We reserve the right to accept or reject contributions without providing specific reasons.
+
+=== Section 4. Review Process
+
+*_Evaluation criteria._* Contributions are evaluated based on:
+* Functionality and technical merit.
+* Alignment with the project's vision and roadmap.
+* Coding style and adherence to best practices.
+* Potential impact on the project and its users.
+
+*_Collaborative decision-making._* The product development team will review contributions collaboratively using standard GitHub tools.
+
+=== Section 5. Consequences of Violations
+
+*_Addressing violations._* If a participant violates this Code of Conduct, the project team may take appropriate action, including:
+* Warning or reprimand.
+* Removal of comments or contributions.
+* Temporary or permanent ban from the project.
+
+=== Section 6. Feedback and Improvement
+
+*_Providing feedback._* If you disagree with a decision or have suggestions for improving this Code of Conduct, you are encouraged to discuss it with the product development team using GitHub's standard tools for discussion.
+
+=== Section 7.
+
+All suggestions for improvement from members who violate this Code of Conduct may be rejected and ignored.
+
+=== Section 8.
+
+If you do not agree with this Code of Conduct, you can contact the product development team with suggestions for making changes using GitHub's standard tools.
+
 * Have a question? See xref:faq:faq.adoc[].
