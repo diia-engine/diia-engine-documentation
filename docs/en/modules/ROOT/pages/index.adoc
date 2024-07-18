@@ -61,8 +61,6 @@ Don't stop there; for technical registry administrators, another journey awaits 
 * [*] Familiarize yourself with the *key terms and definitions* critically important for understanding our Platform. Your encyclopedia awaits at xref:platform-glossary.adoc[Platform Glossary]. Here, you will find all the necessary information to dive into the specifics and language of our system, which will help you better navigate and effectively work with our tools and resources.
 
 
-Bla-bla-bla
-
 //* *Got questions?* We've got answers! Check out: xref:faq:faq.adoc[].
 
 Jump into the sections that resonate with your role and embark on a journey to master the ins and outs of our Platform. Let's explore together!
