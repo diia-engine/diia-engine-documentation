@@ -67,7 +67,8 @@ NOTE: Notice! This software is provided as is, and we are not responsible for ho
 
 === Section 1. User agreement
 
-==== The Diia.Engine platform is an innovative solution that will help ministries and government agencies to conveniently create and manage registers. This will allow for the orderly and secure storage of data in registers, automation and digitization of public services, thus boosting the launch of online services and digitalization in general. Diia.Engine is an export-ready platform that meets international standards for interoperability and data security.
+==== The Diia.Engine platform
+The Diia.Engine platform is an innovative solution that will help ministries and government agencies to conveniently create and manage registers. This will allow for the orderly and secure storage of data in registers, automation and digitization of public services, thus boosting the launch of online services and digitalization in general. Diia.Engine is an export-ready platform that meets international standards for interoperability and data security.
 
 * Instances. The Diia.Engine platform available as instances that can be deployed on your own infrastructure or used in the cloud.
 * The platform works with open source software, so there are no license fees.
@@ -96,7 +97,7 @@ NOTE: Notice! This software is provided as is, and we are not responsible for ho
 
 === Section 3. Contribution Guidelines
 
-*_ Agreeing to the Code of Conduct._* By participating in the project, you agree to abide by this Code of Conduct.
+*_Agreeing to the Code of Conduct._* By participating in the project, you agree to abide by this Code of Conduct.
 *_Contribution methods._* Use GitHub's standard features to propose improvements (pull requests), report bugs (issues), and report violations of this Code of Conduct.
 *_Decision-making on contributions._* The project team will review and evaluate all contributions based on technical merit, alignment with project goals, and adherence to coding standards. We reserve the right to accept or reject contributions without providing specific reasons.
 
