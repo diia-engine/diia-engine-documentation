@@ -92,21 +92,29 @@ The Diia.Engine platform is an innovative solution that will help ministries and
 === Section 2. Expected Behavior
 
 *_Respectful communication._* We expect all participants to treat each other with respect, regardless of background, experience level, or opinion. This includes avoiding discriminatory or offensive language, harassment, and personal attacks.
+
 *_Diversity and inclusion._* We value diversity of thought and experience. We strive to create a welcoming and inclusive environment for all contributors.
+
 *_Professionalism._* We encourage professional and constructive communication in discussions and disagreements.
 
 === Section 3. Contribution Guidelines
 
 *_Agreeing to the Code of Conduct._* By participating in the project, you agree to abide by this Code of Conduct.
+
 *_Contribution methods._* Use GitHub's standard features to propose improvements (pull requests), report bugs (issues), and report violations of this Code of Conduct.
+
 *_Decision-making on contributions._* The project team will review and evaluate all contributions based on technical merit, alignment with project goals, and adherence to coding standards. We reserve the right to accept or reject contributions without providing specific reasons.
 
 === Section 4. Review Process
 
 *_Evaluation criteria._* Contributions are evaluated based on:
+
 * Functionality and technical merit.
+
 * Alignment with the project's vision and roadmap.
+
 * Coding style and adherence to best practices.
+
 * Potential impact on the project and its users.
 
 *_Collaborative decision-making._* The product development team will review contributions collaboratively using standard GitHub tools.
@@ -114,8 +122,11 @@ The Diia.Engine platform is an innovative solution that will help ministries and
 === Section 5. Consequences of Violations
 
 *_Addressing violations._* If a participant violates this Code of Conduct, the project team may take appropriate action, including:
+
 * Warning or reprimand.
+
 * Removal of comments or contributions.
+
 * Temporary or permanent ban from the project.
 
 === Section 6. Feedback and Improvement
