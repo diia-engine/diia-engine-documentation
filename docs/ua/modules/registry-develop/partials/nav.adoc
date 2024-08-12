@@ -12,9 +12,10 @@
 +
 *** xref:registry-develop:registry-admin/admin-portal/overview.adoc[]
 **** xref:registry-develop:registry-admin/admin-portal/version-control/version-control-overview.adoc[]
-***** xref:registry-develop:registry-admin/admin-portal/version-control/master-version-settings.adoc[]
-***** xref:registry-develop:registry-admin/admin-portal/version-control/create-new-change-request.adoc[]
-***** xref:registry-develop:registry-admin/admin-portal/version-control/overview-new-change-request.adoc[]
+***** xref:registry-develop:registry-admin/admin-portal/version-control/master/master-version-settings.adoc[]
+***** xref:registry-develop:registry-admin/admin-portal/version-control/candidate/create-new-change-request.adoc[]
+***** xref:registry-develop:registry-admin/admin-portal/version-control/candidate/overview-new-change-request.adoc[]
+***** xref:registry-develop:registry-admin/admin-portal/version-control/candidate/check-regulations-integrity.adoc[]
 **** xref:registry-develop:registry-admin/admin-portal/admin-portal-user-mgmt.adoc[]
 **** xref:registry-develop:registry-admin/admin-portal/registry-modeling/overview.adoc[]
 ***** xref:registry-develop:registry-admin/admin-portal/registry-modeling/registry-global-settings.adoc[]
@@ -24,7 +25,6 @@
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/search-process.adoc[]
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/copy-process.adoc[]
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/upload-process.adoc[]
-//TODO: TBD in future: Експортувати (download) процеси
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/sorting-process.adoc[]
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/process-groups.adoc[]
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/delete-process.adoc[]
@@ -32,9 +32,16 @@
 ******* xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/components/tab-code.adoc[]
 ******* xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/components/tab-bpmn-editor.adoc[]
 ******* xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/components/edit-groovy-scripts.adoc[]
-***** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/ui-forms-overview.adoc[]
-****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/sorting-paginating-forms.adoc[]
-****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/json-code-view-edit.adoc[]
+***** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/ui-forms-overview.adoc[Управління схемами UI-форм реєстру]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/create-forms.adoc[Створення UI-форм]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/edit-forms.adoc[Редагування UI-форм]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/search-forms.adoc[Навігація та пошук UI-форм]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/copy-forms.adoc[Копіювання UI-форм]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/download-forms.adoc[Завантаження UI-форм]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/sorting-paginating-forms.adoc[Сортування та пагінація UI-форм]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/delete-forms.adoc[Видалення форм]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/json-code-view-edit.adoc[Перегляд та редагування коду JSON-представлення форми]
+****** xref:registry-admin/admin-portal/registry-modeling/ui-forms/form-tabs.adoc[Перегляд та редагування складових форми (Вкладки)]
 ***** xref:registry-develop:registry-admin/admin-portal/registry-modeling/tables/tables-overview.adoc[]
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/tables/tables-data-structures.adoc[]
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/tables/xml-editor.adoc[]
@@ -48,6 +55,7 @@
 **** xref:registry-develop:registry-admin/regulations-deploy/registry-admin-deploy-regulation.adoc[]
 **** xref:registry-develop:registry-admin/regulations-deploy/registry-regulations-auto-validation.adoc[]
 **** xref:registry-develop:registry-admin/regulations-deploy/cleanup-job.adoc[]
+**** xref:registry-develop:registry-admin/regulations-deploy/regulations-idempotеnt-deployment.adoc[]
 +
 //Внесення користувачів до системи
 *** xref:registry-develop:registry-admin/create-users/overview.adoc[]
@@ -60,6 +68,7 @@
 **** Надавачі послуг
 ***** xref:registry-develop:registry-admin/cp-auth-setup/cp-auth-setup-officers.adoc[]
 ***** xref:registry-develop:registry-admin/cp-auth-setup/cp-officer-self-registration.adoc[]
+***** xref:registry-develop:registry-admin/cp-auth-setup/officer-portal-access-individual-qes.adoc[]
 **** Отримувачі послуг
 ***** xref:registry-develop:registry-admin/cp-auth-setup/cp-auth-setup-citizens.adoc[]
 +
@@ -97,8 +106,10 @@
 **** xref:registry-develop:registry-admin/openshift-logging/kibana-request-dashboard.adoc[]
 +
 // ================ GRAFANA MONITORING ===================
-*** Моніторинг систем Платформи (Grafana)
+*** xref:registry-develop:registry-admin/grafana-monitoring/overview.adoc[]
+**** xref:registry-develop:registry-admin/grafana-monitoring/grafana-alerting-notifications.adoc[]
 **** xref:registry-develop:registry-admin/grafana-monitoring/grafana-camunda-metrics.adoc[]
+**** xref:registry-develop:registry-admin/grafana-monitoring/public-api-kong-metrics.adoc[Моніторинг метрик публічного API]
 +
 // Налаштування реєстру
 *** xref:registry-develop:registry-admin/regulation-settings.adoc[]
@@ -115,26 +126,28 @@
 **** xref:registry-develop:registry-admin/external-integration/ext-integration-overview.adoc[]
 **** xref:registry-develop:registry-admin/external-integration/registration-subsystem-trembita/registration-subsystem-trembita.adoc[]
 **** xref:registry-develop:registry-admin/external-integration/rest-api-no-trembita.adoc[]
-**** Виклик зовнішніх реєстрів та систем
-***** ШБО "Трембіта"
+**** Ваша команда викликає API
+***** _ШБО "Трембіта"_
 ****** xref:registry-develop:registry-admin/external-integration/api-call/trembita/external-services-connection-config.adoc[]
 ****** xref:registry-develop:registry-admin/external-integration/cp-integrate-trembita.adoc[]
 ****** xref:registry-develop:registry-admin/external-integration/api-call/trembita/overview.adoc[Реєстри та системи ШБО "Трембіта"]
-***** Інші реєстри та системи
+***** _Інші реєстри та системи_
 ****** xref:registry-develop:bp-modeling/bp/rest-connector.adoc#regulations-configuration[Інтеграція із зовнішніми сервісами за допомогою конектора REST: Налаштування регламенту]
 ****** xref:registry-develop:registry-admin/external-integration/cp-integrate-ext-system.adoc[]
-**** xref:registry-develop:registry-admin/external-integration/api-publish/index.adoc[]
-***** xref:registry-develop:registry-admin/external-integration/api-publish/rest-soap-api-expose.adoc[]
-***** ШБО "Трембіта"
-****** xref:registry-develop:registry-admin/external-integration/api-publish/trembita-bp-invoking.adoc[]
-****** xref:registry-develop:registry-admin/external-integration/api-publish/trembita-data-invoking.adoc[]
-***** Інші реєстри та системи
-****** xref:registry-develop:registry-admin/external-integration/api-publish/get-jwt-token-postman.adoc[]
+**** xref:registry-develop:registry-admin/external-integration/api-publish/index.adoc[Ваша команда надає API]
+***** Приватні дані
+****** xref:registry-develop:registry-admin/external-integration/api-publish/rest-soap-api-expose.adoc[]
+****** _ШБО "Трембіта"_
+******* xref:registry-develop:registry-admin/external-integration/api-publish/trembita-bp-invoking.adoc[]
+******* xref:registry-develop:registry-admin/external-integration/api-publish/trembita-data-invoking.adoc[]
+****** _Інші реєстри та системи_
+******* xref:registry-develop:registry-admin/external-integration/api-publish/get-jwt-token-postman.adoc[]
+***** Публічні дані
+****** xref:registry-develop:registry-admin/external-integration/api-publish/public-api/expose-public-api.adoc[]
 //WIREMOCK
 **** xref:registry-develop:registry-admin/external-integration/cp-mock-integrations.adoc[]
 +
 // API Rate Limits
-// TODO: Review and update
 *** xref:registry-develop:registry-admin/api-rate-limits.adoc[]
 *** xref:registry-develop:registry-admin/remote_connection.adoc[]
 +
@@ -148,10 +161,12 @@
 **** xref:registry-develop:data-modeling/data/physical-model/liquibase-introduction.adoc[]
 **** xref:registry-develop:data-modeling/data/physical-model/liquibase-standard-change-types.adoc[]
 **** xref:registry-develop:data-modeling/data/physical-model/liquibase-ddm-ext.adoc[]
+//SEARCH CONDITIONS
+include::registry-develop:partial$data-modeling/data/physical-model/sc/nav.adoc[]
+//SOME LIQUIBASE SCENARIOS
 ***** xref:registry-develop:data-modeling/data/physical-model/liquibase-changes-management-sys-ext.adoc[]
 **** xref:registry-develop:data-modeling/data/physical-model/rest-api-view-access-to-registry.adoc[]
 **** xref:registry-develop:data-modeling/data/physical-model/auto-generate-number.adoc[]
-**** xref:registry-develop:data-modeling/data/physical-model/join-and-or-usage.adoc[]
 +
 // Первинне завантаження даних
 *** xref:registry-develop:data-modeling/initial-load/index.adoc[Первинне завантаження даних]
@@ -170,12 +185,13 @@
 **** xref:registry-develop:bp-modeling/bp/what-is-bp.adoc[Що таке бізнес-процеси: аналіз, структура і типи операцій]
 **** xref:registry-develop:bp-modeling/bp/bp-modeling-instruction.adoc[]
 **** xref:registry-develop:bp-modeling/bp/element-templates/element-templates-overview.adoc[]
-//***** xref:registry-develop:bp-modeling/bp/element-templates/bp-element-templates-installation-configuration.adoc[]
+***** xref:registry-develop:bp-modeling/bp/element-templates/element-templates-install.adoc[Встановлення типових розширень до бізнес-процесів (_для локальної розробки_)]
 ***** xref:registry-develop:bp-modeling/bp/element-templates/user-task-templates/user-task-overview.adoc[]
 ****** xref:registry-develop:bp-modeling/bp/element-templates/user-task-templates/user-form.adoc[]
 ****** xref:registry-develop:bp-modeling/bp/element-templates/user-task-templates/officer-sign-task.adoc[]
 ****** xref:registry-develop:bp-modeling/bp/element-templates/user-task-templates/citizen-sign-task.adoc[]
-***** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/service-task-overview.adoc[]
+//***** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/service-task-overview.adoc[]
+***** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/service-task-overview.adoc[Типові розширення для сервісних задач]
 ****** Керування користувачами та ролями
 ******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/add-role-to-keycloak-user.adoc[]
 ******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/save-user-roles.adoc[]
@@ -184,20 +200,23 @@
 ******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/remove-role-from-keycloak-user.adoc[]
 ****** Керування налаштування користувача
 ******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/read-user-settings.adoc[]
-****** Створення сутностей
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/create-entity.adoc[]
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/create-nested-entities.adoc[]
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/batch-creation-entities.adoc[]
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/batch-creation-entities-v2.adoc[]
-****** Читання та пошук сутностей
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/read-entity.adoc[]
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/batch-read-entities-from-data-factory.adoc[]
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/search-entities-in-data-factory.adoc[]
-****** Оновлення сутностей
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/update-entity-in-data-factory.adoc[]
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/update-entity-in-data-factory-partially.adoc[]
-****** Видалення сутностей
-******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/delete-entity.adoc[]
+****** Керування сутностями
+******* Створення сутностей
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/create-entity.adoc[]
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/create-nested-entities.adoc[]
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/batch-creation-entities.adoc[]
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/batch-creation-entities-v2.adoc[]
+******* Читання та пошук сутностей
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/read-entity.adoc[]
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/batch-read-entities-from-data-factory.adoc[]
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/search-entities-in-data-factory.adoc[]
+******* Оновлення сутностей
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/update-entity-in-data-factory.adoc[]
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/update-entity-in-data-factory-partially.adoc[]
+******* Видалення сутностей
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/delete-entity.adoc[]
+******* Загальний делегат (`POST`, `GET`, `PUT`, `PATCH`)
+******** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/connect-to-data-factory.adoc[]
 ****** Моделювання цифрових підписів
 ******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/digital-signature-by-dso-service.adoc[]
 ****** Інтеграція зовнішніх систем
@@ -213,6 +232,7 @@
 ***** xref:registry-develop:bp-modeling/bp/element-templates/rest-integration-registries/rest-integration-registries-overview.adoc[Інтеграція реєстрів на Платформі]
 ****** xref:registry-develop:bp-modeling/bp/element-templates/rest-integration-registries/start-bp-another-registry.adoc[]
 ****** xref:registry-develop:bp-modeling/bp/element-templates/rest-integration-registries/search-for-entities-another-registry.adoc[]
+***** xref:registry-develop:bp-modeling/bp/element-templates/element-templates-validate.adoc[Валідація шаблонів типових розширень]
 **** xref:registry-develop:bp-modeling/bp/bpmn/index.adoc[]
 ***** xref:registry-develop:bp-modeling/bp/bpmn/tasks/overview.adoc[]
 ***** xref:registry-develop:bp-modeling/bp/bpmn/gateways/overview.adoc[]
@@ -243,9 +263,11 @@
 **** Моделювання витягів
 ***** xref:registry-develop:bp-modeling/bp/excerpts/bp-modeling-excerpt-csv-docx.adoc[]
 **** xref:registry-develop:registry-admin/user-notifications/email/e-mail-notification.adoc[]
-**** xref:registry-develop:bp-modeling/bp/loading-data-from-csv.adoc[]
-**** xref:registry-develop:bp-modeling/bp/file-upload-bp.adoc[]
-**** xref:registry-develop:bp-modeling/bp/save-digital-doc-remote-url.adoc[]
+**** Робота з цифровими документами
+***** xref:registry-develop:bp-modeling/bp/loading-data-from-csv.adoc[]
+***** xref:registry-develop:bp-modeling/bp/bp-async-data-load.adoc[]
+***** xref:registry-develop:bp-modeling/bp/file-upload-bp.adoc[]
+***** xref:registry-develop:bp-modeling/bp/save-digital-doc-remote-url.adoc[]
 **** xref:registry-develop:bp-modeling/bp/global-vars.adoc[]
 +
 // Моделювання форм до бізнес-процесів
@@ -267,6 +289,7 @@
 ***** xref:registry-develop:bp-modeling/forms/components/edit-grid/edit-grid.adoc[Edit Grid]
 ****** xref:registry-develop:bp-modeling/forms/components/edit-grid/edit-grid-save-data-list.adoc[]
 ****** xref:registry-develop:bp-modeling/forms/components/edit-grid/edit-grid-columns-sorting.adoc[]
+****** xref:registry-develop:bp-modeling/forms/components/edit-grid/edit-grid-hide-view-button.adoc[]
 ***** xref:registry-develop:bp-modeling/forms/components/date-time.adoc[Date/Time]
 ***** xref:registry-develop:bp-modeling/forms/components/checkbox.adoc[Checkbox]
 ***** xref:registry-develop:bp-modeling/forms/components/select/select-overview.adoc[Select]
@@ -313,13 +336,15 @@
 include::registry-develop:partial$registry-admin-study/nav.adoc[]
 +
 // ================= BEST PRACTICES ==================
-** xref:registry-develop:best-practices/best-practices-overview.adoc[]
-*** Референтні приклади бізнес-процесів
-**** xref:registry-develop:best-practices/bp-timer-launch.adoc[]
-**** Самостійна реєстрація користувачів
-***** xref:registry-develop:best-practices/bp-officer-self-register-auto.adoc[]
-***** xref:registry-develop:best-practices/bp-officer-self-register-manual.adoc[]
-**** xref:registry-develop:best-practices/edit-grid-rows-action.adoc[]
-**** xref:registry-develop:best-practices/bp-upload-edit-file.adoc[]
+include::registry-develop:partial$best-practices/nav.adoc[]
 // ================ IT SYSTEM CLASSES =======================
 ** xref:registry-develop:it-system-classes.adoc[Класи IT-систем, які можна побудувати на Платформі реєстрів]
+// ================ Інструкції по аудиту регламенту реєстру =======================
+** xref:registry-develop:registry-audit-instruction/registry-audit-instruction.adoc[Аудит регламенту реєстру. Загальні рекомендації]
+*** xref:registry-develop:registry-audit-instruction/modules/bp-audit.adoc[Аудит бізнес-процесів]
+*** xref:registry-develop:registry-audit-instruction/modules/dm-audit.adoc[Аудит моделі даних]
+*** xref:registry-develop:registry-audit-instruction/modules/form-audit.adoc[Аудит UI-форм бізнес-процесів]
+*** xref:registry-develop:registry-audit-instruction/modules/sec-audit.adoc[Аудит безпеки]
+*** xref:registry-develop:registry-audit-instruction/modules/excerpt-audit.adoc[Аудит шаблонів витягів]
+*** xref:registry-develop:registry-audit-instruction/modules/report-audit.adoc[Аудит шаблонів аналітичних звітів]
+*** xref:registry-develop:registry-audit-instruction/modules/integration-audit.adoc[Аудит зовнішніх інтеграцій]

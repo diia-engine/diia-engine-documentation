@@ -1,5 +1,4 @@
 = Підсистема нотифікацій користувачів
-
 include::platform:ROOT:partial$templates/document-attributes/arch-set-ua.adoc[]
 
 include::platform:ROOT:partial$admonitions/language-ua.adoc[]
@@ -26,9 +25,9 @@ image::arch:architecture/registry/operational/notifications/notifications-subsys
 Події відправки повідомлень користувачам системою фіксуються у журналі аудиту з повним контекстом.
 
 |===
-|Тип події|Службова назва|Опис
+|Тип події|Спосіб фіксації|Службова назва|Опис
 
-|_SYSTEM_EVENT_|SEND_USER_NOTIFICATION|Спроба відправки повідомлення з результатом операції
+|_SYSTEM_EVENT_|Під час виникнення|SEND_USER_NOTIFICATION|Спроба відправки повідомлення з результатом операції
 |===
 
 [NOTE]

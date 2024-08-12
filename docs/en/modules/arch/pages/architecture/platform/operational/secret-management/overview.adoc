@@ -5,26 +5,20 @@ include::platform:ROOT:partial$admonitions/language-en.adoc[]
 
 == Overview
 
-//Підсистема безпечного зберігання чутливої інформації та контролю доступу до токенів, паролів, сертифікатів та ключів шифрування Платформи та Реєстрів.
-The subsystem for the storing of critical data and access control to tokens, passwords, certificates, and encryption keys for the Platform and Registries.
+The *_Secret and encryption management subsystem_* stores sensitive data and controls access to tokens, passwords, certificates, and encryption keys for the Platform and registries.
 
-//== Функції підсистеми
 == Subsystem functions
 
-//* Зберігання токенів, паролів, сертифікатів
-* Storing of tokens, passwords, certificates
-//* Надання підсистемі моделювання регламенту реєстру ключів шифрування
-* Provision of encryption keys to the regulations modeling subsystem
-//* Контроль доступу до чутливої інформації збереженої в підсистемі
-* Access control to the critical data stored in the subsystem
+* Storing tokens, passwords, and certificates
+* Provisioning encryption keys to the Registry regulations modeling subsystem
+* Access control to the sensitive data stored in the subsystem
 
-//== Технічний дизайн підсистеми
 == Subsystem technical design
 
-image::architecture/platform/operational/secret-management/secret-management.drawio.png[width=600,float="center",align="center"]
+image::architecture/platform/operational/secret-management/secret-management.drawio.svg[width=600,float="center",align="center"]
 
 //_Підсистема управління секретами та шифруванням_ складається з сервісу управління секретами та шифруванням HashiCorp Vault.
-_Secret and encryption management subsystem_ is comprised of HashiCorp Vault secret and encryption management service.
+_Secret and encryption management subsystem_ comprises HashiCorp Vault secret and encryption management service.
 
 [NOTE]
 --
@@ -68,6 +62,14 @@ _HashiCorp Vault_ is unsealed automatically in the Platform, using the _Secret a
 |3rd-party
 |https://github.com/epam/edp-ddm-platform-vault[github:/epam/edp-ddm-platform-vault]
 |The instrument for secure secret management, and critical data access protection in computing environments.
+
+|_Certificate management service_
+|`cert-manager`
+|`cert-manager`
+|3rd-party
+|https://gerrit-mdtu-ddm-edp-cicd.apps.cicd2.mdtu-ddm.projects.epam.com/admin/repos/mdtu-ddm/infrastructure/service-mesh[gerrit:/mdtu-ddm/infrastructure/service-mesh]
+|The instrument for managing certificates and certificate issuers as resource types in Kubernetes and OKD clusters.
+
 |===
 
 //== Технологічний стек
@@ -77,6 +79,7 @@ _HashiCorp Vault_ is unsealed automatically in the Platform, using the _Secret a
 The following technologies were used in subsystem design and development:
 
 * xref:arch:architecture/platform-technologies.adoc#vault[HashiCorp Vault]
+* xref:arch:architecture/platform-technologies.adoc#cert-manager[cert-manager]
 
 //== Атрибути якості підсистеми
 == Subsystem quality attributes

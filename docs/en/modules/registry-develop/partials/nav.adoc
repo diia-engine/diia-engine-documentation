@@ -1,4 +1,4 @@
-* xref:registry-develop:overview.adoc[Registry development and support teams]
+* xref:registry-develop:overview.adoc[Registry development and maintenance teams]
 +
 // // ================= REGISTRY ADMINISTRATORS =================
 ** xref:registry-develop:registry-admin/index.adoc[Registry administrators]
@@ -31,8 +31,15 @@
 ******* xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/components/tab-bpmn-editor.adoc[Modeling business processes in BPMN editor]
 ******* xref:registry-develop:registry-admin/admin-portal/registry-modeling/process-models/components/edit-groovy-scripts.adoc[Editing business process scripts in a visual code editor]
 ***** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/ui-forms-overview.adoc[Managing UI forms]
-****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/sorting-paginating-forms.adoc[Sorting UI forms]
-****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/json-code-view-edit.adoc[Viewing and editing a UI-form JSON representation]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/create-forms.adoc[Creating UI-forms]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/edit-forms.adoc[Editing UI forms]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/search-forms.adoc[Searching registry UI forms]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/copy-forms.adoc[Copying UI forms]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/download-forms.adoc[Downloading UI forms]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/sorting-paginating-forms.adoc[Sorting and paginating UI forms]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/delete-forms.adoc[Deleting UI forms]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/json-code-view-edit.adoc[Viewing and editing a UI form JSON representation]
+****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/ui-forms/form-tabs.adoc[Form editing tabs]
 ***** xref:registry-develop:registry-admin/admin-portal/registry-modeling/tables/tables-overview.adoc[Tables]
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/tables/tables-data-structures.adoc[Registry data model tables and their structures]
 ****** xref:registry-develop:registry-admin/admin-portal/registry-modeling/tables/xml-editor.adoc[Modeling the structure of registry database tables in an XML code editor]
@@ -96,8 +103,9 @@
 ]
 +
 // ======================== GRAFANA MONITORING ==========================
-*** Monitoring the Platform subsystems (Grafana)
+*** xref:registry-develop:registry-admin/grafana-monitoring/overview.adoc[Monitoring Platform systems (Grafana)]
 **** xref:registry-develop:registry-admin/grafana-monitoring/grafana-camunda-metrics.adoc[Monitoring business process execution metrics]
+**** xref:registry-develop:registry-admin/grafana-monitoring/public-api-kong-metrics.adoc[Monitoring metrics of public API]
 +
 // ====================== SETTINGS.YAML =================================
 *** xref:registry-develop:registry-admin/regulation-settings.adoc[Managing registry settings (settings.yaml)]
@@ -115,21 +123,22 @@
 //**** xref:registry-develop:registry-admin/external-integration/registration-subsystem-trembita/registration-subsystem-trembita.adoc[]
 **** xref:registry-develop:registry-admin/external-integration/rest-api-no-trembita.adoc[Interacting via REST between Platform registries and with external systems]
 //**** Виклик зовнішніх реєстрів та систем
-**** Calling external registries and systems
+**** Your team consumes API
 //***** ШБО "Трембіта"
 //****** xref:registry-develop:registry-admin/external-integration/api-call/trembita/external-services-connection-config.adoc[]
 //****** xref:registry-develop:registry-admin/external-integration/cp-integrate-trembita.adoc[]
 //****** xref:registry-develop:registry-admin/external-integration/api-call/trembita/overview.adoc[Реєстри та системи ШБО "Трембіта"]
-***** Other registries and systems
-****** xref:registry-develop:bp-modeling/bp/rest-connector.adoc#regulations-configuration[Integrating with external services using the REST connector: configuring the regulations]
-****** xref:registry-develop:registry-admin/external-integration/cp-integrate-ext-system.adoc[Configuring integrations with external systems in Control Plane]
-**** xref:registry-develop:registry-admin/external-integration/api-publish/index.adoc[Providing registry API endpoints for integration]
-***** xref:registry-develop:registry-admin/external-integration/api-publish/rest-soap-api-expose.adoc[Configuring the regulations to provide access to data via SOAP and REST APIs]
+***** xref:registry-develop:bp-modeling/bp/rest-connector.adoc#regulations-configuration[Integrating with external services using the REST connector: configuring the regulations]
+***** xref:registry-develop:registry-admin/external-integration/cp-integrate-ext-system.adoc[Configuring integrations with external systems in Control Plane]
+**** xref:registry-develop:registry-admin/external-integration/api-publish/index.adoc[Your team exposes API]
+***** Private data
+****** xref:registry-develop:registry-admin/external-integration/api-publish/rest-soap-api-expose.adoc[Configuring the regulations to provide access to data via SOAP and REST APIs]
 //***** ШБО "Трембіта"
 //****** xref:registry-develop:registry-admin/external-integration/api-publish/trembita-bp-invoking.adoc[]
 //****** xref:registry-develop:registry-admin/external-integration/api-publish/trembita-data-invoking.adoc[]
-***** Other registries and systems
 ****** xref:registry-develop:registry-admin/external-integration/api-publish/get-jwt-token-postman.adoc[Calling the registry from an external system: getting a JWT token from Keycloak]
+***** Public data
+****** xref:registry-develop:registry-admin/external-integration/api-publish/public-api/expose-public-api.adoc[Configuring access to registry’s public data]
 //========================= WIREMOCK =====================================
 **** xref:registry-develop:registry-admin/external-integration/cp-mock-integrations.adoc[Emulating external integrations]
 +
@@ -166,17 +175,17 @@
 ** xref:registry-develop:bp-modeling/index.adoc[Business process modelers]
 +
 // Моделювання бізнес-процесів та бізнес-правил
-*** xref:registry-develop:bp-modeling/bp/index.adoc[Business process modeling and decision tables]
+*** xref:registry-develop:bp-modeling/bp/index.adoc[Modeling business processes and decision tables]
+**** xref:registry-develop:bp-modeling/bp/what-is-bp.adoc[What are business processes: analysis, structure and operation types]
 //**** xref:registry-develop:bp-modeling/bp/bp-modeling-general-description.adoc[]
 //**** xref:registry-develop:bp-modeling/bp/bp-modeling-instruction.adoc[]
-//**** xref:registry-develop:bp-modeling/bp/element-templates/element-templates-overview.adoc[]
-//***** xref:registry-develop:bp-modeling/bp/element-templates/bp-element-templates-installation-configuration.adoc[]
 **** xref:registry-develop:bp-modeling/bp/element-templates/element-templates-overview.adoc[]
+***** xref:registry-develop:bp-modeling/bp/element-templates/element-templates-install.adoc[Installing extensions to business processes (for local development)]
 ***** xref:registry-develop:bp-modeling/bp/element-templates/user-task-templates/user-task-overview.adoc[]
 ****** xref:registry-develop:bp-modeling/bp/element-templates/user-task-templates/user-form.adoc[]
 ****** xref:registry-develop:bp-modeling/bp/element-templates/user-task-templates/officer-sign-task.adoc[]
 ****** xref:registry-develop:bp-modeling/bp/element-templates/user-task-templates/citizen-sign-task.adoc[]
-***** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/service-task-overview.adoc[]
+***** xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/service-task-overview.adoc[Service task extensions]
 ****** Managing users and roles
 ******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/add-role-to-keycloak-user.adoc[]
 ******* xref:registry-develop:bp-modeling/bp/element-templates/service-task-templates/save-user-roles.adoc[]

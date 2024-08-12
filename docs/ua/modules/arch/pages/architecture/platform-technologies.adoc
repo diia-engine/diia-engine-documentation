@@ -1,5 +1,4 @@
 = Технологічний стек Платформи
-
 include::platform:ROOT:partial$templates/document-attributes/arch-set-ua.adoc[]
 
 include::platform:ROOT:partial$admonitions/language-ua.adoc[]
@@ -62,6 +61,9 @@ image::architecture/ddm-platform-tech-view.svg[]
 |[[postgresql]]https://www.postgresql.org/[PostgreSQL]|14.5.0|https://opensource.org/licenses/postgresql[The PostgreSQL Licence]|Об'єктно реляційна система керування базами даних
 |[[redis]]https://redis.io/[Redis]|6.0.8|https://redis.io/docs/about/license/[Three clause BSD license]|Розподілене сховище пар ключ-значення, які зберігаються в оперативній пам'яті
 |[[ceph]]https://ceph.io/en/[Ceph]|6.2.0-152|https://github.com/ceph/ceph/blob/main/COPYING[LGPL-2.1, LGPL-3, BSD 3-clause, Apache-2.0, MIT License, Boost Software License, Version 1.0, BSD 3-clause, CC0, Boost Software License, Version 1.0, GNU Affero General Public License, Version 3, ]|Розподілена файлова система
+|[[noobaa]]https://noobaa.io[Multo Cloud Gateway (NooBaa)]|4.0.2|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Розширення для інтеграції об’єктного сховища з OpenShift, що дозволяє підключатися до сховищ з різних хмарних провайдерів, та забезпечує простий доступ до даних з різноманітних джерел.
+
+
 |===
 
 === Розширення
@@ -146,7 +148,7 @@ image::architecture/ddm-platform-tech-view.svg[]
 |===
 |Технологія|Версія|Ліцензія|Опис
 
-|[[keycloak]]https://www.keycloak.org/[Keycloak]|15 -> 20|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Система для управління користувачами та їх доступом, автентифікації, інтеграції з зовнішніми Identity провайдерами
+|[[keycloak]]https://www.keycloak.org/[Keycloak]|20.0.3|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Система для управління користувачами та їх доступом, автентифікації, інтеграції з зовнішніми Identity провайдерами
 |===
 
 === Оператори
@@ -243,8 +245,9 @@ image::architecture/ddm-platform-tech-view.svg[]
 |===
 |Оператор|Версія|Ліцензія|Опис
 
-|[[ext-secrets-operator]]https://external-secrets.io/[External Secrets Operator]|0.7.0|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Operator для забезпечення інтеграції Hashicorp Vault з Kubernetes Secrets
-|[[reloader]]https://github.com/stakater/Reloader[Reloader]|1.0.25|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Operator для спостереження за змінами в ConfigMaps та Secrets та їх оновлення на подах компонентів реєстру
+|[[ext-secrets-operator]]https://external-secrets.io/[External Secrets Operator]|0.7.0|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Оператор для забезпечення інтеграції Hashicorp Vault з Kubernetes Secrets
+|[[reloader]]https://github.com/stakater/Reloader[Reloader]|1.0.25|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Оператор для спостереження за змінами в ConfigMaps та Secrets та їх оновлення на подах компонентів реєстру
+|[[cert-manager]]https://cert-manager.io/[cert-manager]|1.6.3|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Керує сертифікатами та видавцями сертифікатів як типами ресурсів у кластерах Kubernetes та OKD, спрощує процес отримання, поновлення та використання сертифікатів
 |===
 
 == Управління бізнес-процесами
@@ -386,8 +389,8 @@ image::architecture/ddm-platform-tech-view.svg[]
 |===
 |Технологія|Версія|Ліцензія|Опис
 
-|[[kiali]]https://kiali.io/[Kiali]|1.35.0|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]| UI застосунок для Istio Service Mesh
-|[[jaeger]]https://www.jaegertracing.io/[Jaeger]|1.24.0|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]| Система для забезпечення розподіленого трейсингу сервісів платформи
+|[[kiali]]https://kiali.io/[Kiali]|1.67.0|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]| UI застосунок для Istio Service Mesh
+|[[jaeger]]https://www.jaegertracing.io/[Jaeger]|1.39.0|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]| Система для забезпечення розподіленого трейсингу сервісів платформи
 |[[grafana]]https://grafana.com/[Grafana]|7.4.5|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Перегляд та аналіз метрик системи, налаштування нотифакацій по метрикам
 |[[prometheus]]https://prometheus.io/[Prometheus]|2.24.0|https://www.apache.org/licenses/LICENSE-2.0[APACHE LICENSE, v2.0]|Timeseries база данних для збереження метрик платформи та query engine по цим даним
 |===
