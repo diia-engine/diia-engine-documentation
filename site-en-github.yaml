@@ -4,12 +4,12 @@
 site:
   title: Platform for deployment and maintenance of state electronic registers
   start_page: platform:ROOT:index.adoc
-  url: /edp-ddm-architecture/en
+  url: /diia-engine-documentation/en
 runtime:
   fetch: true
 content:
   sources:
-    - url: https://github.com/epam/edp-ddm-architecture
+    - url: https://github.com/diia-engine/diia-engine-documentation
       branches: ["1.9.6-docs", "main"]
       start_path: docs/en
 
