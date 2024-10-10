@@ -1,23 +1,7 @@
-:toc-title: ЗМІСТ
-:toc: auto
-:toclevels: 5
-:experimental:
-:important-caption:     ВАЖЛИВО
-:note-caption:          ПРИМІТКА
-:tip-caption:           ПІДКАЗКА
-:warning-caption:       ПОПЕРЕДЖЕННЯ
-:caution-caption:       УВАГА
-:example-caption:           Приклад
-:figure-caption:            Зображення
-:table-caption:             Таблиця
-:appendix-caption:          Додаток
-:sectnums:
-:sectnumlevels: 5
-:sectanchors:
-:sectlinks:
-:partnums:
-
 = Завдання 1. Моделювання структур бази даних реєстру
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+include::platform:ROOT:partial$admonitions/language-ua.adoc[]
 
 == Мета завдання
 
@@ -32,6 +16,25 @@
 Створити структуру бази даних для збереження й обробки інформації із сертифікації лабораторій відповідно до наступної логічної моделі даних:
 
 image:registry-develop:study-project/task-2/task-2-1-logical-model.png[]
+
+[TIP]
+====
+В ході виконання поточного завдання уся необхідна інформація, приклади, файли надаються.
+
+Однак ви можете одразу клонувати репозиторій вашого проєкту із регламентом, використовуючи xref:registry-admin/regulations-deploy/registry-admin-deploy-regulation.adoc[покрокову інструкцію]. У регламенті всі `.xml`-файли для моделювання даних уже створені, зокрема:
+
+* `createTables.xml` -- тут створюються таблиці відповідно до логічної моделі даних.
+* `main-liquibase.xml` -- файл є основним для розгортання моделі даних реєстру. Він містить посилання на інші `.xml`-файли.
+* `createSearchConditions.xml` -- тут створюються пошукові критерії, які будуть `VIEW`-об'єктами у базі даних реєстру, тобто API-представленнями.
+* `populateDictionaries.xml` -- файл із БД-функціями для заповнення таблиць-довідників.
+
+У папці *_data-model_* містяться файли `createTables.xml` та `main-liquibase.xml` (файл є основним для розгортання моделі даних реєстру).
+
+Надалі всі схеми для розгортання БД та API-представлень створюються у папці *_data-model_*, CSV-довідники для подальшого наповнення даними таблиць-довідників розміщуються у *_data-model/data-load_*.
+
+Детальніше про всі налаштування ви дізнаєтеся нижче у цьому документі.
+====
+
 
 [#physical-data-model-actions-plan]
 == План розробки фізичної моделі даних
@@ -61,7 +64,7 @@ TIP: Використовуйте готовий файл _link:{attachmentsdir}
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd
-        http://www.liquibase.org/xml/ns/dbchangelog-ext https://nexus.apps.envone.dev.registry.eua.gov.ua/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog-ext https://nexus.apps.server-name.dev.registry.eua.gov.ua/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
 
 </databaseChangeLog>
 ----
@@ -70,7 +73,7 @@ TIP: Використовуйте готовий файл _link:{attachmentsdir}
 ====
  https://<link to central Nexus>/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd
 
-* Змінна `<link to central Nexus>` - шлях до Nexus-сервера центральних компонентів (потрібно змінювати, наприклад, при перенесенні реєстру на інший кластер).
+* Змінна `<link to central Nexus>` -- шлях до Nexus-сервера центральних компонентів (потрібно змінювати, наприклад, при перенесенні реєстру на інший кластер).
 ====
 +
 [IMPORTANT]
@@ -293,25 +296,25 @@ CAUTION: При додаванні зовнішніх ключів, зверні
 <databaseChangeLog>
 ...
 ...
-    <changeSet id="table laboratory" author="registry owner">
-        <comment>Створюємо таблицю laboratory</comment>
-        <createTable tableName="laboratory" ext:historyFlag="true">
-            <column name="laboratory_id" type="UUID">
-                <constraints nullable="false"
+	<changeSet id="table laboratory" author="registry owner">
+		<comment>Створюємо таблицю laboratory</comment>
+		<createTable tableName="laboratory" ext:historyFlag="true">
+			<column name="laboratory_id" type="UUID" defaultValueComputed="uuid_generate_v4()">
+				<constraints nullable="false"
                              primaryKey="true"
                              primaryKeyName="pk_laboratory_id"/>
-            </column>
-            <column name="name" type="TEXT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="ownership_id" type="UUID">
-                <constraints nullable="false"
+			</column>
+			<column name="name" type="TEXT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="ownership_id" type="UUID">
+				<constraints nullable="false"
                              foreignKeyName="fk_laboratory_ownership"
                              referencedTableName="ownership"
                              referencedColumnNames="ownership_id"/>
-            </column>
-        </createTable>
-    </changeSet>
+			</column>
+		</createTable>
+	</changeSet>
 </databaseChangeLog>
 ----
 +
@@ -356,6 +359,21 @@ CAUTION: При додаванні зовнішніх ключів, зверні
 Принцип створення подальших таблиць є аналогічним зазначеному в прикладі з таблицею «Лабораторія». Структура параметрів у таблицях, що створюються, однакова для всіх таблиць у цьому завданні.
 ====
 
+[NOTE]
+Зверніть увагу, що при моделюванні імен таблиць чи імен полів таблиць, що складаються з 2-х і більше слів, необхідно використовувати символ `"_"` між словами.
+В іменах таблиць та полів допускається використання літер лише латинського алфавіту.
+*Наприклад*: `staff_status`.
+
+[IMPORTANT]
+====
+Існують обмеження щодо використання ідентифікаторів чи імен таблиць та полів.
+Деякі слова є _ключовими словами (key words)_ у стандартах SQL та PostgreSQL і не дозволені для використання.
+
+Перед використанням імен таблиць, ознайомтеся з https://www.postgresql.org/docs/current/sql-keywords-appendix.html[ключовими словами SQL].
+
+*Наприклад*: таблиця з назвою `user` призведе до несподіваних результатів, адже при виконанні запита `SELECT * FROM user` буде виконаний запит не на таблицю, а на об'єкт Postgres.
+====
+
 === Створення таблиці «КОАТУУ»
 
 За аналогією до пункту xref:create-laboratory-table[Створення таблиці «Лабораторія»], створіть таблицю із назвою «КОАТУУ» (стовпці доступні в link:{attachmentsdir}/study-project/task-2/xml-temp/createTables.xml[_createTables.xml_]):
@@ -392,15 +410,89 @@ CAUTION: При додаванні зовнішніх ключів, зверні
 . Додайте теги `<column>` для кожного стовпця таблиці «Кадровий Склад», визначеної у пункті xref:physical-data-model-actions-plan[План розробки фізичної моделі даних].
 . У тегу `<constraints>` визначте первинний ключ таблиці, всі зовнішні посилання до інших таблиць, а також всі обов'язкові поля.
 
+=== Порядок видалення таблиць
+
+Для видалення таблиці не можна просто видалити `changeSet`, який її створював.
+
+Видалення відбувається шляхом додавання нового `changeSet` для видалення конкретної таблиці та її історичної таблиці (назва історичної таблиці така ж, як в основної, але має суфікс `_hst`. *Приклад*: таблиця `table-name` матиме історичну таблицю `table-name_hst`).
+
+.Приклад видалення таблиці
+[source,xml]
+----
+<changeSet id="drop-table" author="author-name">
+	<dropTable tableName="table-name"/>
+</changeSet>
+----
+
+.Приклад видалення історичної таблиці
+[source,xml]
+----
+<changeSet id="drop-table-hst" author="author-name">
+	<dropTable tableName="table-name_hst"/>
+</changeSet>
+----
+
+Лише після видалення таблиці й історичної таблиці можна створити нову таблицю зі зміненими полями.
+
+[NOTE]
+====
+Важливо також при видаленні таблиці враховувати всі залежні від цієї таблиці об'єкти: `analyticsViews`, `searchConditions`, таблиці з _foreign keys_ до цієї таблиці. Спочатку потрібно видалити усі залежні компоненти у зворотному порядку додавання їх у код, а в самому кінці видалити таблиця та її історичну таблицю.
+
+Процес видалення історичної таблиці, analyticsView і searchConditions подібний до видалення таблиць. Видаляти всі залежні таблиці можна в одному changeSet з урахуванням правильного порядку.
+
+Дізнайтеся більше про кастомні XML-теги на сторінках:
+
+* xref:data-modeling/data/physical-model/liquibase-ddm-ext.adoc[]
+* xref:arch:architecture/libraries/liquibase-ddm-ext/overview.adoc[Бібліотека liquibase-ddm-ext]
+====
+
+[CAUTION]
+====
+При невірній послідовності внесення змін до моделі даних регламенту, можливі помилки під час збірки дата-моделі. Одна із можливих помилок: `"change sets check sum"` свідчить про невірне видалення / додавання таблиць.
+
+За потреби, в процесі розробки регламенту, ви можете виконати xref:registry-admin/regulations-deploy/cleanup-job.adoc[Cleanup] та завантажити заново виправлені `.xml`-файли для розгортання моделі даних. Така можливість передбачена виключно для `dev`-середовища.
+
+Ніколи не робіть cleanup у `production`-середовищі, навіть якщо технічно це можливо!
+====
+
 == Створення критеріїв пошуку для інтеграції з формами бізнес-процесів
 
 *Критерії пошуку (Search Conditions)* -- спеціальні об'єкти, що використовуються формами та бізнес-процесами для отримання набору даних з однієї або декількох таблиць реєстру.
 
-*На рівні бази даних вони реалізовуються через представлення (views)*, визначені SQL-запитом до однієї або декількох таблиць.
+*На рівні бази даних вони реалізуються через представлення (views)*, визначені SQL-запитом до однієї або декількох таблиць.
 
-Для створення критеріїв пошуку *використовується тег* `*<ext:createSearchCondition>*`, розроблений в рамках розширення інструмента створення та керування фізичною моделлю даних Liquibase на Платформі реєстрів.
+Для створення критеріїв пошуку *використовується тег* `*<ext:createSearchCondition>*`, розроблений в рамках розширення інструмента створення та керування фізичною моделлю даних Liquibase на Платформі реєстрів, а також спеціальні xref:registry-develop:data-modeling/data/physical-model/liquibase-ddm-ext.adoc#sc-attribute-values[атрибути критеріїв пошуку].
 
-.Приклад. XML-шаблон використання тегу для створення Критерію Пошуку в БД
+[NOTE]
+====
+Зверніть увагу, що при моделюванні імен критеріїв пошуку, які складаються з двох або більше слів, необхідно використовувати символ `"_"` між словами.
+
+В іменах критеріїв пошуку допускається використання лише літер латинського алфавіту.
+Наприклад: `search_condition_name_contains`.
+
+Розробники самостійно визначають зручний для них формат назв у критеріях пошуку.
+
+Для кращої ідентифікації можна використовувати різний підхід до назв таблиці та пошукових критеріїв. Для пошукових критеріїв можна додавати, наприклад, префікс або суфікс `sc` до назви. Головне -- дотримуватися консистентності в обраному стилі для назв усіх пошукових критеріїв. Таким чином, за назвою буде легше ідентифікувати таблицю та критерій пошуку.
+
+Приклад можливої назви:
+
+* Для таблиці: `ownership`.
+* Для критерію пошуку: `sc_ownership` або `ownership_sc`.
+
+====
+
+[IMPORTANT]
+====
+Використовуйте найкращі практики моделювання даних у реєстрі:
+
+* xref:registry-develop:registry-audit-instruction/modules/dm-audit.adoc#_dm_01[Створюйте індекси, необхідні для оптимальної продуктивності запитів критеріїв пошуку].
+* xref:registry-develop:registry-audit-instruction/modules/dm-audit.adoc#_dm_04[Передавайте лише ті дані, які дійсно необхідні для виконання конкретної операції].
+* xref:registry-develop:registry-audit-instruction/modules/dm-audit.adoc#_dm_05[Завжди вказуйте ліміт при моделюванні критеріїв пошуку].
+* xref:registry-develop:registry-audit-instruction/modules/dm-audit.adoc#_dm_09[Використовуйте можливості пагінації при моделюванні критеріїв пошуку].
+
+====
+
+.Приклад. XML-шаблон використання тегу для створення пошукового критерію в БД
 [source,xml]
 ----
 <changeSet author="registry owner" id="SearchCondition">
@@ -632,19 +724,19 @@ SELECT laboratory.laboratory_id,
 Input parameters: name, edrpou
 ----
 
-=== Пошук співробітника за іменем у таблиці «Кадровий Склад»
+=== Пошук співробітника за іменем у таблиці «Статус співробітника»
 
 * Використовується бізнес-процесом: _Додавання персоналу_.
-* Назва критерію пошуку: *`staff-contains-name`*.
+* Назва критерію пошуку: *`staff-status-contains-name`*.
 * Пошук за полем: *`name`*, тип пошуку: *`contains`*.
 * Сортування за полем: *`name`*, напрямок: *`asc`*.
 
 .Приклад. ХМL-шаблон для створення критерію пошуку
 [source,xml]
 ----
-<changeSet author="registry owner" id="searchCondition staff_contains_name">
-<comment>CREATE search condition staff_contains_name</comment>
-    <ext:createSearchCondition name="staff_contains_name">
+<changeSet author="registry owner" id="searchCondition staff_status_contains_name">
+<comment>CREATE search condition staff_status_contains_name</comment>
+    <ext:createSearchCondition name="staff_status_contains_name">
         <ext:table name="staff_status" alias="s">
             <ext:column name="staff_status_id"/>
             <ext:column name="name" sorting="asc" searchType="contains"/>
@@ -787,7 +879,7 @@ TIP: Використовуйте готовий шаблон _link:{attachments
 
 Щоб правильно розгорнути модель даних вашого реєстру, необхідно обов'язково вказати атрибут *`context="pub"`* в рамках тегу *`<include>`*. Наприклад, ви хочете включити до розгортання моделі файл, що містить процедури наповнення таблиць-довідників первинними даними, -- *_populateDictionaries.xml_*.
 
-.Додавання контексту context="pub" для наповнення таблиць даними
+.Додавання контексту `context="pub"` для наповнення таблиць даними
 =====
 [source,xml]
 ----
@@ -816,23 +908,12 @@ TIP: Використовуйте готовий шаблон _link:{attachments
 ** link:{attachmentsdir}/study-project/task-2/csv-dict/dict_koatuu_workshop.csv[_dict_koatuu_workshop.csv_]
 ====
 
-. Змініть версію регламенту у файлі _settings.yaml_, що розміщується у кореневій папці Gerrit-репозитарію.
-+
-[IMPORTANT]
-====
-Версію регламенту необхідно змінювати кожного разу коли вносяться зміни у data-model.
-
-При зміні бізнес-процесів, конфігурацій, форм чи звітів змінювати версію в `settings.yaml` не потрібно.
-====
-
-. Застосуйте зміни до Gerrit (`commit`, `push`).
+. Застосуйте зміни до Gerrit відповідно до інструкції xref:registry-admin/regulations-deploy/registry-admin-deploy-regulation.adoc#merge-changes-gerrit[Внесення змін до віддаленого репозиторію в Gerrit].
 . Пройдіть процедуру рецензування коду вашого коміту (*Code Review*). У разі відсутності відповідних прав, зверніться до відповідальної особи.
 . Дочекайтеся виконання Jenkins-pipeline *MASTER-Build-registry-regulations*.
 
-[NOTE]
-====
-Корисна документація по роботі з Liquibase:
+== Корисна документація по роботі з Liquibase
 
-* xref:registry-develop:data-modeling/data/physical-model/liquibase-standard-change-types.adoc[];
-* xref:registry-develop:data-modeling/data/physical-model/liquibase-ddm-ext.adoc[].
-====
+* xref:registry-develop:data-modeling/data/physical-model/liquibase-standard-change-types.adoc[]
+* xref:registry-develop:data-modeling/data/physical-model/liquibase-ddm-ext.adoc[]
+* https://www.youtube.com/@user-xs3mb6zt5k/playlists[Навчальні відео по роботі Платформи]

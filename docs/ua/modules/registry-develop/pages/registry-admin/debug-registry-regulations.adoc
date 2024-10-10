@@ -187,7 +187,7 @@ image:registry-admin/debug/debug-registry-regulations-19.png[image,width=1431,he
 
 == Відстеження помилок при розробці бізнес-процесу у Camunda
 
-NOTE: При створенні бізнес-процесів дотримуйтеся xref:https://docs.google.com/document/d/1mxwGDe6VTJZ7qkbJbNYGLMPU5oWsdET1GWJ5KUv-5rg/edit?usp=drive_link[вимог до розробки] й для уникнення помилок сумісності вашої бізнес-моделі з платформними вимогами й налаштуваннями, рекомендується xref:bp-modeling/bp/modeling-options.adoc[початково створювати бізнес-процес у Кабінеті адміністратора].
+NOTE: При створенні бізнес-процесів дотримуйтеся https://docs.google.com/document/d/1mxwGDe6VTJZ7qkbJbNYGLMPU5oWsdET1GWJ5KUv-5rg/edit?usp=drive_link[вимог до розробки] й для уникнення помилок сумісності вашої бізнес-моделі з платформними вимогами й налаштуваннями, рекомендується xref:bp-modeling/bp/modeling-options.adoc[початково створювати бізнес-процес у Кабінеті адміністратора].
 
 === Налаштування плагіна BPMN Linter для Camunda Modeler
 

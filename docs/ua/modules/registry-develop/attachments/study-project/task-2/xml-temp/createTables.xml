@@ -1,12 +1,10 @@
-<?xml version="1.1" encoding="UTF-8" standalone="no"?>
-
-<databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd
-        http://www.liquibase.org/xml/ns/dbchangelog-ext https://nexus.apps.envone.dev.registry.eua.gov.ua/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
-
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd
+                    http://www.liquibase.org/xml/ns/dbchangelog-ext
+                    http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
     <changeSet id="table koatuu" author="registry owner">
         <createTable tableName="koatuu" ext:historyFlag="true">
             <column name="koatuu_id" type="UUID" defaultValueComputed="uuid_generate_v4()">
@@ -47,16 +45,16 @@
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_laboratory_id"/>
             </column>
             <column name="name" type="TEXT">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="koatuu_id" type="UUID">
                 <constraints nullable="false" foreignKeyName="fk_laboratory_koatuu" referencedTableName="koatuu" referencedColumnNames="koatuu_id"/>
             </column>
             <column name="address" type="TEXT">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="edrpou" type="TEXT">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="ownership_id" type="UUID">
                 <constraints nullable="false" foreignKeyName="fk_laboratory_ownership" referencedTableName="ownership" referencedColumnNames="ownership_id"/>
@@ -95,5 +93,4 @@
             <column name="hygienist_certificate_file" type="type_file" remarks="Сертифікат для лікаря з гігієни праці"/>
         </createTable>
     </changeSet>
-
 </databaseChangeLog>
