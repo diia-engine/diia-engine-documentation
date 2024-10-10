@@ -673,7 +673,7 @@
     <a class="nav-link" href="../../registry-admin/regulations-deploy/registry-regulations-structure.html">Структура регламенту реєстру</a>
   </li>
   <li class="nav-item" data-depth="4">
-    <a class="nav-link" href="../../registry-admin/regulations-deploy/registry-admin-deploy-regulation.html">Процес розгортання регламенту в Gerrit</a>
+    <a class="nav-link" href="../../registry-admin/regulations-deploy/registry-admin-deploy-regulation.html">Операції з регламентом в Gerrit</a>
   </li>
   <li class="nav-item" data-depth="4">
     <a class="nav-link" href="../../registry-admin/regulations-deploy/registry-regulations-auto-validation.html">Автоматична валідація змін до регламенту</a>
@@ -3990,6 +3990,7 @@
 <li><a href="#_створення_таблиці_тип_власності">4.4. Створення таблиці «Тип Власності»</a></li>
 <li><a href="#_створення_таблиці_статус_співробітника">4.5. Створення таблиці «Статус Співробітника»</a></li>
 <li><a href="#_створення_таблиці_кадровий_склад">4.6. Створення таблиці «Кадровий склад»</a></li>
+<li><a href="#_порядок_видалення_таблиць">4.7. Порядок видалення таблиць</a></li>
 </ul>
 </li>
 <li><a href="#_створення_критеріїв_пошуку_для_інтеграції_з_формами_бізнес_процесів">5. Створення критеріїв пошуку для інтеграції з формами бізнес-процесів</a>
@@ -4003,12 +4004,29 @@
 <li><a href="#_приклад_створення_критерію_пошуку_2">5.4.2. Приклад створення критерію пошуку №2</a></li>
 </ul>
 </li>
-<li><a href="#_пошук_співробітника_за_іменем_у_таблиці_кадровий_склад">5.5. Пошук співробітника за іменем у таблиці «Кадровий Склад»</a></li>
+<li><a href="#_пошук_співробітника_за_іменем_у_таблиці_статус_співробітника">5.5. Пошук співробітника за іменем у таблиці «Статус співробітника»</a></li>
 </ul>
 </li>
 <li><a href="#initial-data-load">6. Первинне завантаження даних</a></li>
 <li><a href="#_застосування_розробленої_моделі_до_бази_даних">7. Застосування розробленої моделі до бази даних</a></li>
+<li><a href="#_корисна_документація_по_роботі_з_liquibase">8. Корисна документація по роботі з Liquibase</a></li>
 </ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+🌐 Цей документ доступний українською та англійською мовами. Використовуйте перемикач у правому верхньому куті, щоб змінити версію.
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 <div class="sect1">
 <h2 id="_мета_завдання"><a class="anchor" href="#_мета_завдання"></a><a class="link" href="#_мета_завдання">1. Мета завдання</a></h2>
@@ -4043,6 +4061,48 @@
 </div>
 <div class="paragraph">
 <p><span class="image"><img src="../../_images/study-project/task-2/task-2-1-logical-model.png" alt="task 2 1 logical model"></span></p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="ПІДКАЗКА"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>В ході виконання поточного завдання уся необхідна інформація, приклади, файли надаються.</p>
+</div>
+<div class="paragraph">
+<p>Однак ви можете одразу клонувати репозиторій вашого проєкту із регламентом, використовуючи <a href="../../registry-admin/regulations-deploy/registry-admin-deploy-regulation.html" class="xref page">покрокову інструкцію</a>. У регламенті всі <code>.xml</code>-файли для моделювання даних уже створені, зокрема:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>createTables.xml</code>&#8201;&#8212;&#8201;тут створюються таблиці відповідно до логічної моделі даних.</p>
+</li>
+<li>
+<p><code>main-liquibase.xml</code>&#8201;&#8212;&#8201;файл є основним для розгортання моделі даних реєстру. Він містить посилання на інші <code>.xml</code>-файли.</p>
+</li>
+<li>
+<p><code>createSearchConditions.xml</code>&#8201;&#8212;&#8201;тут створюються пошукові критерії, які будуть <code>VIEW</code>-об&#8217;єктами у базі даних реєстру, тобто API-представленнями.</p>
+</li>
+<li>
+<p><code>populateDictionaries.xml</code>&#8201;&#8212;&#8201;файл із БД-функціями для заповнення таблиць-довідників.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>У папці <strong><em>data-model</em></strong> містяться файли <code>createTables.xml</code> та <code>main-liquibase.xml</code> (файл є основним для розгортання моделі даних реєстру).</p>
+</div>
+<div class="paragraph">
+<p>Надалі всі схеми для розгортання БД та API-представлень створюються у папці <strong><em>data-model</em></strong>, CSV-довідники для подальшого наповнення даними таблиць-довідників розміщуються у <strong><em>data-model/data-load</em></strong>.</p>
+</div>
+<div class="paragraph">
+<p>Детальніше про всі налаштування ви дізнаєтеся нижче у цьому документі.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -4102,7 +4162,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd
-        http://www.liquibase.org/xml/ns/dbchangelog-ext https://nexus.apps.envone.dev.registry.eua.gov.ua/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd"&gt;
+        http://www.liquibase.org/xml/ns/dbchangelog-ext https://nexus.apps.server-name.dev.registry.eua.gov.ua/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd"&gt;
 
 &lt;/databaseChangeLog&gt;</code></pre>
 </div>
@@ -4122,7 +4182,7 @@
 <div class="ulist">
 <ul>
 <li>
-<p>Змінна <code>&lt;link to central Nexus&gt;</code> - шлях до Nexus-сервера центральних компонентів (потрібно змінювати, наприклад, при перенесенні реєстру на інший кластер).</p>
+<p>Змінна <code>&lt;link to central Nexus&gt;</code>&#8201;&#8212;&#8201;шлях до Nexus-сервера центральних компонентів (потрібно змінювати, наприклад, при перенесенні реєстру на інший кластер).</p>
 </li>
 </ul>
 </div>
@@ -4543,25 +4603,25 @@
 <pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;databaseChangeLog&gt;
 ...
 ...
-    &lt;changeSet id="table laboratory" author="registry owner"&gt;
-        &lt;comment&gt;Створюємо таблицю laboratory&lt;/comment&gt;
-        &lt;createTable tableName="laboratory" ext:historyFlag="true"&gt;
-            &lt;column name="laboratory_id" type="UUID"&gt;
-                &lt;constraints nullable="false"
+	&lt;changeSet id="table laboratory" author="registry owner"&gt;
+		&lt;comment&gt;Створюємо таблицю laboratory&lt;/comment&gt;
+		&lt;createTable tableName="laboratory" ext:historyFlag="true"&gt;
+			&lt;column name="laboratory_id" type="UUID" defaultValueComputed="uuid_generate_v4()"&gt;
+				&lt;constraints nullable="false"
                              primaryKey="true"
                              primaryKeyName="pk_laboratory_id"/&gt;
-            &lt;/column&gt;
-            &lt;column name="name" type="TEXT"&gt;
-                &lt;constraints nullable="false"/&gt;
-            &lt;/column&gt;
-            &lt;column name="ownership_id" type="UUID"&gt;
-                &lt;constraints nullable="false"
+			&lt;/column&gt;
+			&lt;column name="name" type="TEXT"&gt;
+				&lt;constraints nullable="false"/&gt;
+			&lt;/column&gt;
+			&lt;column name="ownership_id" type="UUID"&gt;
+				&lt;constraints nullable="false"
                              foreignKeyName="fk_laboratory_ownership"
                              referencedTableName="ownership"
                              referencedColumnNames="ownership_id"/&gt;
-            &lt;/column&gt;
-        &lt;/createTable&gt;
-    &lt;/changeSet&gt;
+			&lt;/column&gt;
+		&lt;/createTable&gt;
+	&lt;/changeSet&gt;
 &lt;/databaseChangeLog&gt;</code></pre>
 </div>
 </div>
@@ -4622,6 +4682,41 @@
 <td class="content">
 <div class="paragraph">
 <p>Принцип створення подальших таблиць є аналогічним зазначеному в прикладі з таблицею «Лабораторія». Структура параметрів у таблицях, що створюються, однакова для всіх таблиць у цьому завданні.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+Зверніть увагу, що при моделюванні імен таблиць чи імен полів таблиць, що складаються з 2-х і більше слів, необхідно використовувати символ <code>"_"</code> між словами.
+В іменах таблиць та полів допускається використання літер лише латинського алфавіту.
+<strong>Наприклад</strong>: <code>staff_status</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="ВАЖЛИВО"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Існують обмеження щодо використання ідентифікаторів чи імен таблиць та полів.
+Деякі слова є <em>ключовими словами (key words)</em> у стандартах SQL та PostgreSQL і не дозволені для використання.</p>
+</div>
+<div class="paragraph">
+<p>Перед використанням імен таблиць, ознайомтеся з <a href="https://www.postgresql.org/docs/current/sql-keywords-appendix.html">ключовими словами SQL</a>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Наприклад</strong>: таблиця з назвою <code>user</code> призведе до несподіваних результатів, адже при виконанні запита <code>SELECT * FROM user</code> буде виконаний запит не на таблицю, а на об&#8217;єкт Postgres.</p>
 </div>
 </td>
 </tr>
@@ -4716,6 +4811,84 @@
 </ol>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_порядок_видалення_таблиць"><a class="anchor" href="#_порядок_видалення_таблиць"></a><a class="link" href="#_порядок_видалення_таблиць">4.7. Порядок видалення таблиць</a></h3>
+<div class="paragraph">
+<p>Для видалення таблиці не можна просто видалити <code>changeSet</code>, який її створював.</p>
+</div>
+<div class="paragraph">
+<p>Видалення відбувається шляхом додавання нового <code>changeSet</code> для видалення конкретної таблиці та її історичної таблиці (назва історичної таблиці така ж, як в основної, але має суфікс <code>_hst</code>. <strong>Приклад</strong>: таблиця <code>table-name</code> матиме історичну таблицю <code>table-name_hst</code>).</p>
+</div>
+<div class="listingblock">
+<div class="title">Приклад видалення таблиці</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;changeSet id="drop-table" author="author-name"&gt;
+	&lt;dropTable tableName="table-name"/&gt;
+&lt;/changeSet&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Приклад видалення історичної таблиці</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;changeSet id="drop-table-hst" author="author-name"&gt;
+	&lt;dropTable tableName="table-name_hst"/&gt;
+&lt;/changeSet&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Лише після видалення таблиці й історичної таблиці можна створити нову таблицю зі зміненими полями.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Важливо також при видаленні таблиці враховувати всі залежні від цієї таблиці об&#8217;єкти: <code>analyticsViews</code>, <code>searchConditions</code>, таблиці з <em>foreign keys</em> до цієї таблиці. Спочатку потрібно видалити усі залежні компоненти у зворотному порядку додавання їх у код, а в самому кінці видалити таблиця та її історичну таблицю.</p>
+</div>
+<div class="paragraph">
+<p>Процес видалення історичної таблиці, analyticsView і searchConditions подібний до видалення таблиць. Видаляти всі залежні таблиці можна в одному changeSet з урахуванням правильного порядку.</p>
+</div>
+<div class="paragraph">
+<p>Дізнайтеся більше про кастомні XML-теги на сторінках:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../../data-modeling/data/physical-model/liquibase-ddm-ext.html" class="xref page">Розширення Liquibase для моделювання даних</a></p>
+</li>
+<li>
+<p><a href="../../../arch/architecture/libraries/liquibase-ddm-ext/overview.html" class="xref page">Бібліотека liquibase-ddm-ext</a></p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="УВАГА"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>При невірній послідовності внесення змін до моделі даних регламенту, можливі помилки під час збірки дата-моделі. Одна із можливих помилок: <code>"change sets check sum"</code> свідчить про невірне видалення / додавання таблиць.</p>
+</div>
+<div class="paragraph">
+<p>За потреби, в процесі розробки регламенту, ви можете виконати <a href="../../registry-admin/regulations-deploy/cleanup-job.html" class="xref page">Cleanup</a> та завантажити заново виправлені <code>.xml</code>-файли для розгортання моделі даних. Така можливість передбачена виключно для <code>dev</code>-середовища.</p>
+</div>
+<div class="paragraph">
+<p>Ніколи не робіть cleanup у <code>production</code>-середовищі, навіть якщо технічно це можливо!</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -4725,13 +4898,80 @@
 <p><strong>Критерії пошуку (Search Conditions)</strong>&#8201;&#8212;&#8201;спеціальні об&#8217;єкти, що використовуються формами та бізнес-процесами для отримання набору даних з однієї або декількох таблиць реєстру.</p>
 </div>
 <div class="paragraph">
-<p><strong>На рівні бази даних вони реалізовуються через представлення (views)</strong>, визначені SQL-запитом до однієї або декількох таблиць.</p>
+<p><strong>На рівні бази даних вони реалізуються через представлення (views)</strong>, визначені SQL-запитом до однієї або декількох таблиць.</p>
 </div>
 <div class="paragraph">
-<p>Для створення критеріїв пошуку <strong>використовується тег</strong> <code><strong>&lt;ext:createSearchCondition&gt;</strong></code>, розроблений в рамках розширення інструмента створення та керування фізичною моделлю даних Liquibase на Платформі реєстрів.</p>
+<p>Для створення критеріїв пошуку <strong>використовується тег</strong> <code><strong>&lt;ext:createSearchCondition&gt;</strong></code>, розроблений в рамках розширення інструмента створення та керування фізичною моделлю даних Liquibase на Платформі реєстрів, а також спеціальні <a href="../../data-modeling/data/physical-model/liquibase-ddm-ext.html#sc-attribute-values" class="xref page">атрибути критеріїв пошуку</a>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Зверніть увагу, що при моделюванні імен критеріїв пошуку, які складаються з двох або більше слів, необхідно використовувати символ <code>"_"</code> між словами.</p>
+</div>
+<div class="paragraph">
+<p>В іменах критеріїв пошуку допускається використання лише літер латинського алфавіту.
+Наприклад: <code>search_condition_name_contains</code>.</p>
+</div>
+<div class="paragraph">
+<p>Розробники самостійно визначають зручний для них формат назв у критеріях пошуку.</p>
+</div>
+<div class="paragraph">
+<p>Для кращої ідентифікації можна використовувати різний підхід до назв таблиці та пошукових критеріїв. Для пошукових критеріїв можна додавати, наприклад, префікс або суфікс <code>sc</code> до назви. Головне&#8201;&#8212;&#8201;дотримуватися консистентності в обраному стилі для назв усіх пошукових критеріїв. Таким чином, за назвою буде легше ідентифікувати таблицю та критерій пошуку.</p>
+</div>
+<div class="paragraph">
+<p>Приклад можливої назви:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Для таблиці: <code>ownership</code>.</p>
+</li>
+<li>
+<p>Для критерію пошуку: <code>sc_ownership</code> або <code>ownership_sc</code>.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="ВАЖЛИВО"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Використовуйте найкращі практики моделювання даних у реєстрі:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../../registry-audit-instruction/modules/dm-audit.html#_dm_01" class="xref page">Створюйте індекси, необхідні для оптимальної продуктивності запитів критеріїв пошуку</a>.</p>
+</li>
+<li>
+<p><a href="../../registry-audit-instruction/modules/dm-audit.html#_dm_04" class="xref page">Передавайте лише ті дані, які дійсно необхідні для виконання конкретної операції</a>.</p>
+</li>
+<li>
+<p><a href="../../registry-audit-instruction/modules/dm-audit.html#_dm_05" class="xref page">Завжди вказуйте ліміт при моделюванні критеріїв пошуку</a>.</p>
+</li>
+<li>
+<p><a href="../../registry-audit-instruction/modules/dm-audit.html#_dm_09" class="xref page">Використовуйте можливості пагінації при моделюванні критеріїв пошуку</a>.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
-<div class="title">Приклад. XML-шаблон використання тегу для створення Критерію Пошуку в БД</div>
+<div class="title">Приклад. XML-шаблон використання тегу для створення пошукового критерію в БД</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;changeSet author="registry owner" id="SearchCondition"&gt;
     &lt;ext:createSearchCondition name="SearchCondition" limit="1"&gt;
@@ -5043,14 +5283,14 @@ Input parameters: name, edrpou</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_пошук_співробітника_за_іменем_у_таблиці_кадровий_склад"><a class="anchor" href="#_пошук_співробітника_за_іменем_у_таблиці_кадровий_склад"></a><a class="link" href="#_пошук_співробітника_за_іменем_у_таблиці_кадровий_склад">5.5. Пошук співробітника за іменем у таблиці «Кадровий Склад»</a></h3>
+<h3 id="_пошук_співробітника_за_іменем_у_таблиці_статус_співробітника"><a class="anchor" href="#_пошук_співробітника_за_іменем_у_таблиці_статус_співробітника"></a><a class="link" href="#_пошук_співробітника_за_іменем_у_таблиці_статус_співробітника">5.5. Пошук співробітника за іменем у таблиці «Статус співробітника»</a></h3>
 <div class="ulist">
 <ul>
 <li>
 <p>Використовується бізнес-процесом: <em>Додавання персоналу</em>.</p>
 </li>
 <li>
-<p>Назва критерію пошуку: <strong><code>staff-contains-name</code></strong>.</p>
+<p>Назва критерію пошуку: <strong><code>staff-status-contains-name</code></strong>.</p>
 </li>
 <li>
 <p>Пошук за полем: <strong><code>name</code></strong>, тип пошуку: <strong><code>contains</code></strong>.</p>
@@ -5063,9 +5303,9 @@ Input parameters: name, edrpou</code></pre>
 <div class="listingblock">
 <div class="title">Приклад. ХМL-шаблон для створення критерію пошуку</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;changeSet author="registry owner" id="searchCondition staff_contains_name"&gt;
-&lt;comment&gt;CREATE search condition staff_contains_name&lt;/comment&gt;
-    &lt;ext:createSearchCondition name="staff_contains_name"&gt;
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;changeSet author="registry owner" id="searchCondition staff_status_contains_name"&gt;
+&lt;comment&gt;CREATE search condition staff_status_contains_name&lt;/comment&gt;
+    &lt;ext:createSearchCondition name="staff_status_contains_name"&gt;
         &lt;ext:table name="staff_status" alias="s"&gt;
             &lt;ext:column name="staff_status_id"/&gt;
             &lt;ext:column name="name" sorting="asc" searchType="contains"/&gt;
@@ -5361,7 +5601,7 @@ Input parameters: name, edrpou</code></pre>
 <p>Щоб правильно розгорнути модель даних вашого реєстру, необхідно обов&#8217;язково вказати атрибут <strong><code>context="pub"</code></strong> в рамках тегу <strong><code>&lt;include&gt;</code></strong>. Наприклад, ви хочете включити до розгортання моделі файл, що містить процедури наповнення таблиць-довідників первинними даними,&#8201;&#8212;&#8201;<strong><em>populateDictionaries.xml</em></strong>.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Приклад 2. Додавання контексту context="pub" для наповнення таблиць даними</div>
+<div class="title">Приклад 2. Додавання контексту <code>context="pub"</code> для наповнення таблиць даними</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -5438,27 +5678,7 @@ Input parameters: name, edrpou</code></pre>
 </div>
 </li>
 <li>
-<p>Змініть версію регламенту у файлі <em>settings.yaml</em>, що розміщується у кореневій папці Gerrit-репозитарію.</p>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="ВАЖЛИВО"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>Версію регламенту необхідно змінювати кожного разу коли вносяться зміни у data-model.</p>
-</div>
-<div class="paragraph">
-<p>При зміні бізнес-процесів, конфігурацій, форм чи звітів змінювати версію в <code>settings.yaml</code> не потрібно.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-</li>
-<li>
-<p>Застосуйте зміни до Gerrit (<code>commit</code>, <code>push</code>).</p>
+<p>Застосуйте зміни до Gerrit відповідно до інструкції <a href="../../registry-admin/regulations-deploy/registry-admin-deploy-regulation.html#merge-changes-gerrit" class="xref page">Внесення змін до віддаленого репозиторію в Gerrit</a>.</p>
 </li>
 <li>
 <p>Пройдіть процедуру рецензування коду вашого коміту (<strong>Code Review</strong>). У разі відсутності відповідних прав, зверніться до відповідальної особи.</p>
@@ -5471,29 +5691,23 @@ Input parameters: name, edrpou</code></pre>
 </dd>
 </dl>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="ПРИМІТКА"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>Корисна документація по роботі з Liquibase:</p>
 </div>
+</div>
+<div class="sect1">
+<h2 id="_корисна_документація_по_роботі_з_liquibase"><a class="anchor" href="#_корисна_документація_по_роботі_з_liquibase"></a><a class="link" href="#_корисна_документація_по_роботі_з_liquibase">8. Корисна документація по роботі з Liquibase</a></h2>
+<div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p><a href="../../data-modeling/data/physical-model/liquibase-standard-change-types.html" class="xref page">Перелік стандартних тегів Liquibase</a>;</p>
+<p><a href="../../data-modeling/data/physical-model/liquibase-standard-change-types.html" class="xref page">Перелік стандартних тегів Liquibase</a></p>
 </li>
 <li>
-<p><a href="../../data-modeling/data/physical-model/liquibase-ddm-ext.html" class="xref page">Розширення Liquibase для моделювання даних</a>.</p>
+<p><a href="../../data-modeling/data/physical-model/liquibase-ddm-ext.html" class="xref page">Розширення Liquibase для моделювання даних</a></p>
+</li>
+<li>
+<p><a href="https://www.youtube.com/@user-xs3mb6zt5k/playlists">Навчальні відео по роботі Платформи</a></p>
 </li>
 </ul>
-</div>
-</td>
-</tr>
-</table>
 </div>
 </div>
 </div>
