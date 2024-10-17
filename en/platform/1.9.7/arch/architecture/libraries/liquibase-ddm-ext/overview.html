@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>liquibase-ddm-ext library :: Platform for deployment and maintenance of state electronic registers</title>
+    <title>Library liquibase-ddm-ext :: Platform for deployment and maintenance of state electronic registers</title>
     <meta name="generator" content="Antora 3.1.1">
     <link rel="stylesheet" href="../../../../../../_/css/site.css">
   </head>
@@ -2309,7 +2309,7 @@
   <div class="toc-menu"></div>
 </aside>
             <article class="doc">
-<h1 class="page">liquibase-ddm-ext library</h1>
+<h1 class="page">Library <em>liquibase-ddm-ext</em></h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="admonitionblock note">
@@ -2398,7 +2398,7 @@
 <p><strong>liquibase-ext-schema</strong> - extended XSD-scheme of Liquibase tags and attributes that may be used in <strong>Platform</strong> registry development. It is included in all regulations files processed by Liquibase using <em>liquibase-ddm-ext</em></p>
 </li>
 <li>
-<p><strong>service-generation-utility</strong> - generates the <em>registry-model</em>, <em>registry-rest-api</em>, <em>registry-kafka-api</em>, and <em>registry-soap-api</em> services, using database scheme, filled by Liquibase using <em>liquibase-ddm-ext</em></p>
+<p><strong>service-generation-utility</strong> - generates the <em>registry-model</em>, <em>registry-rest-api</em> and <em>registry-soap-api</em> services, using database scheme, filled by Liquibase using <em>liquibase-ddm-ext</em></p>
 </li>
 </ul>
 </div>
@@ -2482,7 +2482,8 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>dropColumn</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">рextends the logic of Liquibase-tag for the deletion of a column from a table in DB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Not supported by the Platform.</strong>
+When you use the <code>dropColumn</code> tag, you&#8217;ll get a validation error: <code>'dropColumn' is not allowed</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>dropDomain</code></p></td>
