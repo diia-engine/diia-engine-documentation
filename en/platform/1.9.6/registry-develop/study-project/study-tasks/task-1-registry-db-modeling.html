@@ -2304,8 +2304,8 @@
 <li><a href="#_table_creation_order">4.3.3. Table creation order</a></li>
 <li><a href="#_usage_of_extisobject_and_extclassify_attributes">4.3.4. Usage of <code>ext:isObject</code> and <code>ext:classify</code> attributes</a>
 <ul class="sectlevel4">
-<li><a href="#_using_the_attribute_extisobjecttrue">4.3.4.1. Using the attribute <code>ext:isObject="true"</code></a></li>
-<li><a href="#_using_the_extclassify_tag">4.3.4.2. Using the <code>ext:classify</code> tag</a></li>
+<li><a href="#is-object">4.3.4.1. Using the attribute <code>ext:isObject</code></a></li>
+<li><a href="#ext-classify">4.3.4.2. Using the <code>ext:classify</code> tag</a></li>
 </ul>
 </li>
 <li><a href="#_field_definitions">4.3.5. Field definitions</a></li>
@@ -3133,7 +3133,7 @@ Ensure the <code>registry.subject</code> table is created, i.e., add the corresp
 <div class="sect3">
 <h4 id="_usage_of_extisobject_and_extclassify_attributes"><a class="anchor" href="#_usage_of_extisobject_and_extclassify_attributes"></a><a class="link" href="#_usage_of_extisobject_and_extclassify_attributes">4.3.4. Usage of <code>ext:isObject</code> and <code>ext:classify</code> attributes</a></h4>
 <div class="sect4">
-<h5 id="_using_the_attribute_extisobjecttrue"><a class="anchor" href="#_using_the_attribute_extisobjecttrue"></a><a class="link" href="#_using_the_attribute_extisobjecttrue">4.3.4.1. Using the attribute <code>ext:isObject="true"</code></a></h5>
+<h5 id="is-object"><a class="anchor" href="#is-object"></a><a class="link" href="#is-object">4.3.4.1. Using the attribute <code>ext:isObject</code></a></h5>
 <div class="paragraph">
 <p>If a table contains the <code>ext:isObject="true"</code> attribute, it will receive a <code>subject_id</code> field, which acts as a foreign key to the <code>registry.subject</code> table. This field will have the <code>nullable="false"</code> constraint, meaning it is required.</p>
 </div>
@@ -3159,7 +3159,7 @@ If the <code>registry.subject</code> table is not part of the regulation, avoid 
 </div>
 </div>
 <div class="sect4">
-<h5 id="_using_the_extclassify_tag"><a class="anchor" href="#_using_the_extclassify_tag"></a><a class="link" href="#_using_the_extclassify_tag">4.3.4.2. Using the <code>ext:classify</code> tag</a></h5>
+<h5 id="ext-classify"><a class="anchor" href="#ext-classify"></a><a class="link" href="#ext-classify">4.3.4.2. Using the <code>ext:classify</code> tag</a></h5>
 <div class="paragraph">
 <p>The <code>ext:classify</code> tag also automatically adds the <code>isObject="true"</code> attribute
 and creates a <code>subject_id</code> field referencing the <code>registry.subject</code> table.

@@ -3291,8 +3291,8 @@
 <li><a href="#_порядок_створення">4.3.3. Порядок створення</a></li>
 <li><a href="#_використання_атрибутів_extisobject_та_extclassify">4.3.4. Використання атрибутів <code>ext:isObject</code> та <code>ext:classify</code></a>
 <ul class="sectlevel4">
-<li><a href="#_атрибут_extisobjecttrue">4.3.4.1. Атрибут <code>ext:isObject="true"</code></a></li>
-<li><a href="#_використання_тегу_extclassify">4.3.4.2. Використання тегу <code>ext:classify</code></a></li>
+<li><a href="#is-object">4.3.4.1. Атрибут <code>ext:isObject</code></a></li>
+<li><a href="#ext-classify">4.3.4.2. Використання тегу <code>ext:classify</code></a></li>
 </ul>
 </li>
 <li><a href="#_призначення_полів">4.3.5. Призначення полів</a></li>
@@ -4118,7 +4118,7 @@
 <div class="sect3">
 <h4 id="_використання_атрибутів_extisobject_та_extclassify"><a class="anchor" href="#_використання_атрибутів_extisobject_та_extclassify"></a><a class="link" href="#_використання_атрибутів_extisobject_та_extclassify">4.3.4. Використання атрибутів <code>ext:isObject</code> та <code>ext:classify</code></a></h4>
 <div class="sect4">
-<h5 id="_атрибут_extisobjecttrue"><a class="anchor" href="#_атрибут_extisobjecttrue"></a><a class="link" href="#_атрибут_extisobjecttrue">4.3.4.1. Атрибут <code>ext:isObject="true"</code></a></h5>
+<h5 id="is-object"><a class="anchor" href="#is-object"></a><a class="link" href="#is-object">4.3.4.1. Атрибут <code>ext:isObject</code></a></h5>
 <div class="paragraph">
 <p>Якщо таблиця містить атрибут <code>ext:isObject="true"</code>, вона отримує поле <code>subject_id</code>, яке є зовнішнім ключем до таблиці <code>registry.subject</code>. Це поле має обмеження <code>nullable="false"</code>, що вимагає обов&#8217;язкового заповнення.</p>
 </div>
@@ -4142,7 +4142,7 @@
 </div>
 </div>
 <div class="sect4">
-<h5 id="_використання_тегу_extclassify"><a class="anchor" href="#_використання_тегу_extclassify"></a><a class="link" href="#_використання_тегу_extclassify">4.3.4.2. Використання тегу <code>ext:classify</code></a></h5>
+<h5 id="ext-classify"><a class="anchor" href="#ext-classify"></a><a class="link" href="#ext-classify">4.3.4.2. Використання тегу <code>ext:classify</code></a></h5>
 <div class="paragraph">
 <p>Тег <code>ext:classify</code> також автоматично додає атрибут <code>isObject="true"</code> і створює поле <code>subject_id</code> з посиланням на таблицю <code>registry.subject</code>. Наприклад:</p>
 </div>
