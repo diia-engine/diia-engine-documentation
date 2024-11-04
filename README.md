@@ -1,6 +1,6 @@
 # Developing and maintaining technical product documentation
 
-## Description of tools
+## testDescription of tools
 
 The development of documentation is conducted using the following tools:
 
