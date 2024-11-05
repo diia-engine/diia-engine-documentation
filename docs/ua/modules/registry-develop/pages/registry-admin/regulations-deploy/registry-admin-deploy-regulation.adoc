@@ -11,7 +11,7 @@ include::platform:ROOT:partial$admonitions/language-ua.adoc[]
 
 * Встановіть https://git-scm.com/downloads[Git та Git Bash-консоль].
 * Рекомендуємо встановити середовище розробки https://www.jetbrains.com/idea/download/[IntelliJ IDEA].
-* Рекомендуємо встановити https://plugins.jetbrains.com/plugin/7272-gerrit[плагін Gerrit] для IntelliJ IDEA.
+* Рекомендуємо встановити плагін https://plugins.jetbrains.com/plugin/7272-gerrit[Gerrit] для IntelliJ IDEA.
 
 TIP: Детальний список рекомендованих інструментів для розробників та адміністраторів реєстру ви можете переглянути на сторінці xref:registry-develop:study-project/index.adoc#preconditions-setup[Навчальний курс для розробників цифрового регламенту реєстру: що необхідно для початку роботи].
 
