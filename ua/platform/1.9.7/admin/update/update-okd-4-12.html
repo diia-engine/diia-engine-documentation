@@ -4899,7 +4899,7 @@ $ oc delete secret -n openshift-etcd etcd-serving-metrics-ip-10-0-131-183.ec2.in
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nodes -o wide.</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get nodes -o wide.</code></pre>
 </div>
 </div>
 </td>
@@ -4908,16 +4908,15 @@ $ oc delete secret -n openshift-etcd etcd-serving-metrics-ip-10-0-131-183.ec2.in
 </div>
 </li>
 <li>
-<p>Після підключення до проблемної ноди через <strong>SSH</strong>, введіть наступну команду у терміналі цієї ноди для тимчасового переведення <strong>SELinux</strong> в <strong>Permissive</strong> режим та відновлення налаштувань контекстів безпеки всіх файлів та директорій за замовчуванням:</p>
+<p>Після підключення до проблемної ноди через <strong>SSH</strong>, введіть наступну команду у терміналі цієї ноди для відновлення налаштувань контекстів безпеки всіх файлів та директорій за замовчуванням:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ setenforce 0
-$ restorecon -R -v /etc/NetworkManager/dispatcher.d/</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ restorecon -R -v /etc/NetworkManager/dispatcher.d/</code></pre>
 </div>
 </div>
 </li>
 <li>
-<p>Після виконання команди перезапустіть ноду через <strong>vSphere Client</strong> за шляхом <strong>Power</strong> &gt; <strong>Restart Guest OS</strong>, що в свою чергу відновить значення налаштування режиму <strong>SELinux = Enforcing</strong>.</p>
+<p>Після виконання команди перезапустіть ноду через <strong>vSphere Client</strong> за шляхом <strong>Power</strong> &gt; <strong>Restart Guest OS</strong>.</p>
 <div class="paragraph">
 <p><span class="image"><img src="../_images/infrastructure/update-okd/update-okd-16.png" alt="update okd 16"></span></p>
 </div>
@@ -4950,7 +4949,37 @@ $ restorecon -R -v /etc/NetworkManager/dispatcher.d/</code></pre>
 </div>
 </li>
 <li>
+<p>В якості додаткового кроку вирішення проблеми з нодами в <code>Not Ready</code> статусі в разі, якщо попердні кроки не спрацювали, можна виконати тимчасове переведення <code>SELinux</code> в <code>Permissive</code> режим. Для цього необхідно виконати наступну команду на кожній ноді в статусі <code>Not Ready</code>, підключившись до неї через <strong>SSH</strong>. Додаткове перезавантаження ноди не потрібне:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ setenforce 0
+$ systemctl restart NetworkManager</code></pre>
+</div>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="УВАГА"></i>
+</td>
+<td class="content">
+Переведення <strong>SELinux</strong> в <strong>Permissive</strong> режим можливо лише тимчасово в ході процесу оновлення. Очікується, що режим <strong>SELinux</strong> автоматично зміниться на <strong>Enforcing</strong> в ході наступних кроків оновлення <strong>OKD</strong> версії, а саме <strong>п.14</strong>.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
 <p>Дочекайтеся оновлення OKD до версії <code>4.12.0-0.okd-2023-03-18-084815</code>.</p>
+</li>
+<li>
+<p>Якщо ви плануєте зробити перерву і не продовжувати оновлення на <strong>OKD</strong> версію <code>4.12.0-0.okd-2023-04-16-041331</code> одномоментно, рекомендується повернути режим на <strong>Enforcing</strong> самостійно. Для цього дочекайтесь успішного оновлення до версії <code>4.12.0-0.okd-2023-03-18-084815</code> та виконайте наступні команди в терміналі ноди:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ setenforce 1
+$ systemctl restart NetworkManager</code></pre>
+</div>
+</div>
 </li>
 </ol>
 </div>
