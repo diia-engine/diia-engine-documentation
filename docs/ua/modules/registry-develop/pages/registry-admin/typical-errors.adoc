@@ -389,7 +389,7 @@ image:registry-develop:registry-admin/typical-errors/typical-errors-49.png[]
 
 Після внесення змін до бізнес-процесу збережіть їх у віддаленому репозиторії *Gerrit* та дочекайтесь успішної збірки.
 
-NOTE: Логування скриптових задач описано у розділі xref:registry-develop:registry-admin/debug-registry-regulations.adoc#_вивід_даних_groovy_скрипта_у_консоль["Вивід даних groovy скрипта у консоль"]. Перегляд помилок у логах контейнерів, які відповідають за бізнес-процеси, можна знайти у розділі xref:registry-develop:registry-admin/debug-registry-regulations.adoc#openshift-pods[OpenShift Pods].
+NOTE: Логування скриптових задач описано у розділі xref:registry-develop:registry-admin/debug-registry-regulations.adoc#groovy-console-output[Вивід даних groovy скрипта у консоль]. Перегляд помилок у логах контейнерів, які відповідають за бізнес-процеси, можна знайти у розділі xref:registry-develop:registry-admin/debug-registry-regulations.adoc#openshift-pods[OpenShift Pods].
 
 [IMPORTANT]
 ====
