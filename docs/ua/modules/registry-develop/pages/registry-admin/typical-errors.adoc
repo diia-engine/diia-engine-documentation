@@ -146,16 +146,16 @@ image:registry-develop:registry-admin/typical-errors/typical-errors-50.png[image
 
 *Приклад*
 
-Ви виконали `git commit` та `git push`, але на етапі рецензування коду виникла помилка в пайплайні *MASTER-Code-review-registry-regulations*.
-
+. Ви виконали `git commit` та `git push`, але на етапі рецензування коду виникла помилка в пайплайні *MASTER-Code-review-registry-regulations*.
++
 image:registry-develop:registry-admin/typical-errors/typical-errors-37.png[image,width=1915,height=985]
 
-Опісля ви додали кілька змін без помилок. У Gerrit це виглядає так:
-
+. Опісля ви додали кілька змін без помилок. У Gerrit це виглядає так:
++
 image:registry-develop:registry-admin/typical-errors/typical-errors-36.png[image,width=1916,height=299]
 
-Якщо перейти до останньої зміни, можна побачити перелік конфліктів, які потрібно розв'язати для продовження роботи.
-
+. Якщо перейти до останньої зміни, можна побачити перелік конфліктів, які потрібно розв'язати для продовження роботи.
++
 image:registry-develop:registry-admin/typical-errors/typical-errors-31.png[image,width=1919,height=988]
 
 *Алгоритм усунення*
