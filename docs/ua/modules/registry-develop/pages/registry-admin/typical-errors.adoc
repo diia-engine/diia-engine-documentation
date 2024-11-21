@@ -281,10 +281,9 @@ image:registry-develop:registry-admin/typical-errors/typical-errors-17.png[image
 
 TIP: Детальний опис порядку змін у таблицях можна знайти на сторінці xref:data-modeling/data/physical-model/data-model-changes-algorithm.adoc[].
 
-== Помилки при роботі із бізнес-процесами та з додатком Camunda
+== Помилки при роботі з бізнес-процесами та додатком Camunda
 
 IMPORTANT: Щоб уникнути помилок під час роботи з Camunda і збереження файлів бізнес-процесів, необхідно правильно створювати файли `.bpmn`. Рекомендований спосіб створення файлів бізнес-процесів можна знайти на сторінці xref:bp-modeling/bp/modeling-options.adoc[].
-
 
 ==== Бізнес-процес не відкривається
 
