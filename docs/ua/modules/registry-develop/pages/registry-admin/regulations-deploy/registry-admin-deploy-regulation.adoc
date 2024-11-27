@@ -287,5 +287,7 @@ image:registry-admin/regulations-deploy/registry-deploy-regulation-11.png[]
 
 . У процесі збірки *MASTER-Build-registry-regulations* окремим етапом запуститься пайплайн *MASTER-Build-registry-regulations-data-model*. Він вносить зміни до налаштувань елементів моделі даних у регламенті реєстру, зокрема `registry-model`, `registry-kafka-api`, `registry-rest-api` та `registry-soap-api`.
 
-NOTE: У разі виникнення помилок на етапі збірки регламенту реєстру, необхідно провести дебаг для їх виявлення помилок та виправлення.
-Детальніше про проведення дебагу читайте на сторінці xref:registry-admin/debug-registry-regulations.adoc[].
+TIP: Повний опис xref:arch:archive/registry-regulations-deployment.adoc[моделі розгортання регламенту та пайплайн публікацій].
+
+NOTE: У разі виникнення помилок на етапі збірки регламенту реєстру, необхідно провести дебаг для їх виявлення та виправлення.
+Детальніше про проведення дебагу читайте на сторінці xref:registry-admin/debug-registry-regulations.adoc#jenkins-debug[Дебаг під час моделювання регламенту реєстру].
