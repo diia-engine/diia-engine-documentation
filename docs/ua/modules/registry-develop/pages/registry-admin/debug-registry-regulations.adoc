@@ -19,7 +19,7 @@ TIP: Детальніше про типові помилки, з якими зі
 
 == Відстеження помилок при розробці *data-model*
 
-NOTE: Розробник має керуватися загальними https://docs.google.com/document/d/1mxwGDe6VTJZ7qkbJbNYGLMPU5oWsdET1GWJ5KUv-5rg/edit?usp=sharing[вимогами щодо створення моделі даних].
+NOTE: Розробник має керуватися загальними xref:registry-develop:study-project/requirements-and-recommendations.adoc[вимогами щодо створення моделі даних].
 
 IMPORTANT: При створенні *changeSet* розробник має брати до уваги наявні обмеження на використання ідентифікаторів чи імен таблиць та полів. Детальніше про ключові слова див. за посиланням: https://www.postgresql.org/docs/current/sql-keywords-appendix.html[]
 
