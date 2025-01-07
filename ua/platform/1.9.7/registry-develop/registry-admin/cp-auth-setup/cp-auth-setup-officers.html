@@ -3989,13 +3989,14 @@
 <ul class="sectlevel1">
 <li><a href="#_загальний_опис">1. Загальний опис</a></li>
 <li><a href="#_автентифікація_за_допомогою_віджета_iit">2. Автентифікація за допомогою віджета IIT</a></li>
-<li><a href="#_автентифікація_за_допомогою_id_gov_ua">3. Автентифікація за допомогою id.gov.ua</a>
+<li><a href="#id-gov-ua-auth">3. Автентифікація за допомогою id.gov.ua</a>
 <ul class="sectlevel2">
 <li><a href="#_передумови">3.1. Передумови</a></li>
 <li><a href="#_налаштування">3.2. Налаштування</a></li>
 </ul>
 </li>
-<li><a href="#_повязані_сторінки">4. Пов&#8217;язані сторінки</a></li>
+<li><a href="#_перевірка_результату">4. Перевірка результату</a></li>
+<li><a href="#_повязані_сторінки">5. Пов&#8217;язані сторінки</a></li>
 </ul>
 </div>
 <div id="preamble">
@@ -4084,7 +4085,7 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </li>
 <li>
-<p>Перейдіть до розділу <span class="underline">Реєстри</span>, відкрийте необхідний та натисніть <code>РЕДАГУВАТИ</code>.</p>
+<p>Перейдіть до розділу <strong>Реєстри</strong>, відкрийте необхідний та натисніть <strong>Редагувати</strong>.</p>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -4107,11 +4108,11 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </li>
 <li>
-<p>Оберіть секцію <span class="underline">Автентифікація надавачів послуг</span> та виконайте налаштування:</p>
+<p>Оберіть секцію <strong>Автентифікація надавачів послуг</strong> та виконайте налаштування:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><span class="underline">Вкажіть тип автентифікації</span>&#8201;&#8212;&#8201;<code>Віджет</code>. Цей тип призначений для автентифікації посадових осіб за допомогою КЕП на формі входу до Кабінету.</p>
+<p><strong>Вкажіть тип автентифікації</strong>&#8201;&#8212;&#8201;<code>Віджет</code>. Цей тип призначений для автентифікації посадових осіб за допомогою КЕП на формі входу до Кабінету.</p>
 <div class="admonitionblock tip">
 <table>
 <tr>
@@ -4126,7 +4127,7 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </li>
 <li>
-<p><span class="underline">Додайте посилання до ресурсу із віджетом</span>. Стандартний IIT-віджет має такий URL: <a href="https://eu.iit.com.ua/sign-widget/v20200922/" class="bare">https://eu.iit.com.ua/sign-widget/v20200922/</a>.</p>
+<p><strong>Додайте посилання до ресурсу із віджетом</strong>. Стандартний IIT-віджет має такий URL: <a href="https://eu.iit.com.ua/sign-widget/v20200922/" class="bare">https://eu.iit.com.ua/sign-widget/v20200922/</a>.</p>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -4164,13 +4165,13 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </li>
 <li>
-<p>Натисніть <kbd>Підтвердити</kbd>, щоб зберегти налаштування.</p>
+<p>Натисніть <strong>Підтвердити</strong>, щоб зберегти налаштування.</p>
 <div class="paragraph">
 <p>В результаті формується запит на внесення змін до конфігурації реєстру.</p>
 </div>
 </li>
 <li>
-<p>Поверніться до відомостей про реєстр і знайдіть розділ <span class="underline">Запити на оновлення</span>.</p>
+<p>Поверніться до відомостей про реєстр і знайдіть розділ <strong>Запити на оновлення</strong>.</p>
 <div class="paragraph">
 <p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-3.png" alt="cp id gov ua iit setup 3"></span></p>
 </div>
@@ -4184,14 +4185,14 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 <i class="fa icon-note" title="ПРИМІТКА"></i>
 </td>
 <td class="content">
-Запропоновані зміни зберігаються до конфігурації реєстру у файлі <strong><em>deploy-templates/values.yaml</em></strong> у разі підтвердження.
+Запропоновані зміни зберігаються до конфігурації реєстру у файлі <strong><code>deploy-templates/values.yaml</code></strong> у разі підтвердження.
 </td>
 </tr>
 </table>
 </div>
 </li>
 <li>
-<p>У новому вікні зіставте 2 версії змін, переконайтеся, що внесені вами дані вірні, та натисніть <kbd>Підтвердити</kbd>. Ви також можете відразу відхилити зміни до конфігурації, натиснувши <kbd>Відхилити</kbd>.</p>
+<p>У новому вікні зіставте 2 версії змін, переконайтеся, що внесені вами дані вірні, та натисніть <strong>Підтвердити</strong>. Ви також можете відразу відхилити зміни до конфігурації, натиснувши <strong>Відхилити</strong>.</p>
 <div class="admonitionblock tip">
 <table>
 <tr>
@@ -4199,7 +4200,7 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 <i class="fa icon-tip" title="ПІДКАЗКА"></i>
 </td>
 <td class="content">
-У вікні для порівняння можна зручно перевірити 2 версії змін: поточну (зліва) та нову (справа).
+У вікні для порівняння можна зручно перевірити 2 версії змін: поточну (<em>ліворуч</em>) та нову (<em>праворуч</em>).
 </td>
 </tr>
 </table>
@@ -4215,10 +4216,10 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Одночасно посадові особи реєстру зможуть використовувати лише один тип автентифікації при вході до Кабінету: <span class="underline">або КЕП</span>, <span class="underline">або <code>id.gov.ua</code></span>.</p>
+<p>Посадові особи реєстру зможуть використовувати <strong>одночасно лише один тип автентифікації</strong> при вході до Кабінету: <strong>КЕП або <code>id.gov.ua</code></strong>.</p>
 </div>
 <div class="paragraph">
-<p>При перемиканні типу автентифікації, параметри для іншого типу лишаються незмінними. Таким чином одночасно <span class="underline">може співіснувати 2 конфігурації</span>, але <span class="underline">активною може бути лише одна</span>. При зміні <code>browserFlow</code> надлишкові ресурси у Helm chart видаляються.</p>
+<p>При перемиканні типу автентифікації, параметри для іншого типу лишаються незмінними. Таким чином <strong>одночасно може співіснувати 2 конфігурації, але активною може бути лише одна</strong>. При зміні налаштування <code>browserFlow</code> надлишкові ресурси у Helm chart видаляються.</p>
 </div>
 <div class="paragraph">
 <p>У нашому прикладі використовується стандартний <code>browserFlow</code> для автентифікації через КЕП&#8201;&#8212;&#8201;<code><strong>dso-officer-auth-flow</strong></code>.</p>
@@ -4228,11 +4229,11 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </table>
 </div>
 <div class="paragraph">
-<p>В результаті запит набуває статусу <code>Підтверджено</code>, і запускається Jenkins-пайплайн <code><strong>MASTER-Build-&lt;registry-name&gt;</strong></code>, де <span class="underline"><code>&lt;registry-name&gt;</code></span>&#8201;&#8212;&#8201;назва реєстру. Він застосовує параметри заданої конфігурації.</p>
+<p>У результаті запит набуває статусу <code>Підтверджено</code>, і запускається Jenkins-пайплайн <strong>MASTER-Build-<code>&lt;registry-name&gt;</code></strong>, де <code>&lt;registry-name&gt;</code>&#8201;&#8212;&#8201;назва реєстру. Він застосовує параметри заданої конфігурації.</p>
 </div>
 </li>
 <li>
-<p>Зачекайте, доки виконається збірка коду. Це може зайняти до 15 хвилин.</p>
+<p>Зачекайте, доки виконається збірка коду. Це може зайняти деякий час.</p>
 <div class="paragraph">
 <p>Ви можете перевірити поточний статус та результат виконання за посиланням <strong><code>CI</code></strong> на інтерфейсі.</p>
 </div>
@@ -4254,20 +4255,127 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </div>
 <div class="sect1">
-<h2 id="_автентифікація_за_допомогою_id_gov_ua"><a class="anchor" href="#_автентифікація_за_допомогою_id_gov_ua"></a><a class="link" href="#_автентифікація_за_допомогою_id_gov_ua">3. Автентифікація за допомогою id.gov.ua</a></h2>
+<h2 id="id-gov-ua-auth"><a class="anchor" href="#id-gov-ua-auth"></a><a class="link" href="#id-gov-ua-auth">3. Автентифікація за допомогою id.gov.ua</a></h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_передумови"><a class="anchor" href="#_передумови"></a><a class="link" href="#_передумови">3.1. Передумови</a></h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Зареєструйтеся в системі ICEI <code>id.gov.ua</code>.<br>
-Для цього перейдіть за посиланням <a href="https://id.gov.ua/connect" class="bare">https://id.gov.ua/connect</a> та укладіть електронний <span class="underline">Договір про приєднання до інтегрованої системи електронної ідентифікації</span>.</p>
+<p>Виконайте запит до адміністратора платформи на формування DNS такого вигляду:</p>
+<div class="paragraph">
+<p><code>
+https://<strong>&lt;registry-name&gt;</strong>-keycloak.apps.krrt-two.ncr.gov.ua
+</code></p>
+</div>
+<div class="paragraph">
+<p>де <code>registry-name</code>&#8201;&#8212;&#8201;назва вашого реєстру в адмін-консолі.</p>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+Зверніть увагу, що домен може відрізнятися залежно від середовища.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Після формування DNS, вам потрібно встановити ваш DNS в налаштуваннях реєстру та зберегти налаштування.</p>
+<div class="paragraph">
+<p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/dns-1.png" alt="dns 1"></span></p>
+</div>
+</li>
+<li>
+<p>Передайте адміністратору Платформи ключ шифрування для встановлення зі сторони Платформи.</p>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="ВАЖЛИВО"></i>
+</td>
+<td class="content">
+ЄДРПОУ в ключі, що надається адміністратору Платформи для встановлення, має збігатися з ЄДРПОУ компанії, що подає заявку в кабінеті ІСЕІ.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Перейдіть за посиланням <a href="https://id.gov.ua/connect" class="bare">https://id.gov.ua/connect</a> та укладіть електронний <strong>Договір про приєднання до інтегрованої системи електронної ідентифікації</strong>. <em>АБО</em> подайте заявку на підключення до тестового середовища ІСЕІ (id.gov.ua) на сторінці <a href="https://id.gov.ua/connectqa" class="bare">https://id.gov.ua/connectqa</a>.</p>
+<div class="paragraph">
+<p><strong>В заявці вкажіть наступне:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Домен:</strong></p>
+<div class="paragraph">
+<p><code>
+<strong>&lt;registry-name&gt;</strong>-keycloak.apps.krrt-two.ncr.gov.ua
+</code></p>
+</div>
+<div class="paragraph">
+<p>де <code>registry-name</code>&#8201;&#8212;&#8201;назва вашого реєстру в адмін-консолі.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+Зверніть увагу, що ваш домен може відрізнятися залежно від середовища, на якому ви працюєте.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p><strong>redirect_url</strong> (<em>для Кабінету отримувача послуг</em>):</p>
+<div class="paragraph">
+<p><code>
+https://<strong>&lt;registry-name&gt;</strong>-keycloak.apps.krrt-two.ncr.gov.ua/auth/realms/<strong>&lt;registry-name&gt;</strong>-citizen-portal/broker/registry-id-gov-ua/endpoint
+</code></p>
+</div>
+<div class="paragraph">
+<p>де <code>registry-name</code>&#8201;&#8212;&#8201;назва вашого реєстру в адмін-консолі.</p>
+</div>
+</li>
+<li>
+<p><strong>redirect_url</strong> (<em>для Кабінету користувача/надавача послуг</em>):</p>
+<div class="paragraph">
+<p><code>
+https://<strong>&lt;registry-name&gt;</strong>-keycloak.apps.krrt-two.ncr.gov.ua/auth/realms/<strong>&lt;registry-name&gt;</strong>-officer-portal/broker/idgovua-officer/endpoint
+</code></p>
+</div>
+<div class="paragraph">
+<p>де <code>registry-name</code>&#8201;&#8212;&#8201;назва вашого реєстру в адмін-консолі.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+Заявки для кабінетів подаються на ІСЕІ окремо.
+</td>
+</tr>
+</table>
+</div>
+</li>
+</ul>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="УВАГА"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -4279,7 +4387,7 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </li>
 <li>
-<p>Після реєстрації клієнта (реєстру), отримайте від ICEI ідентифікатор клієнта в системі id.gov.ua (<code>client_id</code>) та пароль (<code>secret</code>).</p>
+<p>Після реєстрації клієнта (реєстру), отримаєте від ICEI на пошту ідентифікатор клієнта в системі id.gov.ua (<code>client_id</code>) та пароль (<code>secret</code>).</p>
 </li>
 <li>
 <p>Використовуйте отримані дані при налаштуванні автентифікації з <code>id.gov.ua</code> в інтерфейсі <strong>Control Plane</strong>.</p>
@@ -4298,7 +4406,7 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </li>
 <li>
-<p>Перейдіть до розділу <span class="underline">Реєстри</span>, відкрийте необхідний та натисніть <code>РЕДАГУВАТИ</code>.</p>
+<p>Перейдіть до розділу <strong>Реєстри</strong>, відкрийте необхідний та натисніть <strong>Редагувати</strong>.</p>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -4321,14 +4429,14 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </li>
 <li>
-<p>Оберіть секцію <span class="underline">Автентифікація надавачів послуг</span> та виконайте налаштування:</p>
+<p>Оберіть секцію <strong>Автентифікація надавачів послуг</strong> та виконайте налаштування:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><span class="underline">Вкажіть тип автентифікації</span>&#8201;&#8212;&#8201;<code><strong>id.gov.ua</strong></code>. Цей тип призначений для автентифікації посадових осіб за допомогою зовнішнього провайдера на формі входу до Кабінету.</p>
+<p><strong>Вкажіть тип автентифікації</strong>&#8201;&#8212;&#8201;<code>Реєстрова інтеграція з id.gov.ua</code>. Цей тип призначений для автентифікації посадових осіб за допомогою зовнішнього провайдера на формі входу до Кабінету.</p>
 </li>
 <li>
-<p><span class="underline">Додайте посилання до ресурсу</span>. Наприклад, URL може виглядати так: <a href="https://test.id.gov.ua?auth_type=dig_sign" class="bare">https://test.id.gov.ua?auth_type=dig_sign</a>.</p>
+<p><strong>Додайте посилання до ресурсу</strong>. Наприклад, URL може виглядати так: <a href="https://test.id.gov.ua?auth_type=dig_sign" class="bare">https://test.id.gov.ua?auth_type=dig_sign</a>.</p>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -4365,7 +4473,7 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </li>
 <li>
-<p><span class="underline">Вкажіть ідентифікатор клієнта (<code>client_id</code>)</span>, отриманий в системі <code>id.gov.ua</code>. Наприклад, <code>17f33242543e4340b690391d6f1d1513</code>.</p>
+<p><strong>Вкажіть ідентифікатор клієнта (<code>client_id</code>)</strong>, отриманий в системі <code>id.gov.ua</code>. Наприклад, <code>17f33242543e4340b690391d6f1d1513</code>.</p>
 <div class="admonitionblock tip">
 <table>
 <tr>
@@ -4396,20 +4504,27 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </table>
 </div>
 </li>
+<li>
+<p><strong>Оберіть ключ шифрування</strong> (попередньо наданий вами адміністратора Платформи).</p>
+</li>
 </ul>
 </div>
+</li>
+</ol>
+</div>
 <div class="paragraph">
-<p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-2.png" alt="cp id gov ua iit setup 2"></span></p>
+<p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/01-icei.png" alt="01 icei"></span></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Натисніть <strong>Підтвердити</strong>, щоб зберегти налаштування.</p>
+<div class="paragraph">
+<p>У результаті формується запит на внесення змін до конфігурації реєстру.</p>
 </div>
 </li>
 <li>
-<p>Натисніть <kbd>Підтвердити</kbd>, щоб зберегти налаштування.</p>
-<div class="paragraph">
-<p>В результаті формується запит на внесення змін до конфігурації реєстру.</p>
-</div>
-</li>
-<li>
-<p>Поверніться до відомостей про реєстр і знайдіть розділ <span class="underline">Запити на оновлення</span>.</p>
+<p>Поверніться до відомостей про реєстр і знайдіть розділ <strong>Запити на оновлення</strong>.</p>
 <div class="paragraph">
 <p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-3.png" alt="cp id gov ua iit setup 3"></span></p>
 </div>
@@ -4423,14 +4538,14 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 <i class="fa icon-note" title="ПРИМІТКА"></i>
 </td>
 <td class="content">
-Запропоновані зміни зберігаються до конфігурації реєстру у файлі <strong><em>deploy-templates/values.yaml</em></strong> у разі підтвердження.
+Запропоновані зміни зберігаються до конфігурації реєстру у файлі <strong><code>deploy-templates/values.yaml</code></strong> у разі підтвердження.
 </td>
 </tr>
 </table>
 </div>
 </li>
 <li>
-<p>У новому вікні зіставте 2 версії змін, переконайтеся, що внесені вами дані вірні, та натисніть <kbd>Підтвердити</kbd>. Ви також можете відразу відхилити зміни до конфігурації, натиснувши <kbd>Відхилити</kbd>.</p>
+<p>У новому вікні зіставте 2 версії змін, переконайтеся, що внесені вами дані вірні, та натисніть <strong>Підтвердити</strong>. Ви також можете відразу відхилити зміни до конфігурації, натиснувши <strong>Відхилити</strong>.</p>
 <div class="admonitionblock tip">
 <table>
 <tr>
@@ -4438,7 +4553,7 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 <i class="fa icon-tip" title="ПІДКАЗКА"></i>
 </td>
 <td class="content">
-У вікні для порівняння можна зручно перевірити 2 версії змін: поточну (зліва) та нову (справа).
+У вікні для порівняння можна зручно перевірити 2 версії змін: поточну (<em>ліворуч</em>) та нову (<em>праворуч</em>).
 </td>
 </tr>
 </table>
@@ -4454,10 +4569,10 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Одночасно посадові особи реєстру зможуть використовувати лише один тип автентифікації при вході до Кабінету: <span class="underline">або КЕП</span>, <span class="underline">або <code>id.gov.ua</code></span>.</p>
+<p>Посадові особи реєстру зможуть використовувати <strong>одночасно лише один тип автентифікації</strong> при вході до Кабінету: <strong>КЕП або <code>id.gov.ua</code></strong>.</p>
 </div>
 <div class="paragraph">
-<p>При перемиканні типу автентифікації, параметри для іншого типу лишаються незмінними. Таким чином одночасно <span class="underline">може співіснувати 2 конфігурації</span>, але <span class="underline">активною може бути лише одна</span>. При зміні <code>browserFlow</code> надлишкові ресурси у Helm chart видаляються.</p>
+<p>При перемиканні типу автентифікації, параметри для іншого типу лишаються незмінними. Таким чином <strong>одночасно може співіснувати 2 конфігурації, але активною може бути лише одна</strong>. При зміні налаштування <code>browserFlow</code> надлишкові ресурси у Helm chart видаляються.</p>
 </div>
 <div class="paragraph">
 <p>У нашому прикладі використовується <code>browserFlow</code> для автентифікації із переадресацією до зовнішнього провайдера&#8201;&#8212;&#8201;<code><strong>id-gov-ua-officer-redirector</strong></code>.</p>
@@ -4467,11 +4582,11 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </table>
 </div>
 <div class="paragraph">
-<p>В результаті запит набуває статусу <code>Підтверджено</code>, і запускається Jenkins-пайплайн <code><strong>MASTER-Build-&lt;registry-name&gt;</strong></code>, де <span class="underline"><code>&lt;registry-name&gt;</code></span>&#8201;&#8212;&#8201;назва реєстру. Він застосовує параметри заданої конфігурації.</p>
+<p>У результаті запит набуває статусу <code>Підтверджено</code>, і запускається Jenkins-пайплайн <strong>MASTER-Build-<code>&lt;registry-name&gt;</code></strong>, де <code>&lt;registry-name&gt;</code>&#8201;&#8212;&#8201;назва реєстру. Він застосовує параметри заданої конфігурації.</p>
 </div>
 </li>
 <li>
-<p>Зачекайте, доки виконається збірка коду. Це може зайняти до 15 хвилин.</p>
+<p>Зачекайте, доки виконається збірка коду. Це може зайняти деякий час.</p>
 <div class="paragraph">
 <p>Ви можете перевірити поточний статус та результат виконання за посиланням <strong><code>CI</code></strong> на інтерфейсі.</p>
 </div>
@@ -4494,7 +4609,33 @@ ID.GOV.UA&#8201;&#8212;&#8201;<a href="https://id.gov.ua/" class="bare">https://
 </div>
 </div>
 <div class="sect1">
-<h2 id="_повязані_сторінки"><a class="anchor" href="#_повязані_сторінки"></a><a class="link" href="#_повязані_сторінки">4. Пов&#8217;язані сторінки</a></h2>
+<h2 id="_перевірка_результату"><a class="anchor" href="#_перевірка_результату"></a><a class="link" href="#_перевірка_результату">4. Перевірка результату</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Перевірити налаштування тестової авторизації на обраному вами кабінеті користувача ви можете з тестовим ключем, що надається ІСЕІ (id.gov.ua). Тестові ключі можна завантажити на сторінці <a href="https://id.gov.ua/connectqa" class="bare">https://id.gov.ua/connectqa</a>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+Для авторизації в кабінеті офіцера, потрібно попередньо створити користувача-офіцера в Keycloak з відповідною роллю та обов’язково додати атрибути з електронного ключа.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Детальний опис створення користувача доступний на сторінці <a href="../create-users/manual-user-creation.html" class="xref page">Створення окремого користувача та надання прав доступу</a>.</p>
+</div>
+<div class="paragraph">
+<p>Створення користувача для перевірки тестового підключення до ІСЕІ <a href="../../registry-admin-study/study-tasks/task-12-authentication-setup.html#create-keycloak-user" class="xref page">за посиланням</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_повязані_сторінки"><a class="anchor" href="#_повязані_сторінки"></a><a class="link" href="#_повязані_сторінки">5. Пов&#8217;язані сторінки</a></h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
