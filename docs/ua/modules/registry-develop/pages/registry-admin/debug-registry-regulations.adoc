@@ -17,7 +17,7 @@ TIP: Детальніше про типові помилки, з якими зі
 * Відстеження помилок при розробці бізнес-процесу у застосунку *Camunda*.
 * Додаткові можливості дебагу.
 
-== Відстеження помилок при розробці *data-model*
+== Відстеження помилок при розробці `data-model`
 
 NOTE: Розробник має керуватися загальними xref:registry-develop:study-project/requirements-and-recommendations.adoc[вимогами щодо створення моделі даних].
 
@@ -78,7 +78,7 @@ image:registry-admin/debug/debug-registry-regulations-6.png[image,width=2048,hei
 image:registry-admin/debug/debug-registry-regulations-7.png[image,width=1734,height=1030]
 
 [#jenkins-debug]
-== Відстеження помилок під час збірки регламенту у сервісі *Jenkins*
+== Відстеження помилок під час збірки регламенту у сервісі Jenkins
 
 //TODO: Migrate linked doc to open-source if necessary
 https://docs.google.com/document/d/1oxAP4h_1pPqeIohAuSawZ-SLZW25MmiT9aQsKbF-eYU/edit#heading=h.3a4sqldz4o2y[Збірка регламенту реєстру] проходить в декілька етапів на різних пайплайнах, і на кожному з них можливе виникнення помилок.
@@ -321,5 +321,3 @@ image:registry-admin/debug/debug-registry-regulations-32.png[image,width=1893,he
 * Значення `traceId`.
 * Детальний опис помилки.
 * `java stacktrace` помилки.
-
-
