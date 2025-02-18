@@ -9,8 +9,8 @@ runtime:
   fetch: true
 content:
   sources:
-    - url: ./
-      branches: HEAD
+    - url: https://github.com/diia-engine/diia-engine-documentation
+      branches: ["1.9.6-docs"]
       start_path: docs/en
 
 output:
