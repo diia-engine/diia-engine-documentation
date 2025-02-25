@@ -13,8 +13,6 @@
     <div class="navbar-brand">
       <img src="../../../../../../_/static/images/ua.png" class="site-logo"/>
       <a class="navbar-item site-title" href="/diia-engine-documentation/ua">Платформа для розгортання та супроводження державних електронних реєстрів</a>
-      <img src="../../../../../../_/static/images/youtube.png" class="site-logo"/>
-      <a class="navbar-item site-title" href="https://www.youtube.com/@%D0%9F%D0%BB%D0%B0%D1%82%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%80%D0%B5%D1%94%D1%81%D1%82%D1%80%D1%96%D0%B2">Платформа реєстрів</a>
       <div class="navbar-item search hide-for-print">
         <div id="search-field" class="field">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -409,7 +407,7 @@
     <a class="nav-link" href="../../../../admin/platform-id-gov-ua-setup.html">Налаштування взаємодії з ІСЕІ ID.GOV.UA</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../../../../../1.9.7/registry-develop/bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
+    <a class="nav-link" href="../../../../registry-develop/bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../../../../admin/integration-diia.html">Налаштування інтеграції з "Дія"</a>
@@ -737,7 +735,7 @@
     <a class="nav-link" href="../../../../registry-develop/registry-admin/change-dev-prod-mode.html">Налаштування режиму розгортання реєстру (deployment mode)</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../../../../registry-develop/registry-admin/excerpts/excerpt-templates-pdf-docx-csv.html">Налаштування витягів реєстру</a>
+    <a class="nav-link" href="../../../../registry-develop/registry-admin/registry-admin-reports-pdf-docx-csv.html">Налаштування витягів реєстру</a>
   </li>
   <li class="nav-item" data-depth="3">
     <button class="nav-item-toggle"></button>
@@ -3227,12 +3225,9 @@
   </div>
   <ul class="components">
     <li class="component is-current">
-      <div class="title"><a href="../../../../../1.9.7/index.html">Платформа Реєстрів</a></div>
+      <div class="title"><a href="../../../../index.html">Платформа Реєстрів</a></div>
       <ul class="versions">
-        <li class="version is-latest">
-          <a href="../../../../../1.9.7/index.html">1.9.7</a>
-        </li>
-        <li class="version is-current">
+        <li class="version is-current is-latest">
           <a href="../../../../index.html">1.9.6</a>
         </li>
       </ul>
@@ -3245,7 +3240,7 @@
 <main class="article">
     <div class="toolbar" role="navigation">
 <button class="nav-toggle"></button>
-  <a href="../../../../../1.9.7/index.html" class="home-link"></a>
+  <a href="../../../../index.html" class="home-link"></a>
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../../../../index.html">Платформа Реєстрів</a></li>
@@ -3255,13 +3250,6 @@
     <li><a href="overview.html">liquibase-ddm-ext</a></li>
   </ul>
 </nav>
-<div class="page-versions">
-  <button class="version-menu-toggle" title="Show other versions of page">1.9.6</button>
-  <div class="version-menu">
-    <a class="version" href="../../../../../1.9.7/arch/architecture/libraries/liquibase-ddm-ext/overview.html">1.9.7</a>
-    <a class="version is-current" href="overview.html">1.9.6</a>
-  </div>
-</div>
 <div class="page-languages">
     <button class="language-menu-toggle" title="Show other languages of page">Українська</button>
     <div class="language-menu">
@@ -3274,7 +3262,7 @@
   <div class="toc-menu"></div>
 </aside>
             <article class="doc">
-<h1 class="page">Бібліотека <em>liquibase-ddm-ext</em></h1>
+<h1 class="page">Бібліотека liquibase-ddm-ext</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="admonitionblock note">
@@ -3365,7 +3353,7 @@
 <p><strong>liquibase-ext-schema</strong> - розширена XSD-схема liquibase тегів та атрибутів, які можуть використовуватись при розробці реєстру <strong>Платформи</strong>, включається у всі файли регламенту, які обробляються Liquibase з використанням <em>liquibase-ddm-ext</em></p>
 </li>
 <li>
-<p><strong>service-generation-utility</strong> - генерує сервіси <em>registry-model</em>, <em>registry-rest-api</em>, <em>registry-soap-api</em>, використовуючи схему бази даних, яку наповнює Liquibase з використанням <em>liquibase-ddm-ext</em></p>
+<p><strong>service-generation-utility</strong> - генерує сервіси <em>registry-model</em>, <em>registry-rest-api</em>, <em>registry-kafka-api</em>, <em>registry-soap-api</em>, використовуючи схему бази даних, яку наповнює Liquibase з використанням <em>liquibase-ddm-ext</em></p>
 </li>
 </ul>
 </div>
@@ -3449,7 +3437,7 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>dropColumn</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">так</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Не підтримується Платформою</strong>. При використанні тегу <code>dropColumn</code> ви отримаєте помилку валідації: <code>'dropColumn' is not allowed</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">розширює логіку Liquibase-тегу видалення колонки з існуючої таблиці у БД</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>dropDomain</code></p></td>
@@ -3581,7 +3569,7 @@
 <p>Окрім створення власне схеми бази даних, <strong>liquibase-ddm-ext</strong> також заповнює таблиці з метаданими, необхідними для коректної генерації <em>registry</em>-сервісів</p>
 </div>
 <div class="paragraph">
-<p>Таблиці, в які потрапляють ці метадані: <code>ddm_liquibase-metadata</code>, <code>ddm_rls_metadata</code>, <code>ddm_role_permission</code>.</p>
+<p>Таблиці, в які потрапляють ці метадані: <em>ddm_liquibase-metadata</em>, <em>ddm_rls_metadata</em>, <em>ddm_role_permission</em></p>
 </div>
 <div class="sect2">
 <h3 id="_ddm_liquibase_metadata"><a class="anchor" href="#_ddm_liquibase_metadata"></a><a class="link" href="#_ddm_liquibase_metadata">8.1. ddm_liquibase_metadata</a></h3>
@@ -3619,22 +3607,22 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Приклад</strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>change_type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">change_type</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">тип метаінформації</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">search_condition</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>change_name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">change_name</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">до якого об&#8217;єкта відноситься метаінформація</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">назва критерію пошуку</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>attribute_name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">attribute_name</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">назву одного атрибуту вказаного change</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">pagination</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>attribute_value</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">attribute_value</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">значення для вказаного атрибуту</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">limit</p></td>
 </tr>

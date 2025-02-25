@@ -13,8 +13,6 @@
     <div class="navbar-brand">
       <img src="../../../../../../_/static/images/ua.png" class="site-logo"/>
       <a class="navbar-item site-title" href="/diia-engine-documentation/ua">Платформа для розгортання та супроводження державних електронних реєстрів</a>
-      <img src="../../../../../../_/static/images/youtube.png" class="site-logo"/>
-      <a class="navbar-item site-title" href="https://www.youtube.com/@%D0%9F%D0%BB%D0%B0%D1%82%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%80%D0%B5%D1%94%D1%81%D1%82%D1%80%D1%96%D0%B2">Платформа реєстрів</a>
       <div class="navbar-item search hide-for-print">
         <div id="search-field" class="field">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -409,7 +407,7 @@
     <a class="nav-link" href="../../../../admin/platform-id-gov-ua-setup.html">Налаштування взаємодії з ІСЕІ ID.GOV.UA</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../../../../../1.9.7/registry-develop/bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
+    <a class="nav-link" href="../../../bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../../../../admin/integration-diia.html">Налаштування інтеграції з "Дія"</a>
@@ -737,7 +735,7 @@
     <a class="nav-link" href="../../../registry-admin/change-dev-prod-mode.html">Налаштування режиму розгортання реєстру (deployment mode)</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../../../registry-admin/excerpts/excerpt-templates-pdf-docx-csv.html">Налаштування витягів реєстру</a>
+    <a class="nav-link" href="../../../registry-admin/registry-admin-reports-pdf-docx-csv.html">Налаштування витягів реєстру</a>
   </li>
   <li class="nav-item" data-depth="3">
     <button class="nav-item-toggle"></button>
@@ -3227,12 +3225,9 @@
   </div>
   <ul class="components">
     <li class="component is-current">
-      <div class="title"><a href="../../../../../1.9.7/index.html">Платформа Реєстрів</a></div>
+      <div class="title"><a href="../../../../index.html">Платформа Реєстрів</a></div>
       <ul class="versions">
-        <li class="version is-latest">
-          <a href="../../../../../1.9.7/index.html">1.9.7</a>
-        </li>
-        <li class="version is-current">
+        <li class="version is-current is-latest">
           <a href="../../../../index.html">1.9.6</a>
         </li>
       </ul>
@@ -3245,7 +3240,7 @@
 <main class="article">
     <div class="toolbar" role="navigation">
 <button class="nav-toggle"></button>
-  <a href="../../../../../1.9.7/index.html" class="home-link"></a>
+  <a href="../../../../index.html" class="home-link"></a>
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../../../../index.html">Платформа Реєстрів</a></li>
@@ -3255,13 +3250,6 @@
     <li><a href="liquibase-ddm-ext.html">Розширення Liquibase для моделювання даних</a></li>
   </ul>
 </nav>
-<div class="page-versions">
-  <button class="version-menu-toggle" title="Show other versions of page">1.9.6</button>
-  <div class="version-menu">
-    <a class="version" href="../../../../../1.9.7/registry-develop/data-modeling/data/physical-model/liquibase-ddm-ext.html">1.9.7</a>
-    <a class="version is-current" href="liquibase-ddm-ext.html">1.9.6</a>
-  </div>
-</div>
 <div class="page-languages">
     <button class="language-menu-toggle" title="Show other languages of page">Українська</button>
     <div class="language-menu">
@@ -3394,45 +3382,47 @@
 <h2 id="_загальний_опис"><a class="anchor" href="#_загальний_опис"></a><a class="link" href="#_загальний_опис">1. Загальний опис</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Модель даних реєстру описується декларативно за допомогою XML-шаблонів, які інтерпретує та обробляє інструмент <a href="https://www.liquibase.com/">Liquibase</a>. Під час обробки ці шаблони перетворюються на SQL-структури для створення або зміни баз даних.</p>
+<p>Модель даних реєстру описується декларативно за допомогою XML-шаблонів, які обробляє інструмент Liquibase та генерує на SQL-структури.</p>
 </div>
 <div class="paragraph">
-<p>Оскільки <a href="liquibase-standard-change-types.html" class="xref page">стандартні можливості Liquibase</a> не покривають усіх потреб роботи зі складними структурами даних, Платформа використовує власну бібліотеку розширень — <strong><code>liquibase-ddm-ext</code></strong>. Ця бібліотека додає підтримку <strong>кастомних тегів</strong> (у термінології Liquibase — <strong><em>change types</em></strong>), що розширюють можливості XML-шаблонів для опису специфічної бізнес-логіки та структур.</p>
+<p>Через складні вимоги до архітектури Платформи, використання стандартної функціональності Liquibase не покриває всі потреби при роботі зі структурами даних.</p>
 </div>
 <div class="paragraph">
-<p>Інтеграція <strong><code>liquibase-ddm-ext</code></strong> забезпечує такі переваги:</p>
+<p>Функціональність Liquibase розширено платформним модулем <code><strong>liquibase-ddm-ext</strong></code>, який забезпечує роботу з додатковими <em>кастомними тегами</em> (в термінології Liquibase&#8201;&#8212;&#8201;<em><strong>change types</strong></em>) XML-шаблону Liquibase, що покривають наступні категорії:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Гнучке управління схемами даних</strong> з підтримкою кастомних змін.</p>
+<p><a href="#createTable">створення таблиць з підтримкою історичності даних</a>;</p>
 </li>
 <li>
-<p><strong>Підтримка спеціалізованих змін і операцій</strong>, що виходять за межі стандартної функціональності Liquibase.</p>
+<p><a href="#createDomain ">створення/видалення користувацьких даних (Domain)</a>;</p>
 </li>
 <li>
-<p><strong>Спрощення модифікації баз даних</strong> завдяки уніфікованому XML-підходу.</p>
+<p><a href="#ENUM">створення/видалення користувацьких типів даних (Type)</a>;</p>
+</li>
+<li>
+<p><a href="#createSimpleSearchCondition">створення/видалення простого критерію пошуку (Simple Search Condition)</a>;</p>
+</li>
+<li>
+<p><a href="#createSearchCondition">створення/видалення критерію пошуку (Search Condition)</a>;</p>
+</li>
+<li>
+<p><a href="#createMany2Many">створення типу зв&#8217;язку "багато до багатьох" (many-to-many)</a>;</p>
+</li>
+<li>
+<p><a href="#createAnalyticsView">створення аналітичного представлення на репліці (Analytics View)</a>;</p>
+</li>
+<li>
+<p><a href="#createCompositeEntity">збереження декількох сутностей в рамках однієї транзакції (Composite Entity)</a>;</p>
+</li>
+<li>
+<p><a href="#partialUpdate">генерація ендпоінтів для зміни окремих частин сутності (partial Update)</a>;</p>
+</li>
+<li>
+<p><a href="#grantAll">надання/видалення прав ролі ена всі аналітичні представлення (grantAll/revokeAll)</a>.</p>
 </li>
 </ul>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="ПРИМІТКА"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>Актуальний перелік розширених тегів та їх параметрів описано в останній версії XSD-схеми. Ви можете переглянути її за наступним посиланням:</p>
-</div>
-<div class="paragraph">
-<p><code>
-<a href="http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd" class="bare">http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd</a>
-</code></p>
-</div>
-</td>
-</tr>
-</table>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -3441,7 +3431,8 @@
 <i class="fa icon-tip" title="ПІДКАЗКА"></i>
 </td>
 <td class="content">
-Додаткові деталі про бібліотеку <code>liquibase-ddm-ext</code> ви можете переглянути в архітектурній документації Платформи, на сторінці <a href="../../../../arch/architecture/libraries/liquibase-ddm-ext/overview.html" class="xref page">Бібліотека <em>liquibase-ddm-ext</em></a>.
+Для прикладу, повний перелік розширених тегів з їх параметрами зберігається в
+xsd-схемі за <a href="https://nexus.apps.envone.dev.registry.eua.gov.ua/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/1.5.0-SNAPSHOT.74/liquibase-ext-schema-1.5.0-SNAPSHOT.74.xsd">посиланням</a>.
 </td>
 </tr>
 </table>
@@ -5078,13 +5069,13 @@ WHERE user_age BETWEEN значення_від AND значення_до</code><
 <details>
 <summary class="title"><em>Приклад OpenAPI специфікації</em></summary>
 <div class="content">
-      <div id="swagger-ui_CGBL6GLEC3F4EJ7793GKUF9ICR97F8FD"></div>
+      <div id="swagger-ui_EDYNURS7KIYGL86KHFF7AHA1HQMJQD9M"></div>
 
       <script>
         document.addEventListener('DOMContentLoaded', function() {
           SwaggerUIBundle({
             url: "../../../_attachments/data-model/sc/pagination/swagger-offset.yml",
-            dom_id: "#swagger-ui_CGBL6GLEC3F4EJ7793GKUF9ICR97F8FD",
+            dom_id: "#swagger-ui_EDYNURS7KIYGL86KHFF7AHA1HQMJQD9M",
             presets: [
               SwaggerUIBundle.presets.apis,
               SwaggerUIStandalonePreset
@@ -5209,13 +5200,13 @@ WHERE user_age BETWEEN значення_від AND значення_до</code><
 <details>
 <summary class="title"><em>Приклад OpenAPI специфікації</em></summary>
 <div class="content">
-      <div id="swagger-ui_IF1KU7GG7EF2VKOMCAXU24QKW8BJ8PJ1"></div>
+      <div id="swagger-ui_M79BWWMNLHL47HJPGLPT46CNDE5FHAPP"></div>
 
       <script>
         document.addEventListener('DOMContentLoaded', function() {
           SwaggerUIBundle({
             url: "../../../_attachments/data-model/sc/pagination/swagger-page.yml",
-            dom_id: "#swagger-ui_IF1KU7GG7EF2VKOMCAXU24QKW8BJ8PJ1",
+            dom_id: "#swagger-ui_M79BWWMNLHL47HJPGLPT46CNDE5FHAPP",
             presets: [
               SwaggerUIBundle.presets.apis,
               SwaggerUIStandalonePreset
