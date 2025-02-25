@@ -440,7 +440,7 @@
     <a class="nav-link" href="../../../../../admin/backup-restore/backup-schedule-registry-components.html">Керування розкладом резервного копіювання реєстру</a>
   </li>
   <li class="nav-item" data-depth="4">
-    <a class="nav-link" href="../../../../../admin/backup-restore/postgres-backup-restore.html">Резервне копіювання та відновлення БД реєстру</a>
+    <a class="nav-link" href="../../../../../admin/backup-restore/postgres-backup-restore.html">Резервне копіювання та відновлення бази даних реєстру</a>
   </li>
 </ul>
   </li>
@@ -478,6 +478,9 @@
     <a class="nav-link" href="../../../../../admin/file-system/ceph_scaling.html">Масштабування розміру файлової системи Ceph</a>
   </li>
   <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../../../../../admin/file-system/ceph-rbd-to-cloud-disk-migration.html">Міграція дисків реєстрових інстансів БД з типом <em>ceph-rbd</em> до типів дисків хмарного сховища</a>
+  </li>
+  <li class="nav-item" data-depth="3">
     <button class="nav-item-toggle"></button>
     <span class="nav-text">Сховище S3 Ceph Object Storage</span>
 <ul class="nav-list">
@@ -496,7 +499,7 @@
     <a class="nav-link" href="../../../../../admin/platform-id-gov-ua-setup.html">Налаштування взаємодії з ІСЕІ ID.GOV.UA</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../../../../../../1.9.8/registry-develop/bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
+    <a class="nav-link" href="../../../../bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../../../../../admin/integration-diia.html">Налаштування інтеграції з "Дія"</a>
@@ -4028,13 +4031,13 @@
   </div>
   <ul class="components">
     <li class="component is-current">
-      <div class="title"><a href="../../../../../../1.9.8/index.html">Платформа Реєстрів</a></div>
+      <div class="title"><a href="../../../../../index.html">Платформа Реєстрів</a></div>
       <ul class="versions">
-        <li class="version is-latest">
-          <a href="../../../../../../1.9.8/index.html">1.9.8</a>
-        </li>
-        <li class="version is-current">
+        <li class="version is-current is-latest">
           <a href="../../../../../index.html">1.9.7</a>
+        </li>
+        <li class="version">
+          <a href="../../../../../../1.9.6/index.html">1.9.6</a>
         </li>
       </ul>
     </li>
@@ -4046,18 +4049,18 @@
 <main class="article">
     <div class="toolbar" role="navigation">
 <button class="nav-toggle"></button>
-  <a href="../../../../../../1.9.8/index.html" class="home-link"></a>
+  <a href="../../../../../index.html" class="home-link"></a>
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../../../../../index.html">Платформа Реєстрів</a></li>
-    <li><a href="search-subjects.html">Сервіс пошуку суб&#8217;єкта в ЄДР (SearchSubjects)</a></li>
+    <li><a href="search-subjects.html">Сервіс пошуку суб&#8217;єкта в ЄДР (<em>SearchSubjects</em>)</a></li>
   </ul>
 </nav>
 <div class="page-versions">
   <button class="version-menu-toggle" title="Show other versions of page">1.9.7</button>
   <div class="version-menu">
-    <a class="version" href="../../../../../../1.9.8/registry-develop/registry-admin/external-integration/api-call/trembita/search-subjects.html">1.9.8</a>
     <a class="version is-current" href="search-subjects.html">1.9.7</a>
+    <a class="version" href="../../../../../../1.9.6/registry-develop/registry-admin/external-integration/api-call/trembita/search-subjects.html">1.9.6</a>
   </div>
 </div>
 <div class="page-languages">
@@ -4072,9 +4075,19 @@
   <div class="toc-menu"></div>
 </aside>
             <article class="doc">
-<h1 class="page">Сервіс пошуку суб&#8217;єкта в ЄДР (SearchSubjects)</h1>
+<h1 class="page">Сервіс пошуку суб&#8217;єкта в ЄДР (<em>SearchSubjects</em>)</h1>
+<div id="toc" class="toc">
+<div id="toctitle">ЗМІСТ</div>
+<ul class="sectlevel1">
+<li><a href="#_огляд_сервісу">1. Огляд сервісу</a></li>
+<li><a href="#_повязані_сторінки">2. Пов&#8217;язані сторінки</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_огляд_сервісу"><a class="anchor" href="#_огляд_сервісу"></a><a class="link" href="#_огляд_сервісу">1. Огляд сервісу</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>Сервіс <code>SearchSubjects</code> надає можливість здійснити пошук у <em>Єдиному державному реєстру юридичних та фізичних осіб</em> (ЄДР) та отримати відомості щодо загальної інформації про суб&#8217;єкта відповідно до критеріїв пошуку через ШБО "Трембіта".</p>
+<p>Сервіс <strong><code>SearchSubjects</code></strong> надає можливість здійснити пошук в Єдиному державному реєстру юридичних та фізичних осіб (ЄДР) та отримати відомості щодо загальної інформації про суб&#8217;єкта відповідно до критеріїв пошуку через ШБО "Трембіта".</p>
 </div>
 <div class="paragraph">
 <p>Пошук суб&#8217;єкта в ЄДР здійснюється за параметрами:</p>
@@ -4100,16 +4113,14 @@
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Серія та номер паспорту використовується для фізичної особи-підприємця, якщо особа відмовилась від отримання ІПН (РНОКПП). Формат: серія (дві кирилічні літери у верхньому регістрі), об&#8217;єднана з шістьма цифрами номеру, наприклад: СН012345; або, у разі нового пластикового паспорта, номер у вигляді дев&#8217;яти цифр</p>
+<p>Серія та номер паспорта використовується для фізичної особи-підприємця, якщо особа відмовилась від отримання ІПН (РНОКПП). Формат: серія (дві кириличні літери у верхньому регістрі), об&#8217;єднана з шістьма цифрами номера, наприклад: СН012345; або, у разі нового пластикового паспорта, номер у вигляді дев&#8217;яти цифр</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="exampleblock">
-<div class="title">Приклад 1. запит у форматі XML:</div>
-<div class="content">
 <div class="listingblock">
+<div class="title">Запит у форматі XML</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:edr="http://nais.gov.ua/api/sevdeir/EDR" xmlns:xro="http://x-road.eu/xsd/xroad.xsd" xmlns:iden="http://x-road.eu/xsd/identifiers"&gt;
    &lt;soapenv:Header&gt;
@@ -4142,12 +4153,8 @@
 &lt;/soapenv:Envelope&gt;</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="title">Приклад 2. відповідь у форматі XML:</div>
-<div class="content">
 <div class="listingblock">
+<div class="title">Відповідь у форматі XML</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;soap11env:Envelope xmlns:soap11env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://nais.gov.ua/api/sevdeir/EDR" xmlns:xroad="http://x-road.eu/xsd/xroad.xsd" xmlns:id="http://x-road.eu/xsd/identifiers"&gt;
    &lt;soap11env:Header&gt;
@@ -4185,8 +4192,6 @@
       &lt;/tns:SearchSubjectsResponse&gt;
    &lt;/soap11env:Body&gt;
 &lt;/soap11env:Envelope&gt;</code></pre>
-</div>
-</div>
 </div>
 </div>
 <table class="tableblock frame-all grid-all stretch">
@@ -4272,44 +4277,53 @@
 </tr>
 </tbody>
 </table>
-<table class="tableblock frame-all grid-all stretch">
-<caption class="title">Таблиця 2. Можливі значення стану (state) суб&#8217;єкта з ЄДР</caption>
+<table id="edr-subject-state" class="tableblock frame-all grid-all stretch">
+<caption class="title">Таблиця 2. Можливі значення стану (<code>state</code>) суб&#8217;єкта з ЄДР</caption>
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Стан</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statusValue</code> (Стан)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Мапінг</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Опис</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-1</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">«скасовано»</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>-1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>SUSPENDED</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Призупинено</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">«зареєстровано»</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ACTIVE</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Суб&#8217;єкт є активним</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">«в стані припинення»</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>CANCEL_STATE</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">У процесі анулювання</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">«припинено»</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>3</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>CANCELED</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Анульовано</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">«порушено справу про банкрутство»</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>4</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>BANKRUPTCY_PROCEEDINGS_INITIATED</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ініційовано процедуру банкрутства</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">«порушено справу про банкрутство (санація)»</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>5</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>BANKRUPTCY_PROCEEDINGS_INITIATED_SANITATION</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ініційовано процедуру банкрутства з санацією</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">«зареєстровано, свідоцтво про державну реєстрацію недійсне»</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>6</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ACTIVE_GOV_REGISTRATION_INVALID</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Суб&#8217;єкт є активним, але є проблеми з державною реєстрацією</p></td>
 </tr>
 </tbody>
 </table>
@@ -4321,27 +4335,31 @@
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Актуальну інформацію щодо необхідних ідентифікаторів сервісу та його постачальника, а також опис параметрів і WSDL, ви можете отримати за посиланнями:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="https://directory-test.trembita.gov.ua:8443/SEVDEIR-TEST/GOV/00015622/2_MJU_EDR_prod/SearchSubjects?tab=0">Вебсервіс SearchSubjects (тестове середовище)</a></p>
-</li>
-<li>
-<p><a href="https://directory-prod.trembita.gov.ua:8443/SEVDEIR/GOV/00015622/2_MJU_EDR_prod/SearchSubjects?tab=0">Вебсервіс SearchSubjects (промислове середовище)</a></p>
-</li>
-</ul>
+<p>Актуальну інформацію щодо необхідних ідентифікаторів сервісу та його постачальника, а також опис параметрів і WSDL, ви можете отримати в <a href="https://catalog.trembita.gov.ua/?env=SEVDEIR">офіційному каталозі "Трембіта"</a>.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_повязані_сторінки"><a class="anchor" href="#_повязані_сторінки"></a><a class="link" href="#_повязані_сторінки">2. Пов&#8217;язані сторінки</a></h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../../../../bp-modeling/bp/element-templates/soap-integration/edr/search-subjects-edr-registry.html" class="xref page">SOAP-конектор <em>Search Subjects Edr Registry</em></a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
 </article>
     </div>
 </main></div>
 <footer class="footer">
-    <p>© 2024 Платформа Реєстрів.</p>
+    <p>© 2023 Платформа Реєстрів.</p>
     <img src="../../../../../../../_/static/images/made-in-ua.png" class="made-in-ua-logo"/>
 </footer><script id="site-script" src="../../../../../../../_/js/site.js" data-ui-root-path="../../../../../../../_"></script>
 <script async src="../../../../../../../_/js/vendor/highlight.js"></script>

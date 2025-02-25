@@ -367,6 +367,9 @@
     <a class="nav-link" href="../file-system/ceph_scaling.html">Scaling the Ceph file system</a>
   </li>
   <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../file-system/ceph-rbd-to-cloud-disk-migration.html">Migrating registry database instance disks from <em>ceph-rbd</em> to cloud storage disk types</a>
+  </li>
+  <li class="nav-item" data-depth="3">
     <button class="nav-item-toggle"></button>
     <span class="nav-text">S3 Ceph Object Storage</span>
 <ul class="nav-list">
@@ -382,7 +385,7 @@
     <span class="nav-text">Integrating with external systems</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../../../1.9.8/registry-develop/bp-modeling/bp/rest-connector.html#create-service-entry">Integrating with external services using REST connector: Creating a service entry and authorization secret</a>
+    <a class="nav-link" href="../../registry-develop/bp-modeling/bp/rest-connector.html#create-service-entry">Integrating with external services using REST connector: Creating a service entry and authorization secret</a>
   </li>
 </ul>
   </li>
@@ -2264,13 +2267,13 @@
   </div>
   <ul class="components">
     <li class="component is-current">
-      <div class="title"><a href="../../../1.9.8/index.html">The Registries Platform</a></div>
+      <div class="title"><a href="../../index.html">The Registries Platform</a></div>
       <ul class="versions">
-        <li class="version is-latest">
-          <a href="../../../1.9.8/index.html">1.9.8</a>
-        </li>
-        <li class="version is-current">
+        <li class="version is-current is-latest">
           <a href="../../index.html">1.9.7</a>
+        </li>
+        <li class="version">
+          <a href="../../../1.9.6/index.html">1.9.6</a>
         </li>
       </ul>
     </li>
@@ -2282,7 +2285,7 @@
 <main class="article">
     <div class="toolbar" role="navigation">
 <button class="nav-toggle"></button>
-  <a href="../../../1.9.8/index.html" class="home-link"></a>
+  <a href="../../index.html" class="home-link"></a>
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../../index.html">The Registries Platform</a></li>
@@ -2294,8 +2297,8 @@
 <div class="page-versions">
   <button class="version-menu-toggle" title="Show other versions of page">1.9.7</button>
   <div class="version-menu">
-    <a class="version" href="../../../1.9.8/admin/backup-restore/postgres-backup-restore.html">1.9.8</a>
     <a class="version is-current" href="postgres-backup-restore.html">1.9.7</a>
+    <a class="version" href="../../../1.9.6/admin/backup-restore/postgres-backup-restore.html">1.9.6</a>
   </div>
 </div>
 <div class="page-languages">
@@ -2311,75 +2314,177 @@
 </aside>
             <article class="doc">
 <h1 class="page">Backing up and restoring registry databases</h1>
-<div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>The Postgres Operator by Crunchy Data (PGO), used for managing registry databases, includes pgBackRest, an open-source solution for backup and restoring. PGO facilitates the execution of many common tasks required throughout the lifecycle of a database, including:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Configuring schedules for automatic backup and retention policies.</p>
+<div id="toc" class="toc">
+<div id="toctitle">On this page:</div>
+<ul class="sectlevel1">
+<li><a href="#_overview">1. Overview</a></li>
+<li><a href="#_backup_configuration">2. Backup configuration</a>
+<ul class="sectlevel2">
+<li><a href="#_configuring_backup_schedules">2.1. Configuring backup schedules</a></li>
+<li><a href="#_managing_backup_retention_policies">2.2. Managing backup retention policies</a>
+<ul class="sectlevel3">
+<li><a href="#_retention_logic">2.2.1. Retention logic</a></li>
+<li><a href="#_retention_policy_types">2.2.2. Retention policy types</a></li>
+<li><a href="#_configuration_sample">2.2.3. Configuration sample</a></li>
+</ul>
 </li>
-<li>
-<p>Backing up data to multiple locations.</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Supporting backup storage in Kubernetes, AWS S3 (or S3-compatible systems like MinIO), Google Cloud Storage (GCS), and Azure Blob Storage.</p>
+<li><a href="#_managing_wal_archiving">2.3. Managing WAL archiving</a>
+<ul class="sectlevel3">
+<li><a href="#_examples">2.3.1. Examples</a></li>
+</ul>
+</li>
+<li><a href="#_one_time_backup_creation">2.4. One-time backup creation</a>
+<ul class="sectlevel3">
+<li><a href="#_step_1_configure_backup_parameters">Step 1: Configure backup parameters</a></li>
+<li><a href="#_step_2_launch_the_backup">Step 2: Launch the backup</a></li>
+<li><a href="#_repeating_a_backup">Repeating a backup</a></li>
+<li><a href="#_recommendations">Recommendations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_restoring_backups">3. Restoring backups</a>
+<ul class="sectlevel2">
+<li><a href="#_restore_to_a_specific_point_in_time_or_backup">3.1. Restore to a specific point in time or backup</a>
+<ul class="sectlevel3">
+<li><a href="#_point_in_time_recovery_pitr">3.1.1. Point-in-time recovery (PITR)</a></li>
+<li><a href="#_restore_from_a_specific_backup">3.1.2. Restore from a specific backup</a></li>
+<li><a href="#_completing_the_restore_process">3.1.3. Completing the restore process</a></li>
+<li><a href="#_additional_notes">3.1.4. Additional notes</a></li>
+</ul>
+</li>
+<li><a href="#_cloning_from_a_backup">3.2. Cloning from a backup</a>
+<ul class="sectlevel3">
+<li><a href="#_cloning_to_a_specific_point_in_time_pitr">3.2.1. Cloning to a specific point in time (PITR)</a></li>
+<li><a href="#_cloning_from_a_specific_backup">3.2.2. Cloning from a specific backup</a></li>
+<li><a href="#_completing_the_cloning_process">3.2.3. Completing the cloning process</a></li>
+<li><a href="#_best_practices">3.2.4. Best practices</a></li>
+</ul>
+</li>
+<li><a href="#_synchronizing_data_on_the_analytical_cluster">3.3. Synchronizing data on the analytical cluster</a>
+<ul class="sectlevel3">
+<li><a href="#_steps_to_synchronize_data">3.3.1. Steps to synchronize data</a></li>
+<li><a href="#_recommendations_2">3.3.2. Recommendations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_continuous_recovery_on_a_standby_cluster">4. Continuous recovery on a standby cluster</a>
+<ul class="sectlevel2">
+<li><a href="#_creating_a_standby_cluster">4.1. Creating a standby cluster</a>
+<ul class="sectlevel3">
+<li><a href="#_requirements">4.1.1. Requirements</a></li>
+<li><a href="#_standby_cluster_configuration">4.1.2. Standby cluster configuration</a></li>
+</ul>
+</li>
+<li><a href="#_promoting_the_standby_cluster">4.2. Promoting the standby cluster</a>
+<ul class="sectlevel3">
+<li><a href="#_preventing_split_brain_scenarios">4.2.1. Preventing split-brain scenarios</a></li>
+<li><a href="#_promotion_process">4.2.2. Promotion process</a></li>
+<li><a href="#_post_promotion_steps">4.2.3. Post-promotion steps</a></li>
+</ul>
+</li>
+</ul>
 </li>
 </ul>
 </div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+🌐 This document is available in both English and Ukrainian. Use the language toggle in the top right corner to switch between versions.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_overview"><a class="anchor" href="#_overview"></a><a class="link" href="#_overview">1. Overview</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The platform enables reliable backup and restore processes for the registry databases,
+ensuring data protection against loss, supporting disaster recovery, and maintaining business continuity.</p>
+</div>
+<div class="paragraph">
+<p>To achieve these capabilities,
+the platform uses the <strong>Postgres Operator</strong> by <strong>Crunchy Data (PGO)</strong> in combination with <strong>pgBackRest</strong>,
+an open-source, powerful backup and restore tool for PostgreSQL databases.</p>
+</div>
+<div class="paragraph">
+<p><strong>PGO</strong> simplifies and automates many tasks related to back up and restore, including:</p>
+</div>
+<div class="ulist checklist">
+<ul class="checklist">
+<li>
+<p><i class="fa fa-check-square-o"></i> Configuring automated backup schedules and retention policies</p>
 </li>
 <li>
-<p>Performing one-time backups</p>
+<p><i class="fa fa-check-square-o"></i> Storing backups across multiple locations: Kubernetes, AWS S3 (and S3-compatible services like MinIO), Google Cloud Storage (GCS), and Azure Blob Storage</p>
 </li>
 <li>
-<p>Performing point-in-time recovery (PITR).</p>
+<p><i class="fa fa-check-square-o"></i> Executing on-demand backups</p>
 </li>
 <li>
-<p>Cloning data to a new database instance.</p>
+<p><i class="fa fa-check-square-o"></i> Supporting Point-In-Time Recovery (PITR)</p>
 </li>
 <li>
-<p>And more</p>
+<p><i class="fa fa-check-square-o"></i> Cloning databases into new instances</p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_configuring_backup"><a class="anchor" href="#_configuring_backup"></a><a class="link" href="#_configuring_backup">1. Configuring backup</a></h2>
+<h2 id="_backup_configuration"><a class="anchor" href="#_backup_configuration"></a><a class="link" href="#_backup_configuration">2. Backup configuration</a></h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>By default, the Postgres operational and analytical clusters are configured to continuously archive write-ahead logs (WAL) and create a full backup once a day.The retention policy is set to keep one full backup, so when a new backup is created, pgBackRest cleans up the previous backup and its associated WAL files.</p>
-</div>
-<div class="paragraph">
-<p>pgBackRest provides various types of backups, retention policy configurations, and backup schedule options to customize the system according to desired recovery point objectives (RPO), recovery time objectives (RTO), and space utilization requirements.</p>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Challenge </dt>
+<dd>
+<p>By default,
+both the operational and analytical Postgres clusters are configured
+to continuously archive Write-Ahead Logs (<strong>WAL</strong>) and create full backups daily.
+The current retention policy keeps only one full backup—when a new backup is created,
+<strong>pgBackRest</strong> automatically deletes the previous one along with its associated WAL files.</p>
+</dd>
+<dt class="hdlist1">Solution </dt>
+<dd>
+<p><strong>pgBackRest</strong> allows configuring various backup types, retention policies, and backup schedules to meet Recovery Point Objective (<strong>RPO</strong>), Recovery Time Objective (<strong>RTO</strong>), and efficient storage usage.</p>
+</dd>
+</dl>
 </div>
 <div class="sect2">
-<h3 id="_managing_backup_schedules"><a class="anchor" href="#_managing_backup_schedules"></a><a class="link" href="#_managing_backup_schedules">1.1. Managing backup schedules</a></h3>
+<h3 id="_configuring_backup_schedules"><a class="anchor" href="#_configuring_backup_schedules"></a><a class="link" href="#_configuring_backup_schedules">2.1. Configuring backup schedules</a></h3>
 <div class="paragraph">
-<p>Schedules can be configured for all three types of backups:</p>
+<p>You can set schedules for the following backup types:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>full</code>: backup of the entire Postgres cluster. This is the largest among all types of backups.</p>
+<p><code>full</code>: A complete backup of the entire Postgres cluster. This is the largest backup type.</p>
 </li>
 <li>
-<p><code>differential</code> backup of all data since the last full backup.</p>
+<p><code>differential</code>: Backs up changes since the last full backup.</p>
 </li>
 <li>
-<p><code>incremental</code>: backup of all data since the last full, differential, or incremental backup.</p>
+<p><code>incremental</code>: Backs up changes since the last full, differential, or incremental backup.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Backup schedules are stored in the <code>spec.backups.pgbackrest.repos.schedules</code> section. Each value in this section takes a string in cron format that defines the backup schedule.</p>
+<p></p>
 </div>
-<div class="paragraph">
-<p>For example, the backup policy consists of creating a full backup every week on Sunday at 1 AM and creating incremental backups every day at 1 AM, except on Sundays. The configuration should look similar to:</p>
-</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Example: </dt>
+<dd>
+<p>To create a full backup every Sunday at 1:00 AM and incremental backups every other day at 1:00 AM:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
@@ -2392,30 +2497,66 @@
           incremental: "0 1 * * 1-6"</code></pre>
 </div>
 </div>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Schedules are defined in the <code>spec.backups.pgbackrest.repos.schedules</code> section using <strong>cron</strong> format.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
-<p>To manage scheduled backups, PGO will create several Kubernetes CronJobs that perform backups at the specified intervals. The backups will use the configuration you provided.</p>
+<p><strong>PGO</strong> will generate corresponding <strong>Kubernetes CronJobs</strong> to automate the backup process.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_managing_backup_retention_policies"><a class="anchor" href="#_managing_backup_retention_policies"></a><a class="link" href="#_managing_backup_retention_policies">1.2. Managing backup retention policies</a></h3>
+<h3 id="_managing_backup_retention_policies"><a class="anchor" href="#_managing_backup_retention_policies"></a><a class="link" href="#_managing_backup_retention_policies">2.2. Managing backup retention policies</a></h3>
 <div class="paragraph">
-<p>PGO allows you to set backup retention policies for full and differential backups. When the retention period of a full backup expires, pgBackRest will clean up all associated backups and WAL files. For example, if you have a full backup with four associated incremental backups, when the retention period of the full backup expires, the retention period of all its incremental backups also expires.</p>
+<p><strong>PGO</strong> allows flexible control over backup retention policies for full and differential backups, ensuring a balance between historical backup availability and efficient disk usage.</p>
 </div>
+<div class="sect3">
+<h4 id="_retention_logic"><a class="anchor" href="#_retention_logic"></a><a class="link" href="#_retention_logic">2.2.1. Retention logic</a></h4>
 <div class="paragraph">
-<p>There are two types of <code>repo1-retention-full-type</code> policies that can be set:</p>
+<p>When a full backup expires,
+<strong>pgBackRest</strong> automatically deletes it along with its associated incremental and differential backups and corresponding <strong>WAL</strong> files.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Example: </dt>
+<dd>
+<p>If you have a full backup with four incremental backups,
+all incremental backups will be deleted when the full backup expires.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_retention_policy_types"><a class="anchor" href="#_retention_policy_types"></a><a class="link" href="#_retention_policy_types">2.2.2. Retention policy types</a></h4>
+<div class="paragraph">
+<p>There are two types of retention policies for full backups (<code>repo1-retention-full-type</code>):</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>count</code>: based on the number of backups you want to retain. This is the default value.</p>
+<p><code>count</code> — Keeps a specified number of the most recent full backups. (<em>Default value</em>)</p>
 </li>
 <li>
-<p><code>time</code>: based on the time in days. Full backups older than <code>repo-retention-full</code> will be removed from the repository if there is at least one backup that equals or exceeds the <code>repo-retention-full</code> parameter</p>
+<p><code>time</code> — Retains backups for a specified number of days.</p>
 </li>
 </ul>
 </div>
+</div>
+<div class="sect3">
+<h4 id="_configuration_sample"><a class="anchor" href="#_configuration_sample"></a><a class="link" href="#_configuration_sample">2.2.3. Configuration sample</a></h4>
 <div class="paragraph">
-<p>For example, if we want to retain full backups for 14 days, the most convenient way to do this is through the <code>spec.backups.pgbackrest.global</code> section:</p>
+<p>To keep full backups for 14 days, add the following to <code>spec.backups.pgbackrest.global</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2427,130 +2568,404 @@
         repo1-retention-full-type: time</code></pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p>In this case, if we have 2 backups: one 12-day-old and another 15-day-old, no backups will be deleted because deleting the 15-day-old backup would leave only the 12-day-old backup, which would violate the retention policy of having at least one backup of 14-day age before removing older backups.</p>
+<p>If you have two backups—one 12 days old and another 15 days old—neither will be deleted.
+Deleting the 15-day-old backup would leave only the 12-day-old backup,
+violating the policy that requires at least one 14-day-old backup to be retained.</p>
 </div>
-<div class="paragraph">
-<p>It may be the case that the daily volume of WAL logs is significant, and saving storage space in the backup repository is more important than the ability to perform point-in-time recovery (PITR) to a significant depth. To configure the retention of WAL logs for a certain number of backups, pgBackRest has the following parameters:</p>
+</td>
+</tr>
+</table>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>repo1-retention-archive</code>: The number of backups for which WAL will be retained.</p>
-</li>
-</ul>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>repo1-retention-archive-type</code>: The type of backup for retaining WAL <code>(incr, diff, full)</code>. If set to <code>full</code>, pgBackRest will retain WAL for the number of full backups defined by repo-retention-archive. If set to <code>diff</code>, pgBackRest will retain archive logs for the number of full and differential backups defined by repo-retention-archive. If set to <code>incr</code>, pgBackRest will retain archive logs for the number of full, differential, and incremental backups defined by repo-retention-archive.</p>
-</li>
-</ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_creating_a_one_time_backup"><a class="anchor" href="#_creating_a_one_time_backup"></a><a class="link" href="#_creating_a_one_time_backup">1.3. Creating a one-time backup</a></h3>
+<h3 id="_managing_wal_archiving"><a class="anchor" href="#_managing_wal_archiving"></a><a class="link" href="#_managing_wal_archiving">2.3. Managing WAL archiving</a></h3>
 <div class="paragraph">
-<p>First, you need to configure the <code>spec.backups.pgbackrest.manual</code> section to be able to perform a one-time backup. It contains information about the type of backup you want to create and any other pgBackRest configuration parameters.</p>
+<p>When <strong>WAL</strong> log volume is significant,
+you can optimize storage by limiting the number of retained WAL logs without compromising recovery capabilities.</p>
 </div>
 <div class="paragraph">
-<p>Let&#8217;s configure a custom resource for creating a one-time full backup:</p>
+<p><strong>pgBackRest</strong> provides the following parameters to manage WAL archiving:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>repo1-retention-archive</code> — Number of backups to retain WAL logs for.</p>
+</li>
+<li>
+<p><code>repo1-retention-archive-type</code> — Backup types for which WAL logs are retained. Supported values:</p>
+</li>
+<li>
+<p><code>full</code> — Retain WAL only for full backups.</p>
+</li>
+<li>
+<p><code>diff</code> — Retain WAL for full and differential backups.</p>
+</li>
+<li>
+<p><code>incr</code> — Retain WAL for full, differential, and incremental backups.</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="_examples"><a class="anchor" href="#_examples"></a><a class="link" href="#_examples">2.3.1. Examples</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Space optimization:</strong> To minimize WAL log retention, configure WAL archiving only for full backups:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">repo1-retention-archive: "2"
+repo1-retention-archive-type: full</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><strong>Flexible recovery:</strong> To support Point-In-Time Recovery (PITR), use:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">repo1-retention-archive: "5"
+repo1-retention-archive-type: incr</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_one_time_backup_creation"><a class="anchor" href="#_one_time_backup_creation"></a><a class="link" href="#_one_time_backup_creation">2.4. One-time backup creation</a></h3>
+<div class="paragraph">
+<p><strong>Postgres Operator (PGO)</strong> allows creating one-time backups using <strong>pgBackRest</strong>. This process involves two main steps:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Configuring backup parameters.</p>
+</li>
+<li>
+<p>Initiating the backup through an annotation.</p>
+</li>
+</ol>
+</div>
+<div class="sect3">
+<h4 id="_step_1_configure_backup_parameters"><a class="anchor" href="#_step_1_configure_backup_parameters"></a><a class="link" href="#_step_1_configure_backup_parameters">Step 1: Configure backup parameters</a></h4>
+<div class="paragraph">
+<p>First, configure the <code>spec.backups.pgbackrest.manual</code> section to define the parameters for the one-time backup.
+Specify the backup type and any additional <strong>pgBackRest</strong> options.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example: Configuring a full backup</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
   backups:
     pgbackrest:
       manual:
-        repoName: repo1
+        repoName: repo1 <i class="conum" data-value="1"></i><b>(1)</b>
         options:
-         - --type=full</code></pre>
+          - --type=full <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This doesn&#8217;t initiate the backup yet - you need to add the <code>postgres-operator.crunchydata.com/pgbackrest-backup</code> annotation to your custom resource. The best way to configure this annotation is by using a timestamp label, so you know when you initiated the backup.</p>
+<p><strong>Parameter explanation:</strong></p>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>repoName</code> — The name of the repository where the backup will be stored.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>--type=full</code> — Indicates a full backup.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p>For example, for an operational cluster, you can execute the following command to initiate a one-time backup:</p>
+<p>This configuration <strong>only prepares</strong> the backup parameters <strong>but does not initiate</strong> the backup process.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_step_2_launch_the_backup"><a class="anchor" href="#_step_2_launch_the_backup"></a><a class="link" href="#_step_2_launch_the_backup">Step 2: Launch the backup</a></h4>
+<div class="paragraph">
+<p>To start the backup,
+add the annotation <code>postgres-operator.crunchydata.com/pgbackrest-backup</code> to your <strong>PostgresCluster</strong> resource.
+Include a timestamp in the annotation to indicate when the backup was initiated.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example: Launching a backup for the operational cluster</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n postgres-operator postgrescluster operational \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n &lt;registry-name&gt; postgrescluster operational \
   postgres-operator.crunchydata.com/pgbackrest-backup="$(date)"</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>PGO will detect this annotation and create a new disposable backup task!</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Replace <code>&lt;registry-name&gt;</code> with your registry/namespace name.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>If you plan to make one-time backups with similar parameters in the future, you can leave them in the specification; simply update the annotation to a different value during the next backup.</p>
+<p>PGO will detect the annotation and initiate the one-time backup based on the configured parameters.</p>
 </div>
+</div>
+<div class="sect3">
+<h4 id="_repeating_a_backup"><a class="anchor" href="#_repeating_a_backup"></a><a class="link" href="#_repeating_a_backup">Repeating a backup</a></h4>
 <div class="paragraph">
-<p>To re-execute the above command, you will need to add the <code>--overwrite</code> flag to update the annotation value, like in the below example:</p>
+<p>If you need to rerun the backup with the same parameters, update the annotation with the <code>--overwrite</code> flag.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example: Rerunning the backup</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n postgres-operator postgrescluster operational --overwrite \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n &lt;registry-name&gt; postgrescluster operational --overwrite \
   postgres-operator.crunchydata.com/pgbackrest-backup="$(date)"</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_recommendations"><a class="anchor" href="#_recommendations"></a><a class="link" href="#_recommendations">Recommendations</a></h4>
+<div class="ulist">
+<ul>
+<li>
+<p>Save commonly used backup configurations in the <code>manual</code> section for easy reuse.</p>
+</li>
+<li>
+<p>Use timestamped annotations to track backup initiation times.</p>
+</li>
+<li>
+<p>For large clusters, schedule full backups during off-peak hours to minimize a system load.</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_restoring"><a class="anchor" href="#_restoring"></a><a class="link" href="#_restoring">2. Restoring</a></h2>
+<h2 id="_restoring_backups"><a class="anchor" href="#_restoring_backups"></a><a class="link" href="#_restoring_backups">3. Restoring backups</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_point_in_time_recovery_pitr_or_restoring_a_backup_copy"><a class="anchor" href="#_point_in_time_recovery_pitr_or_restoring_a_backup_copy"></a><a class="link" href="#_point_in_time_recovery_pitr_or_restoring_a_backup_copy">2.1. Point-in-Time Recovery (PITR) or restoring a backup copy</a></h3>
+<h3 id="_restore_to_a_specific_point_in_time_or_backup"><a class="anchor" href="#_restore_to_a_specific_point_in_time_or_backup"></a><a class="link" href="#_restore_to_a_specific_point_in_time_or_backup">3.1. Restore to a specific point in time or backup</a></h3>
 <div class="paragraph">
-<p>To restore the database to a specific date and time, you need to add the following to the <code>spec.backups.pgbackrest</code> section:</p>
+<p><strong>pgBackRest</strong> supports two main approaches for restoring a PostgreSQL database:</p>
 </div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Point-in-Time Recovery (PITR)</strong> — Restore the database to its exact state at a specific date and time.</p>
+</li>
+<li>
+<p><strong>Restore from a Specific Backup</strong> — Restore directly from a chosen backup without applying WAL logs.</p>
+</li>
+</ol>
+</div>
+<div class="sect3">
+<h4 id="_point_in_time_recovery_pitr"><a class="anchor" href="#_point_in_time_recovery_pitr"></a><a class="link" href="#_point_in_time_recovery_pitr">3.1.1. Point-in-time recovery (PITR)</a></h4>
+<div class="paragraph">
+<p>To restore the database to a specific point in time:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Configure the restore options:</strong>
+Add the following configuration under <code>spec.backups.pgbackrest</code>:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
-  backups:
-    pgbackrest:
-      restore:
-        enabled: true
-        repoName: repo1
-        options:
-        - --type=time
-        - --target="2022-06-09 14:15:11-04"</code></pre>
+ backups:
+   pgbackrest:
+     restore:
+       enabled: true
+       repoName: repo1
+       options:
+         - --type=time <i class="conum" data-value="1"></i><b>(1)</b>
+         - --target="2022-06-09 14:15:11" <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>where <code>--target</code> is the target time for PITR. An example of a restoring target is <code>2022-06-09 14:15:11-04</code>.</p>
+<p><strong>Parameter explanation:</strong></p>
 </div>
+<div class="openblock">
+<div class="content">
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>--type=time</code> — Indicates a point-in-time recovery (PITR).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>--target</code> — Specifies the target date and time for recovery (<code>YYYY-MM-DD HH:MM:SS</code>).</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p>To restore the database to a specific backup, you need to add the following to the <code>spec.backups.pgbackrest section</code>:</p>
+<p>The restore time must be provided in <strong>UTC</strong>.</p>
 </div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p><strong>Initiate the restore process:</strong> Start the recovery by adding an annotation to the <strong>PostgresCluster</strong> resource:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n &lt;registry-name&gt; postgrescluster operational --overwrite \
+ postgres-operator.crunchydata.com/pgbackrest-restore="$(date)"</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Replace <code>&lt;registry-name&gt;</code> with your actual registry or namespace name.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Data loss warning:</strong> Any data created <strong>after</strong> the specified recovery time (<code>--target="2022-06-09 14:15:11"</code>) up to the moment the restore starts will be <strong>lost</strong>.</p>
+</li>
+<li>
+<p>Make sure this data loss is acceptable before initiating PITR.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_restore_from_a_specific_backup"><a class="anchor" href="#_restore_from_a_specific_backup"></a><a class="link" href="#_restore_from_a_specific_backup">3.1.2. Restore from a specific backup</a></h4>
+<div class="paragraph">
+<p>This method allows restoring directly from a chosen backup without applying WAL logs.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Configure Restore Options</strong>:
+Update the <code>spec.backups.pgbackrest</code> section as follows:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
-  backups:
-    pgbackrest:
-      restore:
-        enabled: true
-        repoName: repo1
-        options:
-        - --type=immediate
-        - --set=20220602-073427F_20220602-073507I</code></pre>
+ backups:
+   pgbackrest:
+     restore:
+       enabled: true
+       repoName: repo1
+       options:
+         - --type=immediate <i class="conum" data-value="1"></i><b>(1)</b>
+         - --set=20220602-073427F_20220602-073507I <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>where <code>--set</code> is the name of the target backup. You can view the list of available backups in the S3 backup storage bucket or by executing the command <code>pgbackrest info --stanza=db</code> in the database console.</p>
+<p><strong>Parameter explanation:</strong></p>
 </div>
-<div class="paragraph">
-<p>Now, to initiate the restoring process, you need to add the annotation <code>postgres-operator.crunchydata.com/pgbackrest-restore</code> as follows:</p>
+<div class="openblock">
+<div class="content">
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>--type=immediate</code> — Directly restores from the specified backup.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>--set</code> — The identifier of the backup you wish to restore.</td>
+</tr>
+</table>
 </div>
+</div>
+</div>
+</li>
+<li>
+<p><strong>Find available backups</strong>:
+To get a list of backups, use one of the following methods:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Using <strong>pgBackRest</strong> CLI:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n postgres-operator postgrescluster operational --overwrite \
-  postgres-operator.crunchydata.com/pgbackrest-restore=id1</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">pgbackrest info --stanza=db</code></pre>
 </div>
 </div>
+</li>
+<li>
+<p>Check the contents of the S3 bucket where the backups are stored.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Initiate the restore process:</strong>
+Start the restore by adding the annotation:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl annotate -n &lt;registry-name&gt; postgrescluster operational --overwrite \
+ postgres-operator.crunchydata.com/pgbackrest-restore="$(date)"</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_completing_the_restore_process"><a class="anchor" href="#_completing_the_restore_process"></a><a class="link" href="#_completing_the_restore_process">3.1.3. Completing the restore process</a></h4>
 <div class="paragraph">
-<p>Once the restoring process is complete, you can disable the added configuration:</p>
+<p>After the restore is complete, <strong>disable</strong> the restore mode to prevent further unintended restores.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2561,6 +2976,9 @@
         enabled: false</code></pre>
 </div>
 </div>
+</div>
+<div class="sect3">
+<h4 id="_additional_notes"><a class="anchor" href="#_additional_notes"></a><a class="link" href="#_additional_notes">3.1.4. Additional notes</a></h4>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -2568,148 +2986,567 @@
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-<div class="paragraph">
-<p>All these operations need to be performed on both the operational and analytical databases.
-To synchronize data between the operational and analytical databases, perform  <a href="#_synchronize_data_on_the_analytical_cluster">Synchronize data on the analytical cluster</a>.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Perform the restore steps on both the <strong>operational</strong> and <strong>analytical</strong> databases to maintain consistency.</p>
+</li>
+<li>
+<p>After restoring, follow the steps in <a href="#_synchronizing_data_on_the_analytical_cluster">Synchronizing data on the analytical cluster</a> to ensure both databases are fully aligned.</p>
+</li>
+</ul>
 </div>
 </td>
 </tr>
 </table>
 </div>
 </div>
+</div>
 <div class="sect2">
-<h3 id="_cloning_from_a_backup"><a class="anchor" href="#_cloning_from_a_backup"></a><a class="link" href="#_cloning_from_a_backup">2.2. Cloning from a backup</a></h3>
+<h3 id="_cloning_from_a_backup"><a class="anchor" href="#_cloning_from_a_backup"></a><a class="link" href="#_cloning_from_a_backup">3.2. Cloning from a backup</a></h3>
 <div class="paragraph">
-<p>To clone a database from a backup, you need to add the <code>spec.dataSource</code> section to the manifest that creates a new database instance.
-To restore to a specific point in time, the section will look similar to the below example:</p>
+<p><strong>pgBackRest</strong> allows you to clone a database from an existing backup, enabling the creation of a new PostgreSQL instance either from a specific point in time or from a specific backup set.</p>
+</div>
+<div class="sect3">
+<h4 id="_cloning_to_a_specific_point_in_time_pitr"><a class="anchor" href="#_cloning_to_a_specific_point_in_time_pitr"></a><a class="link" href="#_cloning_to_a_specific_point_in_time_pitr">3.2.1. Cloning to a specific point in time (PITR)</a></h4>
+<div class="paragraph">
+<p>To create a new PostgreSQL instance restored to a specific point in time,
+add the <code>spec.dataSource</code> section to the manifest of the new database instance.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example configuration for PITR</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
-  dataSource:
-    pgbackrest:
-      stanza: db
-      configuration:
-      - secret:
-          name: s3-conf
-      global:
-        repo1-path: "/postgres-backup/source_system/operational"
-        repo1-s3-uri-style: path
-        repo1-storage-verify-tls: n
-        repo1-storage-port: "9000"
-      options:
-      - --type=time
-      - --target="2022-06-09 14:15:11-04"
-      repo:
-        name: repo1
-        s3:
-          bucket: "bucketName"
-          endpoint: "endpoint"
-          region: "us-east-1"</code></pre>
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:                                     <i class="conum" data-value="1"></i><b>(1)</b>
+  dataSource:                             <i class="conum" data-value="2"></i><b>(2)</b>
+    pgbackrest:                           <i class="conum" data-value="3"></i><b>(3)</b>
+      stanza: db                          <i class="conum" data-value="4"></i><b>(4)</b>
+      configuration:                      <i class="conum" data-value="5"></i><b>(5)</b>
+        - secret:                         <i class="conum" data-value="6"></i><b>(6)</b>
+            name: s3-conf                 <i class="conum" data-value="7"></i><b>(7)</b>
+      global:                             <i class="conum" data-value="8"></i><b>(8)</b>
+        repo1-path: "/postgres-backup/source_system/operational"  <i class="conum" data-value="9"></i><b>(9)</b>
+        repo1-s3-uri-style: path                              <i class="conum" data-value="10"></i><b>(10)</b>
+        repo1-storage-verify-tls: n                          <i class="conum" data-value="11"></i><b>(11)</b>
+        repo1-storage-port: "9000"                           <i class="conum" data-value="12"></i><b>(12)</b>
+      options:                                              <i class="conum" data-value="13"></i><b>(13)</b>
+        - --type=time                                       <i class="conum" data-value="14"></i><b>(14)</b>
+        - --target="2022-06-09 14:15:11-04"                 <i class="conum" data-value="15"></i><b>(15)</b>
+      repo:                                                 <i class="conum" data-value="16"></i><b>(16)</b>
+        name: repo1                                         <i class="conum" data-value="17"></i><b>(17)</b>
+        s3:                                                 <i class="conum" data-value="18"></i><b>(18)</b>
+          bucket: "bucketName"                              <i class="conum" data-value="19"></i><b>(19)</b>
+          endpoint: "endpoint"                              <i class="conum" data-value="20"></i><b>(20)</b>
+          region: "us-east-1"                               <i class="conum" data-value="21"></i><b>(21)</b></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>To restore the database from a specific backup, in the <code>spec.dataSource.pgbackrest.options</code> section you need to change the restoring type and add the name of the backup copy:</p>
+<p><strong>Parameter explanation:</strong></p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">      options:
-      - --type=immediate
-      - --set=20220602-073427F_20220602-073507I</code></pre>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>spec</code> — Root section of the Kubernetes manifest.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>dataSource</code> — Specifies the data source for the restore process.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>pgbackrest</code> — Configures pgBackRest as the data source.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><code>stanza</code> — The pgBackRest configuration name for the database.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td><code>configuration</code> — Contains connection details to access backup storage.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td><code>secret</code> — Kubernetes Secret object for storing credentials.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td><code>name</code> — Name of the secret holding S3 access credentials (<code>s3-conf</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td><code>global</code> — Global settings for connecting to the backup repository.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td><code>repo1-path</code> — Path to the backup directory in the repository.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="10"></i><b>10</b></td>
+<td><code>repo1-s3-uri-style</code> — URI style for S3 connections (<code>path</code> or <code>virtual</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="11"></i><b>11</b></td>
+<td><code>repo1-storage-verify-tls</code> — Disables TLS verification (<code>n</code> for no).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="12"></i><b>12</b></td>
+<td><code>repo1-storage-port</code> — Port for connecting to the storage service.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="13"></i><b>13</b></td>
+<td><code>options</code> — Options passed to pgBackRest during the restore.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="14"></i><b>14</b></td>
+<td><code>--type=time</code> — Indicates a PITR restore.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="15"></i><b>15</b></td>
+<td><code>--target</code> — Target date and time for the PITR (<code>YYYY-MM-DD HH:MM:SS</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="16"></i><b>16</b></td>
+<td><code>repo</code> — Specifies the backup repository.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="17"></i><b>17</b></td>
+<td><code>name</code> — Name of the repository (<code>repo1</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="18"></i><b>18</b></td>
+<td><code>s3</code> — S3 configuration for the backup repository.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="19"></i><b>19</b></td>
+<td><code>bucket</code> — S3 bucket name where backups are stored.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="20"></i><b>20</b></td>
+<td><code>endpoint</code> — URL endpoint for the S3-compatible storage.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="21"></i><b>21</b></td>
+<td><code>region</code> — S3 region (e.g., <code>us-east-1</code>).</td>
+</tr>
+</table>
 </div>
-</div>
-<div class="admonitionblock important">
+<div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-important" title="Important"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>All of these operations need to be performed on both the operational and analytical databases.</p>
-</div>
-<div class="paragraph">
-<p>To restore data consistency between the operational and analytical databases, perform the following: <a href="#_synchronize_data_on_the_analytical_cluster">Synchronize data on the analytical cluster</a></p>
+<p>The <code>--target</code> time must include the correct time zone offset (e.g., <code>-04</code> for UTC-4).</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_synchronize_data_on_the_analytical_cluster"><a class="anchor" href="#_synchronize_data_on_the_analytical_cluster"></a><a class="link" href="#_synchronize_data_on_the_analytical_cluster">2.3. Synchronize data on the analytical cluster</a></h3>
+<div class="sect3">
+<h4 id="_cloning_from_a_specific_backup"><a class="anchor" href="#_cloning_from_a_specific_backup"></a><a class="link" href="#_cloning_from_a_specific_backup">3.2.2. Cloning from a specific backup</a></h4>
 <div class="paragraph">
-<p>Since the operational and analytical databases are asynchronously replicated, their backups are not synchronized. Therefore, even when restoring to the same point in time, data consistency between these databases cannot be guaranteed. To bring the restored databases into a synchronized state, perform the following steps on the <code>registry</code> database of the analytical instance:</p>
+<p>To restore a new instance from a specific backup (without WAL logs), update the <code>options</code> section as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">options:
+  - --type=immediate
+  - --set=20220602-073427F_20220602-073507I</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Parameter explanation:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Disable the subscription: <code class="source">ALTER SUBSCRIPTION operational_sub DISABLE</code>;</p>
+<p><code>--type=immediate</code> — Restores directly from a specific backup.</p>
 </li>
 <li>
-<p>Truncate all tables included in the subscription: <code class="source">SELECT 'TRUNCATE' ||' '||srrelid::regclass ||' '||'CASCADE;' FROM pg_subscription_rel \gexec</code>;</p>
-</li>
-<li>
-<p>Drop the subscription: <code>DROP SUBSCRIPTION operational_sub</code>;</p>
-</li>
-<li>
-<p>Create the subscription: <code>create subscription operational_sub connection 'host=OperationalHost user=postgres dbname=registry password=XXXXXX' PUBLICATION analytical_pub WITH(create_slot=false,slot_name=operational_sub)</code>;</p>
+<p><code>--set</code> — Identifier of the backup set to be restored.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Once the initial table synchronization on the analytical cluster is completed, logical replication will automatically be enabled, and the operational and analytical clusters will be in a synchronized state.</p>
+<p>You can list available backups using:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>pgBackRest CLI:</strong></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">pgbackrest info --stanza=db</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><strong>S3 Bucket:</strong>
+Browse the S3 bucket where backups are stored.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_completing_the_cloning_process"><a class="anchor" href="#_completing_the_cloning_process"></a><a class="link" href="#_completing_the_cloning_process">3.2.3. Completing the cloning process</a></h4>
+<div class="paragraph">
+<p>Once the manifest is applied and the process begins,
+<strong>PGO</strong> will automatically restore the database to a new instance based on the specified parameters.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>Perform cloning for both the <strong>operational</strong> and <strong>analytical</strong> databases to maintain consistency.</p>
+</li>
+<li>
+<p>After cloning, validate data consistency between the databases by following the steps in <a href="#_synchronizing_data_on_the_analytical_cluster">Synchronizing data on the analytical cluster</a>.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_best_practices"><a class="anchor" href="#_best_practices"></a><a class="link" href="#_best_practices">3.2.4. Best practices</a></h4>
+<div class="ulist">
+<ul>
+<li>
+<p>Use <strong>PITR</strong> cloning to restore the database to a specific point in time for recovery scenarios.</p>
+</li>
+<li>
+<p>Use <strong>immediate restore</strong> when you need an exact replica of a specific backup set.</p>
+</li>
+<li>
+<p>Regularly verify your S3 credentials and repository configurations to avoid issues during cloning.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synchronizing_data_on_the_analytical_cluster"><a class="anchor" href="#_synchronizing_data_on_the_analytical_cluster"></a><a class="link" href="#_synchronizing_data_on_the_analytical_cluster">3.3. Synchronizing data on the analytical cluster</a></h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Problem </dt>
+<dd>
+<p>The operational and analytical PostgreSQL databases replicate asynchronously.
+As a result, their backups might not be consistent, even if both databases are restored to the same point in time.
+This can lead to discrepancies between the two databases.</p>
+</dd>
+<dt class="hdlist1">Solution </dt>
+<dd>
+<p>To ensure data consistency between the operational and analytical databases after a restore,
+you must manually synchronize the analytical cluster with the operational cluster.</p>
+</dd>
+</dl>
+</div>
+<div class="sect3">
+<h4 id="_steps_to_synchronize_data"><a class="anchor" href="#_steps_to_synchronize_data"></a><a class="link" href="#_steps_to_synchronize_data">3.3.1. Steps to synchronize data</a></h4>
+<div class="paragraph">
+<p>Perform the following steps on the <strong><code>registry</code></strong> database in the <strong>analytical cluster</strong>
+to synchronize it with the operational database:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Disable the current subscription:</strong>
+Temporarily disable the logical replication subscription to prevent new data from syncing during the process.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sql hljs" data-lang="sql">ALTER SUBSCRIPTION operational_sub DISABLE;</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><strong>Truncate all subscribed tables:</strong>
+Clear all tables that are part of the subscription to ensure no conflicting data remains.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sql hljs" data-lang="sql">SELECT 'TRUNCATE ' || srrelid::regclass || ' CASCADE;' FROM pg_subscription_rel \gexec</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This command generates and executes <code>TRUNCATE</code> statements for all subscribed tables,
+using <code>CASCADE</code> to remove dependent data.</p>
+</div>
+</li>
+<li>
+<p><strong>Drop the existing subscription</strong>*
+After truncating the tables, drop the current subscription to prepare for a fresh sync.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sql hljs" data-lang="sql">DROP SUBSCRIPTION operational_sub;</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><strong>Create a new subscription</strong>
+Re-establish the subscription to start a fresh logical replication process from the operational cluster.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sql hljs" data-lang="sql">CREATE SUBSCRIPTION operational_sub
+CONNECTION 'host=OperationalHost user=postgres dbname=registry password=XXXXXX'
+PUBLICATION analytical_pub
+WITH (create_slot=false, slot_name=operational_sub);</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Parameter explanation:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>host=OperationalHost</code> — The hostname or IP of the operational database.</p>
+</li>
+<li>
+<p><code>user=postgres</code> — The username for the connection.</p>
+</li>
+<li>
+<p><code>dbname=registry</code> — The name of the database.</p>
+</li>
+<li>
+<p><code>password=XXXXXX</code> — Password for the connection.</p>
+</li>
+<li>
+<p><code>PUBLICATION analytical_pub</code> — The publication to subscribe to.</p>
+</li>
+<li>
+<p><code>WITH (create_slot=false, slot_name=operational_sub)</code> — Uses an existing replication slot.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>What happens next?</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Once the new subscription is created, <strong>initial table synchronization</strong> begins.</p>
+</li>
+<li>
+<p>After the initial sync is complete, <strong>logical replication</strong> will automatically start, and the analytical database will stay up to date with the operational cluster.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The time required for the initial synchronization depends on the size of the data in the operational database.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_recommendations_2"><a class="anchor" href="#_recommendations_2"></a><a class="link" href="#_recommendations_2">3.3.2. Recommendations</a></h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Avoid changes</strong> in the analytical database during the synchronization process to prevent data conflicts.</p>
+</li>
+<li>
+<p><strong>Monitor PostgreSQL logs</strong> for any errors or warnings during the replication process.</p>
+</li>
+<li>
+<p><strong>Verify data consistency</strong> after synchronization by comparing key tables between the operational and analytical databases.</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_continuous_restoring_on_the_standby_cluster"><a class="anchor" href="#_continuous_restoring_on_the_standby_cluster"></a><a class="link" href="#_continuous_restoring_on_the_standby_cluster">3. Continuous restoring on the standby cluster</a></h2>
+<h2 id="_continuous_recovery_on_a_standby_cluster"><a class="anchor" href="#_continuous_recovery_on_a_standby_cluster"></a><a class="link" href="#_continuous_recovery_on_a_standby_cluster">4. Continuous recovery on a standby cluster</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Advanced high availability and disaster recovery strategies involve distributing database clusters across multiple data centers to maximize uptime. PGO provides ways to deploy PostgreSQL clusters that can span multiple Kubernetes clusters using an external storage system.</p>
+<p>Advanced high availability (<strong>HA</strong>) and disaster recovery (<strong>DR</strong>) strategies often involve
+deploying standby clusters that continuously recover from the primary database.
+These standby clusters act as passive replicas, consistently updated through streaming replication or WAL archiving.
+In the event of a primary cluster failure, the standby can be promoted to minimize downtime and data loss.</p>
+</div>
+<div class="paragraph">
+<p>The <strong>Postgres Operator (PGO)</strong> simplifies the deployment and management of standby clusters across multiple Kubernetes environments
+while using shared backup repositories like S3-compatible storage.</p>
 </div>
 <div class="sect2">
-<h3 id="_creating_a_standby_cluster"><a class="anchor" href="#_creating_a_standby_cluster"></a><a class="link" href="#_creating_a_standby_cluster">3.1. Creating a standby cluster</a></h3>
+<h3 id="_creating_a_standby_cluster"><a class="anchor" href="#_creating_a_standby_cluster"></a><a class="link" href="#_creating_a_standby_cluster">4.1. Creating a standby cluster</a></h3>
 <div class="paragraph">
-<p>The backup repository of the primary cluster needs to be accessible to the standby cluster.
-When creating a standby cluster, you need to add the following to the manifest with <code>standby.enabled</code> set to true and the backup s3 repository parameters for the primary cluster:</p>
+<p>A <strong>standby cluster</strong> continuously restores from backups and WAL logs from the primary cluster’s repository.
+To configure a standby cluster, ensure it has access to the primary cluster’s backup repository.</p>
+</div>
+<div class="sect3">
+<h4 id="_requirements"><a class="anchor" href="#_requirements"></a><a class="link" href="#_requirements">4.1.1. Requirements</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Access to the backup repository:</strong>
+The standby cluster must connect to the same S3 bucket (or other compatible storage)
+used by the primary for backups and WAL logs.</p>
+</li>
+<li>
+<p><strong>Configured pgBackRest:</strong>
+The standby cluster uses pgBackRest to continuously restore and apply WAL logs.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_standby_cluster_configuration"><a class="anchor" href="#_standby_cluster_configuration"></a><a class="link" href="#_standby_cluster_configuration">4.1.2. Standby cluster configuration</a></h4>
+<div class="paragraph">
+<p>To set up a standby cluster, include the following configuration in your cluster manifest:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
   backups:
     pgbackrest:
-      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.40-1
+      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.40-1  <i class="conum" data-value="1"></i><b>(1)</b>
       repos:
-      - name: repo1
-        s3:
-          bucket: "bucket"
-          endpoint: "primary.endpoint"
-          region: "ca-central-1"
+        - name: repo1                                                                       <i class="conum" data-value="2"></i><b>(2)</b>
+          s3:
+            bucket: "bucket"                                                                <i class="conum" data-value="3"></i><b>(3)</b>
+            endpoint: "primary.endpoint"                                                    <i class="conum" data-value="4"></i><b>(4)</b>
+            region: "ca-central-1"                                                          <i class="conum" data-value="5"></i><b>(5)</b>
   standby:
-    enabled: true
-    repoName: repo1</code></pre>
+    enabled: true                                                                           <i class="conum" data-value="6"></i><b>(6)</b>
+    repoName: repo1                                                                         <i class="conum" data-value="7"></i><b>(7)</b></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Parameter explanation:</strong></p>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><strong><code>image</code></strong> — The pgBackRest container image used for backup/restore.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><strong><code>repos</code></strong> — List of backup repositories.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><strong><code>bucket</code></strong> — Name of the S3 bucket for storing backups and WAL logs.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><strong><code>endpoint</code></strong> — URL or IP of the S3-compatible storage.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td><strong><code>region</code></strong> — S3 bucket region.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td><strong><code>standby.enabled</code></strong> — Enables standby mode (<code>true</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td><strong><code>repoName</code></strong> — Name of the repository from which the standby will restore.</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_promoting_the_standby_cluster"><a class="anchor" href="#_promoting_the_standby_cluster"></a><a class="link" href="#_promoting_the_standby_cluster">3.2. Promoting the standby cluster</a></h3>
+<h3 id="_promoting_the_standby_cluster"><a class="anchor" href="#_promoting_the_standby_cluster"></a><a class="link" href="#_promoting_the_standby_cluster">4.2. Promoting the standby cluster</a></h3>
 <div class="paragraph">
-<p>Before promoting the standby cluster, we need to ensure that we don&#8217;t accidentally create a "split-brain" scenario where two primary instances try to write to the same storage. If the primary cluster is still active, make sure you have shut it down before attempting to promote the standby cluster.</p>
+<p><strong>Promoting</strong> a standby cluster converts it into a primary cluster capable of accepting read/write operations. This process is crucial during failover scenarios when the original primary is no longer available.</p>
 </div>
+<div class="sect3">
+<h4 id="_preventing_split_brain_scenarios"><a class="anchor" href="#_preventing_split_brain_scenarios"></a><a class="link" href="#_preventing_split_brain_scenarios">4.2.1. Preventing split-brain scenarios</a></h4>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p>When the primary cluster becomes inactive, we can promote the standby cluster by removing or disabling its <code>spec.standby</code> section:</p>
+<p>Before promoting the standby, ensure the original primary cluster is <strong>fully offline</strong>.
+Having two active primaries writing to the same data source can result in a <strong>split-brain</strong> scenario,
+leading to data inconsistencies or loss.</p>
 </div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_promotion_process"><a class="anchor" href="#_promotion_process"></a><a class="link" href="#_promotion_process">4.2.2. Promotion process</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Disable the standby mode:</strong>
+To promote the standby, disable the standby mode by updating the manifest:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
-  standby:
-    enabled: false</code></pre>
+ standby:
+   enabled: false</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>This change triggers the promotion of the standby cluster to the primary status, and the cluster starts accepting writes.</p>
+</li>
+<li>
+<p>After disabling the standby mode, the following happens:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The standby stops recovering from the backup repository.</p>
+</li>
+<li>
+<p>It becomes a writable primary cluster.</p>
+</li>
+<li>
+<p>New WAL logs and backups will now be generated from this new primary.</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_post_promotion_steps"><a class="anchor" href="#_post_promotion_steps"></a><a class="link" href="#_post_promotion_steps">4.2.3. Post-promotion steps</a></h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Verify cluster health:</strong>
+Confirm the newly promoted primary is operational and accepting connections.</p>
+</li>
+<li>
+<p><strong>Reconfigure backup and replication:</strong>
+Ensure that backups are running from the new primary and, if necessary, set up a new standby cluster for HA.</p>
+</li>
+<li>
+<p><strong>Monitor for issues:</strong>
+Check PostgreSQL and PGO logs to verify that the promotion was completed successfully without errors.</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 </div>
@@ -2718,7 +3555,7 @@ When creating a standby cluster, you need to add the following to the manifest w
     </div>
 </main></div>
 <footer class="footer">
-    <p>© 2024 The Registries Platform.</p>
+    <p>© 2023 The Registries Platform.</p>
     <img src="../../../../_/static/images/made-in-ua.png" class="made-in-ua-logo"/>
 </footer><script id="site-script" src="../../../../_/js/site.js" data-ui-root-path="../../../../_"></script>
 <script async src="../../../../_/js/vendor/highlight.js"></script>

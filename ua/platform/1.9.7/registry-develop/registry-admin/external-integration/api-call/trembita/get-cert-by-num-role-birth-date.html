@@ -440,7 +440,7 @@
     <a class="nav-link" href="../../../../../admin/backup-restore/backup-schedule-registry-components.html">Керування розкладом резервного копіювання реєстру</a>
   </li>
   <li class="nav-item" data-depth="4">
-    <a class="nav-link" href="../../../../../admin/backup-restore/postgres-backup-restore.html">Резервне копіювання та відновлення БД реєстру</a>
+    <a class="nav-link" href="../../../../../admin/backup-restore/postgres-backup-restore.html">Резервне копіювання та відновлення бази даних реєстру</a>
   </li>
 </ul>
   </li>
@@ -478,6 +478,9 @@
     <a class="nav-link" href="../../../../../admin/file-system/ceph_scaling.html">Масштабування розміру файлової системи Ceph</a>
   </li>
   <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../../../../../admin/file-system/ceph-rbd-to-cloud-disk-migration.html">Міграція дисків реєстрових інстансів БД з типом <em>ceph-rbd</em> до типів дисків хмарного сховища</a>
+  </li>
+  <li class="nav-item" data-depth="3">
     <button class="nav-item-toggle"></button>
     <span class="nav-text">Сховище S3 Ceph Object Storage</span>
 <ul class="nav-list">
@@ -496,7 +499,7 @@
     <a class="nav-link" href="../../../../../admin/platform-id-gov-ua-setup.html">Налаштування взаємодії з ІСЕІ ID.GOV.UA</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../../../../../../1.9.8/registry-develop/bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
+    <a class="nav-link" href="../../../../bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../../../../../admin/integration-diia.html">Налаштування інтеграції з "Дія"</a>
@@ -4028,13 +4031,13 @@
   </div>
   <ul class="components">
     <li class="component is-current">
-      <div class="title"><a href="../../../../../../1.9.8/index.html">Платформа Реєстрів</a></div>
+      <div class="title"><a href="../../../../../index.html">Платформа Реєстрів</a></div>
       <ul class="versions">
-        <li class="version is-latest">
-          <a href="../../../../../../1.9.8/index.html">1.9.8</a>
-        </li>
-        <li class="version is-current">
+        <li class="version is-current is-latest">
           <a href="../../../../../index.html">1.9.7</a>
+        </li>
+        <li class="version">
+          <a href="../../../../../../1.9.6/index.html">1.9.6</a>
         </li>
       </ul>
     </li>
@@ -4046,18 +4049,18 @@
 <main class="article">
     <div class="toolbar" role="navigation">
 <button class="nav-toggle"></button>
-  <a href="../../../../../../1.9.8/index.html" class="home-link"></a>
+  <a href="../../../../../index.html" class="home-link"></a>
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../../../../../index.html">Платформа Реєстрів</a></li>
-    <li><a href="get-cert-by-num-role-birth-date.html">Сервіс отримання даних Свідоцтва про народження (GetCertByNumRoleBirthDate)</a></li>
+    <li><a href="get-cert-by-num-role-birth-date.html">Сервіс отримання даних Свідоцтва про народження (<em>GetCertByNumRoleBirthDate</em>)</a></li>
   </ul>
 </nav>
 <div class="page-versions">
   <button class="version-menu-toggle" title="Show other versions of page">1.9.7</button>
   <div class="version-menu">
-    <a class="version" href="../../../../../../1.9.8/registry-develop/registry-admin/external-integration/api-call/trembita/get-cert-by-num-role-birth-date.html">1.9.8</a>
     <a class="version is-current" href="get-cert-by-num-role-birth-date.html">1.9.7</a>
+    <a class="version" href="../../../../../../1.9.6/registry-develop/registry-admin/external-integration/api-call/trembita/get-cert-by-num-role-birth-date.html">1.9.6</a>
   </div>
 </div>
 <div class="page-languages">
@@ -4072,9 +4075,19 @@
   <div class="toc-menu"></div>
 </aside>
             <article class="doc">
-<h1 class="page">Сервіс отримання даних Свідоцтва про народження (GetCertByNumRoleBirthDate)</h1>
+<h1 class="page">Сервіс отримання даних Свідоцтва про народження (<em>GetCertByNumRoleBirthDate</em>)</h1>
+<div id="toc" class="toc">
+<div id="toctitle">ЗМІСТ</div>
+<ul class="sectlevel1">
+<li><a href="#_огляд_сервісу">1. Огляд сервісу</a></li>
+<li><a href="#_повязані_сторінки">2. Пов&#8217;язані сторінки</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_огляд_сервісу"><a class="anchor" href="#_огляд_сервісу"></a><a class="link" href="#_огляд_сервісу">1. Огляд сервісу</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>Сервіс <code>GetCertByNumRoleNames</code> надає можливість здійснити пошук у <em>Державному реєстрі актів цивільного стану</em> (ДРАЦС) та отримати відомості щодо Свідоцтва про народження дитини за вказаними серією і номером Свідоцтва, та датою народження через ШБО "Трембіта".</p>
+<p>Сервіс <strong><code>GetCertByNumRoleNames</code></strong> надає можливість здійснити пошук у <em>Державному реєстрі актів цивільного стану</em> (ДРАЦС) та отримати відомості щодо Свідоцтва про народження дитини за вказаними серією і номером Свідоцтва, та датою народження через ШБО "Трембіта".</p>
 </div>
 <div class="paragraph">
 <p>Пошук Свідоцтва про народження в ДРАЦС здійснюється за критеріями:</p>
@@ -4107,10 +4120,8 @@
 </li>
 </ul>
 </div>
-<div class="exampleblock">
-<div class="title">Приклад 1. запит у форматі XML:</div>
-<div class="content">
 <div class="listingblock">
+<div class="title">Запит у форматі XML</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"&gt;
   &lt;s:Header&gt;
@@ -4131,12 +4142,8 @@
 &lt;/s:Envelope&gt;</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="title">Приклад 2. відповідь у форматі JSON:</div>
-<div class="content">
 <div class="listingblock">
+<div class="title">Відповідь у форматі JSON</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
    "certificate":[
@@ -4192,8 +4199,6 @@
 }</code></pre>
 </div>
 </div>
-</div>
-</div>
 <table class="tableblock frame-all grid-all stretch">
 <caption class="title">Таблиця 1. Опис структурних параметрів</caption>
 <colgroup>
@@ -4211,19 +4216,19 @@
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ErrorInfo</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">текстова інформація про помилки</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Текстова інформація про помилки</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">необов&#8217;язково</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ResultCode</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">результат запиту</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Результат запиту</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">необов&#8217;язково</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ResultData</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">XML з вихідними даними згідно формату в документі та з набором заданих полів в Base64</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">XML з вихідними даними згідно з форматом в документі та з набором заданих полів в Base64</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">необов&#8217;язково</p></td>
 </tr>
@@ -4456,27 +4461,31 @@
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Актуальну інформацію щодо необхідних ідентифікаторів сервісу та його постачальника, а також опис параметрів і WSDL, ви можете отримати за посиланнями:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="https://directory-test.trembita.gov.ua:8443/SEVDEIR-TEST/GOV/22956058/TEST_DRAC/GetCertByNumRoleNames?tab=0&amp;lang=ua">Вебсервіс GetCertByNumRoleBirthDate (тестове середовище)</a></p>
-</li>
-<li>
-<p><a href="https://directory-prod.trembita.gov.ua:8443/SEVDEIR/GOV/00015622/2_MJU_EDR_prod/SubjectDetail?tab=0">Вебсервіс GetCertByNumRoleBirthDate (промислове середовище)</a></p>
-</li>
-</ul>
+<p>Актуальну інформацію щодо необхідних ідентифікаторів сервісу та його постачальника, а також опис параметрів і WSDL, ви можете отримати в <a href="https://catalog.trembita.gov.ua/?env=SEVDEIR">офіційному каталозі "Трембіта"</a>.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_повязані_сторінки"><a class="anchor" href="#_повязані_сторінки"></a><a class="link" href="#_повязані_сторінки">2. Пов&#8217;язані сторінки</a></h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../../../../bp-modeling/bp/element-templates/soap-integration/dracs/get-certificate-by-birthdate.html" class="xref page">SOAP-конектор <em>Get Certificate By Birthdate</em></a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
 </article>
     </div>
 </main></div>
 <footer class="footer">
-    <p>© 2024 Платформа Реєстрів.</p>
+    <p>© 2023 Платформа Реєстрів.</p>
     <img src="../../../../../../../_/static/images/made-in-ua.png" class="made-in-ua-logo"/>
 </footer><script id="site-script" src="../../../../../../../_/js/site.js" data-ui-root-path="../../../../../../../_"></script>
 <script async src="../../../../../../../_/js/vendor/highlight.js"></script>

@@ -440,7 +440,7 @@
     <a class="nav-link" href="../../../admin/backup-restore/backup-schedule-registry-components.html">Керування розкладом резервного копіювання реєстру</a>
   </li>
   <li class="nav-item" data-depth="4">
-    <a class="nav-link" href="../../../admin/backup-restore/postgres-backup-restore.html">Резервне копіювання та відновлення БД реєстру</a>
+    <a class="nav-link" href="../../../admin/backup-restore/postgres-backup-restore.html">Резервне копіювання та відновлення бази даних реєстру</a>
   </li>
 </ul>
   </li>
@@ -478,6 +478,9 @@
     <a class="nav-link" href="../../../admin/file-system/ceph_scaling.html">Масштабування розміру файлової системи Ceph</a>
   </li>
   <li class="nav-item" data-depth="3">
+    <a class="nav-link" href="../../../admin/file-system/ceph-rbd-to-cloud-disk-migration.html">Міграція дисків реєстрових інстансів БД з типом <em>ceph-rbd</em> до типів дисків хмарного сховища</a>
+  </li>
+  <li class="nav-item" data-depth="3">
     <button class="nav-item-toggle"></button>
     <span class="nav-text">Сховище S3 Ceph Object Storage</span>
 <ul class="nav-list">
@@ -496,7 +499,7 @@
     <a class="nav-link" href="../../../admin/platform-id-gov-ua-setup.html">Налаштування взаємодії з ІСЕІ ID.GOV.UA</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../../../../1.9.8/registry-develop/bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
+    <a class="nav-link" href="../../bp-modeling/bp/rest-connector.html#create-service-entry">Інтеграція із зовнішніми сервісами за допомогою конектора REST: Створення serviceEntry та секрету для авторизації сервісу</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../../../admin/integration-diia.html">Налаштування інтеграції з "Дія"</a>
@@ -4028,13 +4031,13 @@
   </div>
   <ul class="components">
     <li class="component is-current">
-      <div class="title"><a href="../../../../1.9.8/index.html">Платформа Реєстрів</a></div>
+      <div class="title"><a href="../../../index.html">Платформа Реєстрів</a></div>
       <ul class="versions">
-        <li class="version is-latest">
-          <a href="../../../../1.9.8/index.html">1.9.8</a>
-        </li>
-        <li class="version is-current">
+        <li class="version is-current is-latest">
           <a href="../../../index.html">1.9.7</a>
+        </li>
+        <li class="version">
+          <a href="../../../../1.9.6/index.html">1.9.6</a>
         </li>
       </ul>
     </li>
@@ -4046,7 +4049,7 @@
 <main class="article">
     <div class="toolbar" role="navigation">
 <button class="nav-toggle"></button>
-  <a href="../../../../1.9.8/index.html" class="home-link"></a>
+  <a href="../../../index.html" class="home-link"></a>
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../../../index.html">Платформа Реєстрів</a></li>
@@ -4061,8 +4064,8 @@
 <div class="page-versions">
   <button class="version-menu-toggle" title="Show other versions of page">1.9.7</button>
   <div class="version-menu">
-    <a class="version" href="../../../../1.9.8/registry-develop/registry-admin/external-integration/cp-integrate-trembita.html">1.9.8</a>
     <a class="version is-current" href="cp-integrate-trembita.html">1.9.7</a>
+    <a class="version" href="../../../../1.9.6/registry-develop/registry-admin/external-integration/cp-integrate-trembita.html">1.9.6</a>
   </div>
 </div>
 <div class="page-languages">
@@ -4081,53 +4084,48 @@
 <div id="toc" class="toc">
 <div id="toctitle">ЗМІСТ</div>
 <ul class="sectlevel1">
-<li><a href="#_загальний_опис">1. Загальний опис</a></li>
-<li><a href="#_приклади_конфігурації_сервісів_та_опис_структурних_параметрів">2. Приклади конфігурації сервісів та опис структурних параметрів</a>
+<li><a href="#_вступ_до_інтеграції_з_реєстрами_через_шбо_трембіта">1. Вступ до інтеграції з реєстрами через ШБО "Трембіта"</a></li>
+<li><a href="#_конфігурація_сервісів_та_параметрів_інтеграції">2. Конфігурація сервісів та параметрів інтеграції</a>
 <ul class="sectlevel2">
-<li><a href="#_налаштування_взаємодії_із_реєстром_єдр">2.1. Налаштування взаємодії із реєстром ЄДР</a></li>
-<li><a href="#_налаштування_взаємодії_із_реєстром_драцс">2.2. Налаштування взаємодії із реєстром ДРАЦС</a></li>
-<li><a href="#_налаштування_взаємодії_із_системою_єібдвпо">2.3. Налаштування взаємодії із системою ЄІБДВПО</a></li>
-<li><a href="#_налаштування_взаємодії_із_довільними_soap_сервісами_сев_деір_трембіта">2.4. Налаштування взаємодії із довільними SOAP-сервісами СЕВ ДЕІР "Трембіта"</a></li>
+<li><a href="#_пошук_підсистем_та_сервісів_у_сев_деір_трембіта">2.1. Пошук підсистем та сервісів у СЕВ ДЕІР "Трембіта"</a></li>
+<li><a href="#_каталог_інтегрованих_підсистем_та_сервісів_трембіта">2.2. Каталог інтегрованих підсистем та сервісів "Трембіта"</a></li>
+<li><a href="#services-trembita-configuration">2.3. Приклади конфігурацій для інтеграції з реєстрами</a>
+<ul class="sectlevel3">
+<li><a href="#_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_єдр">2.3.1. Приклад YAML-конфігурації для інтеграції з сервісами ЄДР</a></li>
+<li><a href="#_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_драцс">2.3.2. Приклад YAML-конфігурації для інтеграції з сервісами ДРАЦС</a></li>
+<li><a href="#_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_єібдвпо">2.3.3. Приклад YAML-конфігурації для інтеграції з сервісами ЄІБДВПО</a></li>
+<li><a href="#_приклад_yaml_конфігурації_для_інтеграції_з_довільними_soap_сервісами_трембіта">2.3.4. Приклад YAML-конфігурації для інтеграції з довільними SOAP-сервісами "Трембіта"</a></li>
+<li><a href="#_опис_параметрів_yaml_конфігурації">2.3.5. Опис параметрів YAML-конфігурації</a></li>
 </ul>
 </li>
-<li><a href="#_перегляд_налаштувань_інтеграції_та_розгортання_змін_до_реєстру">3. Перегляд налаштувань інтеграції та розгортання змін до реєстру</a></li>
+</ul>
+</li>
+<li><a href="#_налаштування_інтеграційних_можливостей_у_control_plane">3. Налаштування інтеграційних можливостей у Control Plane</a>
+<ul class="sectlevel2">
+<li><a href="#_налаштування_інтеграції_з_єдр">3.1. Налаштування інтеграції з ЄДР</a></li>
+<li><a href="#_налаштування_інтеграції_з_драцс">3.2. Налаштування інтеграції з ДРАЦС</a></li>
+<li><a href="#_налаштування_інтеграції_з_єібдвпо">3.3. Налаштування інтеграції з ЄІБДВПО</a></li>
+<li><a href="#_інтеграція_з_довільними_soap_сервісами_трембіта">3.4. Інтеграція з довільними SOAP-сервісами "Трембіта"</a></li>
+</ul>
+</li>
+<li><a href="#_перегляд_налаштувань_інтеграції_та_розгортання_змін">4. Перегляд налаштувань інтеграції та розгортання змін</a></li>
 </ul>
 </div>
-<div id="preamble">
-<div class="sectionbody">
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="ПОПЕРЕДЖЕННЯ"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>Налаштування взаємодії через адміністративну панель Control Plane доступне для версій реєстру 1.9.3 і вище.</p>
-</div>
-<div class="paragraph">
-<p>Для версій реєстру 1.9.2 та нижче налаштувати інтеграцію можливо на рівні регламенту реєстру у файлі <em>bp-trembita/configuration.yml</em> (<em>зверніться до сторінки <a href="api-call/trembita/external-services-connection-config.html" class="xref page">Конфігурація доступу до ШБО "Трембіта"</a></em>).</p>
-</div>
-<div class="paragraph">
-<p>Додавання нових інтеграцій із реєстрами через ШБО "Трембіта" доступне для версій реєстру 1.9.4 і вище.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
 <div class="sect1">
-<h2 id="_загальний_опис"><a class="anchor" href="#_загальний_опис"></a><a class="link" href="#_загальний_опис">1. Загальний опис</a></h2>
+<h2 id="_вступ_до_інтеграції_з_реєстрами_через_шбо_трембіта"><a class="anchor" href="#_вступ_до_інтеграції_з_реєстрами_через_шбо_трембіта"></a><a class="link" href="#_вступ_до_інтеграції_з_реєстрами_через_шбо_трембіта">1. Вступ до інтеграції з реєстрами через ШБО "Трембіта"</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Щоб мати змогу використовувати розроблені на Платформі SOAP-інтеграційні конектори до зовнішніх сервісів та отримувати інформацію від інших реєстрів через ШБО "Трембіта", необхідно попередньо виконати конфігурації на рівні екземпляра реєстру.</p>
+<p>Платформа надає можливості для інтеграції з зовнішніми сервісами та іншими реєстрами через ШБО "Трембіта".
+Це дозволяє легко отримувати необхідні дані з різних джерел у стандартизованому форматі.</p>
 </div>
 <div class="paragraph">
-<p>Налаштування взаємодії з іншими реєстрами через ШБО "Трембіта" виконується в адміністративній панелі <strong>Control Plane</strong>.</p>
+<p>Інтеграція реалізована у вигляді каталогу типових SOAP-конекторів, які забезпечують підключення до реєстрів без необхідності розробки з нуля.
+Такі конектори спрощують взаємодію між системами та прискорюють процес налаштування інтеграцій.</p>
 </div>
 <div class="paragraph">
-<p>Додавання зовнішніх систем для інтеграції не вимагає ручних налаштувань мережевих політик. Усі конфігурації застосовуються автоматично, після налаштувань в адмін-панелі.</p>
+<p>Щоб використовувати ці інтеграційні можливості, потрібно спершу виконати налаштування на рівні екземпляра реєстру.
+Усі конфігурації здійснюються через адміністративну панель <strong>Control Plane</strong>.
+Після збереження змін, потрібні мережеві політики застосовуються автоматично&#8201;&#8212;&#8201;додаткові ручні налаштування не потрібні.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -4136,7 +4134,9 @@
 <i class="fa icon-note" title="ПРИМІТКА"></i>
 </td>
 <td class="content">
-Міжреєстрова інтеграція через "Трембіту" реалізується у вигляді каталогу типових розширень-конекторів до реєстрів та не потребує додаткової конфігурації на рівні регламенту (<em>див. детальніше&#8201;&#8212;&#8201;<a href="../../bp-modeling/external-integration/api-call/connectors-external-registry.html" class="xref page">Типові інтеграційні SOAP-конектори до інших реєстрів</a></em>).
+<div class="paragraph">
+<p>Детальніше про каталог доступних SOAP-конекторів та їх можливості читайте тут — <a href="../../bp-modeling/bp/element-templates/soap-integration/soap-connectors-overview.html" class="xref page">Інтеграційні SOAP-конектори до інших реєстрів</a>.</p>
+</div>
 </td>
 </tr>
 </table>
@@ -4144,115 +4144,259 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_приклади_конфігурації_сервісів_та_опис_структурних_параметрів"><a class="anchor" href="#_приклади_конфігурації_сервісів_та_опис_структурних_параметрів"></a><a class="link" href="#_приклади_конфігурації_сервісів_та_опис_структурних_параметрів">2. Приклади конфігурації сервісів та опис структурних параметрів</a></h2>
+<h2 id="_конфігурація_сервісів_та_параметрів_інтеграції"><a class="anchor" href="#_конфігурація_сервісів_та_параметрів_інтеграції"></a><a class="link" href="#_конфігурація_сервісів_та_параметрів_інтеграції">2. Конфігурація сервісів та параметрів інтеграції</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Наразі на Платформі через "Трембіту" можна <em>за замовчуванням</em> налаштувати інтеграцію із 5-ма сервісами 3-х реєстрів, які підпорядковуються 2-м міністерствам. Також можна додавати нові інтеграції із будь-якими сервісами-учасниками СЕВ ДЕІР "Трембіта".</p>
+<p>За замовчуванням доступна інтеграція з 5 сервісами, що належать до 3-х реєстрів під управлінням 2-х міністерств.
+Це дозволяє швидко підключатися до основних державних реєстрів без додаткової розробки.</p>
 </div>
-<div id="list-of-services-trembita" class="dlist">
-<dl>
-<dt class="hdlist1">Перелік сервісів СЕВ ДЕІР "Трембіта", що використовуються на Платформі: </dt>
-<dd>
-<details>
-<summary class="title">Міністерство юстиції України</summary>
-<div class="content">
-<details>
-<summary class="title">Єдиний державний реєстр (ЄДР)</summary>
-<div class="content">
+<div class="paragraph">
+<p>Окрім готових інтеграцій, Платформа підтримує підключення нових сервісів-учасників СЕВ ДЕІР "Трембіта", що дає змогу розширювати функціональність та інтегрувати будь-які зовнішні джерела даних за потреби.</p>
+</div>
+<div class="sect2">
+<h3 id="_пошук_підсистем_та_сервісів_у_сев_деір_трембіта"><a class="anchor" href="#_пошук_підсистем_та_сервісів_у_сев_деір_трембіта"></a><a class="link" href="#_пошук_підсистем_та_сервісів_у_сев_деір_трембіта">2.1. Пошук підсистем та сервісів у СЕВ ДЕІР "Трембіта"</a></h3>
+<div class="paragraph">
+<p>Щоб використовувати сервіс ШБО "Трембіта", він спершу має бути зареєстрований у системі СЕВ ДЕІР "Трембіта". Лише зареєстровані підсистеми та сервіси можуть бути інтегровані через платформу.</p>
+</div>
+<div class="paragraph">
+<p>Для пошуку потрібного сервісу або підсистеми у СЕВ ДЕІР "Трембіта" використовуйте офіційний каталог.
+Нижче наведено покроковий алгоритм для пошуку.</p>
+</div>
+<div class="paragraph">
+<p>Щоб знайти потрібну підсистему або сервіс для інтеграції через "Трембіту", дотримуйтеся наступного алгоритму:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Відкрийте <a href="https://catalog.trembita.gov.ua/catalog/subsystems?env=SEVDEIR">офіційний каталог підсистем "Трембіти"</a>.</p>
+</li>
+<li>
+<p>Оберіть середовище:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="https://directory-test.trembita.gov.ua:8443/SEVDEIR-TEST/GOV/00015622/2_MJU_EDR_prod/SearchSubjects">Сервіс пошуку суб&#8217;єкта в ЄДР (SearchSubjects)</a></p>
+<p><strong>SEVDEIR-TEST</strong>&#8201;&#8212;&#8201;тестове середовище для розробки та перевірок.</p>
 </li>
 <li>
-<p><a href="https://directory-test.trembita.gov.ua:8443/SEVDEIR-TEST/GOV/00015622/2_MJU_EDR_prod/SubjectDetail">Сервіс отримання детальної інформації про суб&#8217;єкт в ЄДР (SubjectDetail)</a></p>
+<p><strong>SEVDEIR-PROD</strong>&#8201;&#8212;&#8201;промислове середовище для продуктивних інтеграцій.</p>
 </li>
 </ul>
 </div>
-</div>
-</details>
-<details>
-<summary class="title">Державний реєстр актів цивільного стану (ДРАЦС)</summary>
-<div class="content">
+</li>
+<li>
+<p>Знайдіть потрібну підсистему за кодом:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="https://directory-test.trembita.gov.ua:8443/SEVDEIR-TEST/GOV/00015622/3_MJU_DRACS_prod/GetCertByNumRoleNames">Сервіс отримання даних Свідоцтва про народження за вказаними серією і номером Свідоцтва та ПІБ (GetCertByNumRoleNames)</a></p>
+<p>Використовуйте поле <strong>Код підсистеми</strong> для пошуку.</p>
 </li>
 <li>
-<p><a href="https://directory-test.trembita.gov.ua:8443/SEVDEIR-TEST/GOV/00015622/3_MJU_DRACS_prod/GetCertByNumRoleBirthDate">Сервіс отримання даних Свідоцтва про народження за вказаними серією і номером Свідоцтва, та датою народження (GetCertByNumRoleBirthDate)</a></p>
+<p>Наприклад, для <strong>Єдиного державного реєстру (ЄДР)</strong> міністерства юстиції використовуйте код <code>2_MJU_EDR_prod</code>.</p>
 </li>
 </ul>
 </div>
-</div>
-</details>
-</div>
-</details>
-<details>
-<summary class="title">Міністерство соціальної політики України</summary>
-<div class="content">
-<details>
-<summary class="title">Єдина інформаційна база даних внутрішньо переміщених осіб (ЄІБДВПО)</summary>
-<div class="content">
-<div class="ulist">
-<ul>
-<li>
-<p><a href="https://directory-test.trembita.gov.ua:8443/SEVDEIR-TEST/GOV/37567866/51_IDP_prod/IDPexchangeService">Сервіс пошуку довідки ВПО (IDPexchangeService)</a></p>
-</li>
-</ul>
-</div>
-</div>
-</details>
-</div>
-</details>
-<div class="admonitionblock tip">
+<div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-tip" title="ПІДКАЗКА"></i>
+<i class="fa icon-note" title="ПРИМІТКА"></i>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Повний каталог вебсервісів системи ШБО "Трембіта", де можна отримати необхідні ідентифікатори, представлено за посиланнями:</p>
+<p>Зверніть увагу, що <strong><code>_prod</code></strong> означає, що це підсистема-власник/виробник даних (<strong>producer</strong>), а не вказівка на продуктивне середовище.</p>
 </div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Перегляньте доступні сервіси у підсистемі:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="https://directory-test.trembita.gov.ua:8443/">Каталог вебсервісів (тестове середовище)</a></p>
+<p>У розділі <strong>Сервіси</strong> знайдіть потрібний сервіс.</p>
 </li>
 <li>
-<p><a href="https://directory-prod.trembita.gov.ua:8443/">Каталог вебсервісів (промислове середовище)</a></p>
+<p>Наприклад, сервіс <strong>SearchSubjects</strong> використовується для пошуку суб&#8217;єкта в ЄДР.</p>
 </li>
 </ul>
 </div>
-</td>
-</tr>
-</table>
+</li>
+<li>
+<p>Повний ідентифікатор сервісу формується за таким шаблоном:</p>
+<div class="listingblock">
+<div class="content">
+<pre>SEVDEIR-ENV/GOV/КОД_ОРГАНУ/КОД_ПІДСИСТЕМИ/СЕРВІС</pre>
 </div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="ПІДКАЗКА"></i>
-</td>
-<td class="content">
-Перегляньте також сторінку <a href="api-call/trembita/overview.html" class="xref page">Реєстри та системи ШБО "Трембіта"</a> та ознайомтеся із параметрами SOAP API-контракту для інтеграції кожного сервісу.
-</td>
-</tr>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_каталог_інтегрованих_підсистем_та_сервісів_трембіта"><a class="anchor" href="#_каталог_інтегрованих_підсистем_та_сервісів_трембіта"></a><a class="link" href="#_каталог_інтегрованих_підсистем_та_сервісів_трембіта">2.2. Каталог інтегрованих підсистем та сервісів "Трембіта"</a></h3>
+<div class="paragraph">
+<p>Таблиця нижче демонструє перелік актуальних підсистем та сервісів "Трембіта", інтеграції з якими підтримуються Платформою реєстрів.</p>
+</div>
+<div class="paragraph">
+<p></p>
+</div>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог інтеграцій через Трембіту</title>
+    <style>
+        .custom-tab<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог інтеграцій через Трембіту</title>
+    <style>
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .custom-table th, .custom-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+        .custom-table th {
+            background-color: #f2f2f2;
+        }
+        .custom-table td:nth-child(1) { width: 15%; } /* Міністерство */
+        .custom-table td:nth-child(2) { width: 20%; } /* Реєстр */
+        .custom-table td:nth-child(3) { width: 15%; } /* Сервіс */
+        .custom-table td:nth-child(4) { width: 20%; } /* Опис */
+        .custom-table td:nth-child(5) { width: 30%; } /* Повний ідентифікатор сервісу */
+        .code {
+            font-family: monospace;
+            background-color: #f9f9f9;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+<table class="custom-table">
+    <thead>
+        <tr>
+            <th>Міністерство</th>
+            <th>Реєстр</th>
+            <th>Сервіс</th>
+            <th>Опис</th>
+            <th>Повний ID сервісу</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Міністерство юстиції України -->
+        <tr>
+            <td rowspan="4">Міністерство юстиції України</td>
+            <td rowspan="2">Єдиний державний реєстр (ЄДР)</td>
+            <td><span class="code">SearchSubjects</span></td>
+            <td>Сервіс пошуку суб'єкта в ЄДР</td>
+            <td><span class="code">SEVDEIR-TEST/GOV/00015622/2_MJU_EDR_prod/SearchSubjects</span></td>
+        </tr>
+        <tr>
+            <td><span class="code">SubjectDetail</span></td>
+            <td>Сервіс отримання детальної інформації про суб'єкта</td>
+            <td><span class="code">SEVDEIR-TEST/GOV/00015622/2_MJU_EDR_prod/SubjectDetail</span></td>
+        </tr>
+        <tr>
+            <td rowspan="2">Державний реєстр актів цивільного стану (ДРАЦС)</td>
+            <td><span class="code">GetCertByNumRoleNames</span></td>
+            <td>Вивантаження даних свідоцтва за серією, номером та ПІБ</td>
+            <td><span class="code">SEVDEIR-TEST/GOV/00015622/3_MJU_DRACS_prod/GetCertByNumRoleNames</span></td>
+        </tr>
+        <tr>
+            <td><span class="code">GetCertByNumRoleBirthDate</span></td>
+            <td>Вивантаження даних свідоцтва за серією, номером та датою народження</td>
+            <td><span class="code">SEVDEIR-TEST/GOV/00015622/3_MJU_DRACS_prod/GetCertByNumRoleBirthDate</span></td>
+        </tr>
+
+        <!-- Міністерство соціальної політики України -->
+        <tr>
+            <td>Міністерство соціальної політики України</td>
+            <td>Єдина інформаційна база даних ВПО (ЄІБДВПО)</td>
+            <td><span class="code">IDPexchangeService</span></td>
+            <td>Сервіс пошуку довідки ВПО</td>
+            <td><span class="code">SEVDEIR-TEST/GOV/37567866/51_IDP_prod/IDPexchangeservice</span></td>
+        </tr>
+    </tbody>
 </table>
+
+</body>
+</html>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Пояснення до таблиці: </dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>У таблиці наведено тестові середовища (<strong>SEVDEIR-TEST</strong>).</p>
+</li>
+<li>
+<p>Для інтеграції з продуктивним середовищем замініть <code>SEVDEIR-TEST</code> на <code>SEVDEIR-PROD</code>.</p>
+</li>
+<li>
+<p>Завжди перевіряйте підтримку версій сервісів у каталозі&#8201;&#8212;&#8201;можуть бути доступні різні варіанти інтеграції (наприклад, стандартна або розширена версія сервісу тощо).</p>
+</li>
+</ul>
 </div>
 </dd>
 </dl>
 </div>
-<div id="services-trembita-configuration" class="dlist">
-<dl>
-<dt class="hdlist1">Приклади параметрів, які можна використати у Control Plane для налаштування взаємодії із сервісами СЕВ ДЕІР "Трембіта": </dt>
-<dd>
-<details>
-<summary class="title">Приклад конфігурації підключення до сервісів ЄДР</summary>
-<div class="content">
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="ПІДКАЗКА"></i>
+</td>
+<td class="content">
+Перегляньте сторінку <a href="api-call/trembita/overview.html" class="xref page">Інтеграція з "Трембіта": SOAP API контракт (XML)</a> та ознайомтеся із параметрами SOAP API-контракту для інтеграції кожного сервісу.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="services-trembita-configuration"><a class="anchor" href="#services-trembita-configuration"></a><a class="link" href="#services-trembita-configuration">2.3. Приклади конфігурацій для інтеграції з реєстрами</a></h3>
+<div class="paragraph">
+<p>Налаштування інтеграції з іншими реєстрами через ШБО "Трембіта" визначаються в адміністративній панелі Control Plane і зберігаються до файлу конфігурації <code>deploy-templates/values.yaml</code> реєстру.</p>
+</div>
+<div class="paragraph">
+<p>Нижче подано приклади параметрів, які можна використати у Control Plane для налаштування взаємодії із сервісами СЕВ ДЕІР "Трембіта" і які потім зберігаються до файлу конфігурації.</p>
+</div>
+<div class="sect3">
+<h4 id="_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_єдр"><a class="anchor" href="#_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_єдр"></a><a class="link" href="#_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_єдр">2.3.1. Приклад YAML-конфігурації для інтеграції з сервісами ЄДР</a></h4>
+<div class="paragraph">
+<p>Цей приклад демонструє, як виглядатиме конфігурація для інтеграції з Єдиним державним реєстром (ЄДР) через ШБО "Трембіта" після налаштування у Control Plane.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Ці YAML-налаштування не налаштовуються вручну. Вони є результатом конфігурації, виконаної через Control Plane. Після збереження змін у Control Plane файл <code>deploy-templates/values.yaml</code> оновиться автоматично та міститиме подібну конфігурацію.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="listingblock">
-<div class="title">deploy-templates/values.yaml</div>
+<div class="title">Приклад інтеграції з ЄДР: deploy-templates/values.yaml</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">trembita:
   registries:
@@ -4260,7 +4404,7 @@
       user-id: 'DDM'
       protocol-version: '4.0'
       protocol: "SOAP"
-      trembita-url: 'https://trembita-edr-registry-mock.apps.envone.dev.registry.eua.gov.ua/mockEDRService'
+      trembita-url: 'https://trembita-edr-registry-mock.example.com'
       secret-name: 'trembita-registries-secrets'
       client:
         x-road-instance: 'SEVDEIR-TEST'
@@ -4278,101 +4422,199 @@
         secret: "vault:registry-kv/registry/&lt;registry&gt;/trembita-registries/&lt;trembita-registry-name&gt;"</code></pre>
 </div>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p>де:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>trembita-edr-registry-mock</code> — назва mock-сервісу;</p>
+</li>
+<li>
+<p><code>example.com</code> — назва кластера.</p>
+</li>
+</ul>
 </div>
-</details>
-<details>
-<summary class="title">Приклад конфігурації підключення до сервісів ДРАЦС</summary>
-<div class="content">
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_драцс"><a class="anchor" href="#_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_драцс"></a><a class="link" href="#_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_драцс">2.3.2. Приклад YAML-конфігурації для інтеграції з сервісами ДРАЦС</a></h4>
+<div class="paragraph">
+<p>Цей приклад демонструє, як виглядатиме конфігурація для інтеграції з Державним реєстром актів цивільного стану (ДРАЦС) через ШБО "Трембіта" після налаштування у Control Plane.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Ці YAML-налаштування не налаштовуються вручну. Вони є результатом конфігурації, виконаної через Control Plane. Після збереження змін у Control Plane файл <code>deploy-templates/values.yaml</code> оновиться автоматично та міститиме подібну конфігурацію.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="listingblock">
-<div class="title">deploy-templates/values.yaml</div>
+<div class="title">Приклад інтеграції з ДРАЦС: deploy-templates/values.yaml</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">trembita:
   registries:
     dracs-registry:
-          trembita-url: 'https://trembita-dracs-registry-mock.apps.envone.dev.registry.eua.gov.ua/dracsMock'
-          user-id: 'DDM'
-          protocol-version: '4.0'
-          protocol: "SOAP"
-          client:
-            x-road-instance: 'SEVDEIR-TEST'
-            member-class: 'GOV'
-            member-code: '43395033'
-            subsystem-code: 'IDGOV_TEST_01'
-          service:
-            x-road-instance: 'SEVDEIR-TEST'
-            member-class: 'GOV'
-            member-code: '22956058'
-            subsystem-code: 'TEST_DRAC'</code></pre>
+      trembita-url: 'https://trembita-dracs-registry-mock.example.com'
+      user-id: 'DDM'
+      protocol-version: '4.0'
+      protocol: "SOAP"
+      client:
+        x-road-instance: 'SEVDEIR-TEST'
+        member-class: 'GOV'
+        member-code: '43395033'
+        subsystem-code: 'IDGOV_TEST_01'
+      service:
+        x-road-instance: 'SEVDEIR-TEST'
+        member-class: 'GOV'
+        member-code: '22956058'
+        subsystem-code: 'TEST_DRAC'</code></pre>
 </div>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p>де:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>trembita-dracs-registry-mock</code> — назва mock-сервісу;</p>
+</li>
+<li>
+<p><code>example.com</code> — назва кластера.</p>
+</li>
+</ul>
 </div>
-</details>
-<details>
-<summary class="title">Приклад конфігурації підключення до сервісів ЄІБДВПО</summary>
-<div class="content">
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_єібдвпо"><a class="anchor" href="#_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_єібдвпо"></a><a class="link" href="#_приклад_yaml_конфігурації_для_інтеграції_з_сервісами_єібдвпо">2.3.3. Приклад YAML-конфігурації для інтеграції з сервісами ЄІБДВПО</a></h4>
+<div class="paragraph">
+<p>Цей приклад демонструє, як виглядатиме конфігурація для інтеграції з Єдиною інформаційною базою даних внутрішньо переміщених осіб (ЄІБДВПО) після налаштування у Control Plane.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Ці YAML-налаштування не налаштовуються вручну. Вони є результатом конфігурації, виконаної через Control Plane. Після збереження змін у Control Plane файл <code>deploy-templates/values.yaml</code> оновиться автоматично та міститиме подібну конфігурацію.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="listingblock">
-<div class="title">deploy-templates/values.yaml</div>
+<div class="title">Приклад інтеграції з ЄІБДВПО: deploy-templates/values.yaml</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">trembita:
   registries:
     idp-exchange-service-registry:
-          trembita-url: https://trembita-idp-mock-server.apps.envone.dev.registry.eua.gov.ua/idpMock
-          user-id: DDM
-          protocol-version: '4.0'
-          type: "registry"
-          protocol: "SOAP"
-          client:
-            x-road-instance: SEVDEIR-TEST
-            member-class: GOV
-            member-code: '43395033'
-            subsystem-code: IDGOV_TEST_01
-          service:
-            x-road-instance: SEVDEIR-TEST
-            member-class: GOV
-            member-code: '37567866'
-            subsystem-code: 51_IDP_prod</code></pre>
-</div>
-</div>
-</div>
-</details>
-<details>
-<summary class="title">Приклад конфігурації підключення до довільних SOAP-сервісів "Трембіти"</summary>
-<div class="content">
-<div class="listingblock">
-<div class="title">deploy-templates/values.yaml</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">trembita:
-  registries:
-    edrlike-registry:
-      user-id: "DDM"
-      protocol-version: "4.0"
-      url: "https://trembita.mdtu-ddm.projects.epam.com"
-      type: "registry" # Вказує на рівень взаємодії - реєстровий
+      trembita-url: 'https://trembita-idp-mock-server.example.com'
+      user-id: DDM
+      protocol-version: '4.0'
+      type: "registry"
       protocol: "SOAP"
       client:
-        x-road-instance: "THIS-REGISTRY"
-        member-class: "GOV"
-        member-code: "1488"
-        subsystem-code: "Platform-registry"
+        x-road-instance: SEVDEIR-TEST
+        member-class: GOV
+        member-code: '43395033'
+        subsystem-code: IDGOV_TEST_01
       service:
-        x-road-instance: "THAT-REGISTRY"
-        member-class: "GOV"
-        member-code: "42"
-        subsystem-code: "Edrllike-system"
+        x-road-instance: SEVDEIR-TEST
+        member-class: GOV
+        member-code: '37567866'
+        subsystem-code: 51_IDP_prod</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>де:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>trembita-idp-mock-server</code> — назва mock-сервісу;</p>
+</li>
+<li>
+<p><code>example.com</code> — назва кластера.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_приклад_yaml_конфігурації_для_інтеграції_з_довільними_soap_сервісами_трембіта"><a class="anchor" href="#_приклад_yaml_конфігурації_для_інтеграції_з_довільними_soap_сервісами_трембіта"></a><a class="link" href="#_приклад_yaml_конфігурації_для_інтеграції_з_довільними_soap_сервісами_трембіта">2.3.4. Приклад YAML-конфігурації для інтеграції з довільними SOAP-сервісами "Трембіта"</a></h4>
+<div class="paragraph">
+<p>Цей приклад демонструє, як виглядатиме конфігурація для інтеграції з будь-якими довільними SOAP-сервісами "Трембіта" після налаштування через Control Plane. Ця конфігурація надає можливість гнучко визначати параметри для підключення до різних сервісів.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Ці YAML-налаштування не налаштовуються вручну. Вони є результатом конфігурації, виконаної через Control Plane. Після збереження змін у Control Plane файл <code>deploy-templates/values.yaml</code> оновиться автоматично та міститиме подібну конфігурацію.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Приклад інтеграції двох довільних SOAP-сервісів: deploy-templates/values.yaml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">trembita:
+  registries: <i class="conum" data-value="1"></i><b>(1)</b>
+    edrlike-registry:
+      trembita-url: "https://trembita.example.com" <i class="conum" data-value="2"></i><b>(2)</b>
+      user-id: "DDM" <i class="conum" data-value="3"></i><b>(3)</b>
+      protocol-version: "4.0" <i class="conum" data-value="4"></i><b>(4)</b>
+      type: "registry" # Вказує на рівень взаємодії - реєстровий <i class="conum" data-value="5"></i><b>(5)</b>
+      protocol: "SOAP" <i class="conum" data-value="6"></i><b>(6)</b>
+      client:
+        x-road-instance: "THIS-REGISTRY" <i class="conum" data-value="7"></i><b>(7)</b>
+        member-class: "GOV" <i class="conum" data-value="8"></i><b>(8)</b>
+        member-code: "0000" <i class="conum" data-value="9"></i><b>(9)</b>
+        subsystem-code: "Platform-registry" <i class="conum" data-value="10"></i><b>(10)</b>
+      service:
+        x-road-instance: "THAT-REGISTRY" <i class="conum" data-value="11"></i><b>(11)</b>
+        member-class: "GOV" <i class="conum" data-value="12"></i><b>(12)</b>
+        member-code: "42" <i class="conum" data-value="13"></i><b>(13)</b>
+        subsystem-code: "Edrllike-system" <i class="conum" data-value="14"></i><b>(14)</b>
+        service-code: "Service code" <i class="conum" data-value="15"></i><b>(15)</b>
+        service-version: "Service version" <i class="conum" data-value="16"></i><b>(16)</b>
       # опційний блок авторизації
       auth:
-        type: "AUTH_TOKEN"
-        secret: "vault:registry-kv/registry/&lt;registry&gt;/trembita-registries/&lt;trembita-registry-name&gt;"
+        type: "AUTH_TOKEN" <i class="conum" data-value="17"></i><b>(17)</b>
+        secret: "vault:registry-kv/registry/&lt;registry&gt;/trembita-registries/&lt;trembita-registry-name&gt;" <i class="conum" data-value="18"></i><b>(18)</b>
     new-registry:
       user-id: "DDM"
       protocol-version: "4.0"
-      url: "https://trembita.mdtu-ddm.projects.epam.com"
+      trembita-url: "https://trembita.example.com"
       type: "registry" # Вказує на рівень взаємодії - реєстровий
       protocol: "SOAP"
       client:
         x-road-instance: "THIS-REGISTRY"
         member-class: "GOV"
-        member-code: "1488"
+        member-code: "1111"
         subsystem-code: "Platform-registry"
       service:
         x-road-instance: "THAT-REGISTRY"
@@ -4386,9 +4628,13 @@
 </div>
 </div>
 </div>
-</details>
+<div class="sect3">
+<h4 id="_опис_параметрів_yaml_конфігурації"><a class="anchor" href="#_опис_параметрів_yaml_конфігурації"></a><a class="link" href="#_опис_параметрів_yaml_конфігурації">2.3.5. Опис параметрів YAML-конфігурації</a></h4>
+<div class="paragraph">
+<p>У таблиці нижче наведено опис структурних параметрів та їх відповідність елементам YAML-файлу.</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Таблиця 1. Опис структурних параметрів</caption>
+<caption class="title">Таблиця 1. Опис структурних параметрів конфігурації</caption>
 <colgroup>
 <col style="width: 30%;">
 <col style="width: 70%;">
@@ -4401,131 +4647,156 @@
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>registries</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ① <code>registries</code></p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Назва реєстру, до якого буде сформовано запит</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><em>Заголовки, що ідентифікують користувача, який робить запит</em></p></td>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong>Заголовки, що ідентифікують користувача, який робить запит</strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>trembita-url</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ② <code>trembita-url</code></p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Адреса до ШБО</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>user-id</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ③ <code>user-id</code></p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Ідентифікатор користувача, який ініціює запит</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>protocol-version</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Версія протоколу, за яким обмінюються повідомлення ШБО.<br>
-<em>На цей час версія протоколу 4.0</em></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ④ <code>protocol-version</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Версія протоколу, за яким обмінюються повідомлення ШБО.
+<strong><em>На цей час версія протоколу 4.0</em></strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>type</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Вказує на рівень взаємодії.<br>
-При створенні нових SOAP-інтеграцій через "Трембіту" (додавання нової системи), рівень взаємодії завжди <em>реєстровий</em>&#8201;&#8212;&#8201;<strong><code>type: "registry"</code></strong>.</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑤ <code>type</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Вказує на рівень взаємодії.
+При створенні нових SOAP-інтеграцій через "Трембіту", рівень взаємодії <strong>завжди реєстровий</strong> — <strong><code>type: "registry"</code></strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>protocol</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Протокол інтеграційної взаємодії.<br>
-Встановлюється за замовчуванням&#8201;&#8212;&#8201;завжди <code>"SOAP"</code>.</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑥ <code>protocol</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Протокол інтеграційної взаємодії.
+Встановлюється за замовчуванням — <strong>завжди</strong> <code>"SOAP"</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><em>Заголовок (client), який ідентифікує учасника сервісу</em></p></td>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong>Заголовок (<code>client</code>), який ідентифікує учасника сервісу</strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>x-road-instance</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑦ <code>x-road-instance</code></p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Код середовища, який ідентифікує екземпляр учасника</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>member-class</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑧ <code>member-class</code></p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Ідентифікатор класу учасника</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>member-code</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑨ <code>member-code</code></p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Ідентифікатор учасника</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>subsystem-code</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Код, який ідентифікує підсистему учасника, якщо сервіс надається підсистемою</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑩ <code>subsystem-code</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Код підсистеми учасника, якщо сервіс надається підсистемою</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><em>Заголовок (service), який ідентифікує сервіс</em></p></td>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong>Заголовок (<code>service</code>), який ідентифікує сервіс</strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>x-road-instance</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Код середовища, який ідентифікує екземпляр сервісу</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑪ <code>x-road-instance</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Код середовища сервісу</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>member-class</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑫ <code>member-class</code></p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Ідентифікатор класу сервісу</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>member-code</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑬ <code>member-code</code></p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Ідентифікатор сервісу</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>subsystem-code</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Код, який ідентифікує підсистему сервісу, якщо сервіс надається підсистемою</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑭ <code>subsystem-code</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Код підсистеми сервісу</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>service-code</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(Опціональний параметр)</em>.<br>
-Визначає специфічний код конкретного сервісу, що викликається. Використовується для однозначної ідентифікації певної служби.</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑮ <code>service-code</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(Опціональний)</em> Код конкретного сервісу для виклику</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>service-version</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(Опціональний параметр)</em><br>
-Визначає номер версії сервісу, що викликається. Забезпечення доступ до правильної версії сервісу, якщо їх декілька.</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑯ <code>service-version</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(Опціональний)</em> Номер версії сервісу</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><em>(Опціональний блок) Заголовок (auth), який визначає параметри авторизації</em></p></td>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><em>(Опціональний блок)</em> Заголовок (<code>auth</code>), який визначає параметри авторизації</strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>type</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Тип автентифікації.<br>
-<em>Доступні значення для SOAP-взаємодії: <code><strong>AUTH_TOKEN</strong></code> і <strong><code>NO_AUTH</code></strong></em>.</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑰ <code>type</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Тип автентифікації.
+<em>Доступні значення: <code>AUTH_TOKEN</code>, <code>NO_AUTH</code>.</em></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>secret</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span style="font-size:1.2em;"> ⑱ <code>secret</code></p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Шлях до секрету рівня реєстру у Vault</p></td>
 </tr>
 </tbody>
 </table>
-</dd>
-</dl>
 </div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="ПІДКАЗКА"></i>
-</td>
-<td class="content">
-Конкретні приклади налаштувань взаємодії із реєстрами через ШБО "Трембіта" ви можете переглянути у відповідних підрозділах нижче.
-</td>
-</tr>
-</table>
 </div>
-<div style="page-break-after: always;"></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_налаштування_інтеграційних_можливостей_у_control_plane"><a class="anchor" href="#_налаштування_інтеграційних_можливостей_у_control_plane"></a><a class="link" href="#_налаштування_інтеграційних_можливостей_у_control_plane">3. Налаштування інтеграційних можливостей у Control Plane</a></h2>
+<div class="sectionbody">
 <div class="sect2">
-<h3 id="_налаштування_взаємодії_із_реєстром_єдр"><a class="anchor" href="#_налаштування_взаємодії_із_реєстром_єдр"></a><a class="link" href="#_налаштування_взаємодії_із_реєстром_єдр">2.1. Налаштування взаємодії із реєстром ЄДР</a></h3>
+<h3 id="_налаштування_інтеграції_з_єдр"><a class="anchor" href="#_налаштування_інтеграції_з_єдр"></a><a class="link" href="#_налаштування_інтеграції_з_єдр">3.1. Налаштування інтеграції з ЄДР</a></h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
 <p>Увійдіть до консолі <strong>Control Plane</strong> як адміністратор реєстру.</p>
 <div class="paragraph">
-<p><span class="image unresolved"><img src="admin:infrastructure/cluster-mgmt/update-cluster-mgmt-01.png" alt="update cluster mgmt 01"></span></p>
+<p><span class="image"><img src="../../../admin/_images/infrastructure/cluster-mgmt/update-cluster-mgmt-ua-01.png" alt="update cluster mgmt ua 01"></span></p>
 </div>
 </li>
 <li>
-<p>Перейдіть до розділу <span class="underline">Реєстри</span> та відкрийте необхідний.</p>
+<p>Перейдіть до розділу <strong>Реєстри</strong> та відкрийте необхідний.</p>
 <div class="paragraph">
 <p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-01.png" alt="cp id gov ua iit setup 01"></span></p>
 </div>
 </li>
 <li>
-<p>Знайдіть секцію <span class="underline">Налаштування взаємодії з реєстрами через Трембіту</span> та сконфігуруйте необхідну інтеграцію із реєстром ЄДР.</p>
+<p>Знайдіть секцію <strong>Налаштування взаємодії з реєстрами через Трембіту</strong> та сконфігуруйте необхідну інтеграцію із реєстром ЄДР.</p>
 <div class="imageblock">
 <div class="content">
 <img src="../../_images/registry-admin/external-integration/cp-integrate-trembita/cp-integrate-trembita-12.png" alt="cp integrate trembita 12">
@@ -4613,13 +4884,13 @@
 </div>
 </li>
 <li>
-<p>Натисніть <kbd>Підтвердити</kbd>, щоб зберегти налаштування.</p>
+<p>Натисніть <strong>Підтвердити</strong>, щоб зберегти налаштування.</p>
 <div class="paragraph">
 <p>В результаті формується запит на внесення змін до конфігурації реєстру.</p>
 </div>
 </li>
 <li>
-<p>Відкрийте розділ <span class="underline">Запити на оновлення</span> та перегляньте сформований запит, натиснувши іконку перегляду&#8201;&#8212;&#8201;👁.</p>
+<p>Відкрийте розділ <strong>Запити на оновлення</strong> та перегляньте сформований запит, натиснувши іконку перегляду&#8201;&#8212;&#8201;👁.</p>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -4627,7 +4898,7 @@
 <i class="fa icon-note" title="ПРИМІТКА"></i>
 </td>
 <td class="content">
-Запропоновані зміни <span class="underline">автоматично підтверджуються</span> системою та зберігаються до конфігурації реєстру у файлі <strong><em>deploy-templates/values.yaml</em></strong>.
+Запропоновані зміни <strong>автоматично підтверджуються</strong> системою та зберігаються до конфігурації реєстру у файлі <strong><em>deploy-templates/values.yaml</em></strong>.
 </td>
 </tr>
 </table>
@@ -4646,26 +4917,25 @@
 </li>
 </ol>
 </div>
-<div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
-<h3 id="_налаштування_взаємодії_із_реєстром_драцс"><a class="anchor" href="#_налаштування_взаємодії_із_реєстром_драцс"></a><a class="link" href="#_налаштування_взаємодії_із_реєстром_драцс">2.2. Налаштування взаємодії із реєстром ДРАЦС</a></h3>
+<h3 id="_налаштування_інтеграції_з_драцс"><a class="anchor" href="#_налаштування_інтеграції_з_драцс"></a><a class="link" href="#_налаштування_інтеграції_з_драцс">3.2. Налаштування інтеграції з ДРАЦС</a></h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
 <p>Увійдіть до консолі <strong>Control Plane</strong> як адміністратор реєстру.</p>
 <div class="paragraph">
-<p><span class="image unresolved"><img src="admin:infrastructure/cluster-mgmt/update-cluster-mgmt-01.png" alt="update cluster mgmt 01"></span></p>
+<p><span class="image"><img src="../../../admin/_images/infrastructure/cluster-mgmt/update-cluster-mgmt-ua-01.png" alt="update cluster mgmt ua 01"></span></p>
 </div>
 </li>
 <li>
-<p>Перейдіть до розділу <span class="underline">Реєстри</span> та відкрийте необхідний.</p>
+<p>Перейдіть до розділу <strong>Реєстри</strong> та відкрийте необхідний.</p>
 <div class="paragraph">
 <p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-01.png" alt="cp id gov ua iit setup 01"></span></p>
 </div>
 </li>
 <li>
-<p>Знайдіть секцію <span class="underline">Налаштування взаємодії з реєстрами через Трембіту</span> та сконфігуруйте необхідну інтеграцію із реєстром ДРАЦС.</p>
+<p>Знайдіть секцію <strong>Налаштування взаємодії з реєстрами через Трембіту</strong> та сконфігуруйте необхідну інтеграцію із реєстром ДРАЦС.</p>
 <div class="imageblock">
 <div class="content">
 <img src="../../_images/registry-admin/external-integration/cp-integrate-trembita/cp-integrate-trembita-12.png" alt="cp integrate trembita 12">
@@ -4709,7 +4979,7 @@
 <i class="fa icon-note" title="ПРИМІТКА"></i>
 </td>
 <td class="content">
-Під "сервісом" тут мається на увазі рівень реєстру ДРАЦС. Безпосередньо ендпоінти (ресурси), до яких надходитиме запит для отримання даних, налаштовані на рівні інтеграційних конекторів до ДРАЦСу, які ви можете використовувати у бізнес-процесах.
+Під "сервісом" тут мається на увазі рівень реєстру ДРАЦС. Безпосередньо ендпоінти (ресурси), до яких надходитиме запит для отримання даних, налаштовані на рівні інтеграційних конекторів до ДРАЦС, які ви можете використовувати у бізнес-процесах.
 </td>
 </tr>
 </table>
@@ -4745,13 +5015,13 @@
 </div>
 </li>
 <li>
-<p>Натисніть <kbd>Підтвердити</kbd>, щоб зберегти налаштування.</p>
+<p>Натисніть <strong>Підтвердити</strong>, щоб зберегти налаштування.</p>
 <div class="paragraph">
 <p>В результаті формується запит на внесення змін до конфігурації реєстру.</p>
 </div>
 </li>
 <li>
-<p>Відкрийте розділ <span class="underline">Запити на оновлення</span> та перегляньте сформований запит, натиснувши іконку перегляду&#8201;&#8212;&#8201;👁.</p>
+<p>Відкрийте розділ <strong>Запити на оновлення</strong> та перегляньте сформований запит, натиснувши іконку перегляду&#8201;&#8212;&#8201;👁.</p>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -4759,7 +5029,7 @@
 <i class="fa icon-note" title="ПРИМІТКА"></i>
 </td>
 <td class="content">
-Запропоновані зміни <span class="underline">автоматично підтверджуються</span> системою та зберігаються до конфігурації реєстру у файлі <strong><em>deploy-templates/values.yaml</em></strong>.
+Запропоновані зміни <strong>автоматично підтверджуються</strong> системою та зберігаються до конфігурації реєстру у файлі <code>deploy-templates/values.yaml</code>.
 </td>
 </tr>
 </table>
@@ -4778,26 +5048,25 @@
 </li>
 </ol>
 </div>
-<div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
-<h3 id="_налаштування_взаємодії_із_системою_єібдвпо"><a class="anchor" href="#_налаштування_взаємодії_із_системою_єібдвпо"></a><a class="link" href="#_налаштування_взаємодії_із_системою_єібдвпо">2.3. Налаштування взаємодії із системою ЄІБДВПО</a></h3>
+<h3 id="_налаштування_інтеграції_з_єібдвпо"><a class="anchor" href="#_налаштування_інтеграції_з_єібдвпо"></a><a class="link" href="#_налаштування_інтеграції_з_єібдвпо">3.3. Налаштування інтеграції з ЄІБДВПО</a></h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
 <p>Увійдіть до консолі <strong>Control Plane</strong> як адміністратор реєстру.</p>
 <div class="paragraph">
-<p><span class="image unresolved"><img src="admin:infrastructure/cluster-mgmt/update-cluster-mgmt-01.png" alt="update cluster mgmt 01"></span></p>
+<p><span class="image"><img src="../../../admin/_images/infrastructure/cluster-mgmt/update-cluster-mgmt-ua-01.png" alt="update cluster mgmt ua 01"></span></p>
 </div>
 </li>
 <li>
-<p>Перейдіть до розділу <span class="underline">Реєстри</span> та відкрийте необхідний.</p>
+<p>Перейдіть до розділу <strong>Реєстри</strong> та відкрийте необхідний.</p>
 <div class="paragraph">
 <p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-01.png" alt="cp id gov ua iit setup 01"></span></p>
 </div>
 </li>
 <li>
-<p>Знайдіть секцію <span class="underline">Налаштування взаємодії з реєстрами через Трембіту</span> та сконфігуруйте необхідну інтеграцію із системою ЄІБДВПО.</p>
+<p>Знайдіть секцію <strong>Налаштування взаємодії з реєстрами через Трембіту</strong> та сконфігуруйте необхідну інтеграцію із системою ЄІБДВПО.</p>
 <div class="imageblock">
 <div class="content">
 <img src="../../_images/registry-admin/external-integration/cp-integrate-trembita/cp-integrate-trembita-12.png" alt="cp integrate trembita 12">
@@ -4877,13 +5146,13 @@
 </div>
 </li>
 <li>
-<p>Натисніть <kbd>Підтвердити</kbd>, щоб зберегти налаштування.</p>
+<p>Натисніть <strong>Підтвердити</strong>, щоб зберегти налаштування.</p>
 <div class="paragraph">
 <p>В результаті формується запит на внесення змін до конфігурації реєстру.</p>
 </div>
 </li>
 <li>
-<p>Відкрийте розділ <span class="underline">Запити на оновлення</span> та перегляньте сформований запит, натиснувши іконку перегляду&#8201;&#8212;&#8201;👁.</p>
+<p>Відкрийте розділ <strong>Запити на оновлення</strong> та перегляньте сформований запит, натиснувши іконку перегляду&#8201;&#8212;&#8201;👁.</p>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -4891,7 +5160,7 @@
 <i class="fa icon-note" title="ПРИМІТКА"></i>
 </td>
 <td class="content">
-Запропоновані зміни <span class="underline">автоматично підтверджуються</span> системою та зберігаються до конфігурації реєстру у файлі <strong><em>deploy-templates/values.yaml</em></strong>.
+Система автоматично підтверджує запропоновані зміни та зберігає їх до файлу конфігурації реєстру <code>deploy-templates/values.yaml</code>.
 </td>
 </tr>
 </table>
@@ -4910,48 +5179,39 @@
 </li>
 </ol>
 </div>
-<div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
-<h3 id="_налаштування_взаємодії_із_довільними_soap_сервісами_сев_деір_трембіта"><a class="anchor" href="#_налаштування_взаємодії_із_довільними_soap_сервісами_сев_деір_трембіта"></a><a class="link" href="#_налаштування_взаємодії_із_довільними_soap_сервісами_сев_деір_трембіта">2.4. Налаштування взаємодії із довільними SOAP-сервісами СЕВ ДЕІР "Трембіта"</a></h3>
+<h3 id="_інтеграція_з_довільними_soap_сервісами_трембіта"><a class="anchor" href="#_інтеграція_з_довільними_soap_сервісами_трембіта"></a><a class="link" href="#_інтеграція_з_довільними_soap_сервісами_трембіта">3.4. Інтеграція з довільними SOAP-сервісами "Трембіта"</a></h3>
 <div class="paragraph">
 <p>Механізм налаштування інтеграційної взаємодії із сервісами-учасниками СЕВ ДЕІР "Трембіта" є однаковим для усіх систем (<em>детальніше див. у попередніх розділах цього документа</em>). Єдиними відмінностями є такі:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Ви можете <em>додавати</em> нові інтеграційні взаємодії на рівні реєстру.</p>
+<p>Ви можете <strong>додавати</strong> нові інтеграційні взаємодії на рівні реєстру.</p>
 </li>
 <li>
-<p>Ви можете <em>видаляти</em> створені інтеграційні взаємодії для поточного реєстру.</p>
+<p>Ви можете <strong>видаляти</strong> створені інтеграційні взаємодії для поточного реєстру.</p>
 </li>
 <li>
-<p>При додаванні нової взаємодії, у налаштуваннях реєстру <em>deploy-templates/values.yaml</em> додається атрибут <strong><code>type: "registry"</code></strong>, який вказує на <em>реєстровий</em> рівень взаємодії.</p>
+<p>При додаванні нової взаємодії, у налаштуваннях реєстру <code>deploy-templates/values.yaml</code> додається атрибут <strong><code>type: "registry"</code></strong>, який вказує на <strong>реєстровий рівень</strong> взаємодії.</p>
 </li>
 <li>
-<p>Взаємодії, які розгортаються автоматично разом із реєстром (ЄДР, ДРАЦС та ЄІБДВПО), можливо лише редагувати й неможливо видалити. Для таких інтеграцій рівень взаємодії завжди <em>системний</em>.</p>
+<p>Взаємодії, які розгортаються автоматично разом із реєстром (ЄДР, ДРАЦС та ЄІБДВПО), можливо лише редагувати й неможливо видалити. Для таких інтеграцій рівень взаємодії завжди <strong>системний</strong>.</p>
 </li>
 </ul>
 </div>
-<details>
-<summary class="title"><em>Екран конфігурації реєстру у Control Plane</em></summary>
-<div class="content">
 <div class="imageblock">
 <div class="content">
 <img src="../../../arch/_images/architecture/registry/operational/bpms/soap-connector/control-plane-main.png" alt="control plane main">
 </div>
-<div class="title">Зображення 1. Загальний вигляд блоку налаштувань</div>
+<div class="title">Зображення 1. Загальний вигляд блоку інтеграційних налаштувань у вебінтерфейсі Control Plane</div>
 </div>
-</div>
-</details>
-<details>
-<summary class="title"><em>Додавання нової конфігурації у Control Plane</em></summary>
-<div class="content">
 <div class="imageblock">
 <div class="content">
 <img src="../../../arch/_images/architecture/registry/operational/bpms/soap-connector/control-plane-create-trembita-auth.png" alt="control plane create trembita auth">
 </div>
-<div class="title">Зображення 2. Додавання нової конфігурації з авторизаційним токеном</div>
+<div class="title">Зображення 2. Додавання нової конфігурації у Control Plane з авторизаційним токеном</div>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -4959,8 +5219,6 @@
 </div>
 <div class="title">Зображення 3. Додавання нової конфігурації без додаткової авторизації</div>
 </div>
-</div>
-</details>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -4968,7 +5226,7 @@
 <i class="fa icon-important" title="ВАЖЛИВО"></i>
 </td>
 <td class="content">
-З міркувань безпеки, <code>Службова назва реєстру</code> не може бути змінена після збереження конфігурації, та має бути унікальна в рамках реєстру
+З міркувань безпеки, <strong>Службова назва реєстру</strong> не може бути змінена після збереження конфігурації, та має бути унікальна в рамках реєстру
 </td>
 </tr>
 </table>
@@ -4977,7 +5235,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_перегляд_налаштувань_інтеграції_та_розгортання_змін_до_реєстру"><a class="anchor" href="#_перегляд_налаштувань_інтеграції_та_розгортання_змін_до_реєстру"></a><a class="link" href="#_перегляд_налаштувань_інтеграції_та_розгортання_змін_до_реєстру">3. Перегляд налаштувань інтеграції та розгортання змін до реєстру</a></h2>
+<h2 id="_перегляд_налаштувань_інтеграції_та_розгортання_змін"><a class="anchor" href="#_перегляд_налаштувань_інтеграції_та_розгортання_змін"></a><a class="link" href="#_перегляд_налаштувань_інтеграції_та_розгортання_змін">4. Перегляд налаштувань інтеграції та розгортання змін</a></h2>
 <div class="sectionbody">
 <div class="olist arabic">
 <ol class="arabic">
@@ -4993,21 +5251,31 @@
 </div>
 </li>
 <li>
-<p>В результаті внесених змін запускається Jenkins-пайплайн <code><strong>MASTER-Build-&lt;registry-name&gt;</strong></code>, де <span class="underline"><code>&lt;registry-name&gt;</code></span>&#8201;&#8212;&#8201;назва реєстру. Він застосовує параметри заданої конфігурації.</p>
+<p>У результаті внесених змін запускається Jenkins-пайплайн <code><strong>MASTER-Build-&lt;registry-name&gt;</strong></code>, де <code>&lt;registry-name&gt;</code>&#8201;&#8212;&#8201;назва реєстру.
+Він застосовує параметри заданої конфігурації.</p>
 </li>
 <li>
 <p>Зачекайте, доки виконається збірка коду. Це може зайняти до 15 хвилин.</p>
 <div class="paragraph">
-<p>Ви можете перевірити поточний статус та результат виконання за посиланням <strong><code>CI</code></strong> на інтерфейсі.</p>
+<p>Ви можете перевірити поточний статус та результат виконання за посиланням <strong>CI</strong> на інтерфейсі.</p>
 </div>
-<div class="paragraph">
-<p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-6.png" alt="cp id gov ua iit setup 6"></span></p>
+<div class="imageblock">
+<div class="content">
+<img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-6.png" alt="cp id gov ua iit setup 6">
 </div>
-<div class="paragraph">
-<p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-7.png" alt="cp id gov ua iit setup 7"></span></p>
+<div class="title">Зображення 4. Перехід до Jenkins</div>
 </div>
-<div class="paragraph">
-<p><span class="image"><img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-8.png" alt="cp id gov ua iit setup 8"></span></p>
+<div class="imageblock">
+<div class="content">
+<img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-7.png" alt="cp id gov ua iit setup 7">
+</div>
+<div class="title">Зображення 5. Пайплайн збірки реєстру MASTER-Build</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../../_images/registry-admin/cp-auth-setup-officers/cp-id-gov-ua-iit-setup-8.png" alt="cp id gov ua iit setup 8">
+</div>
+<div class="title">Зображення 6. Процесу проходження пайплайну збірки реєстру</div>
 </div>
 </li>
 <li>
@@ -5030,7 +5298,7 @@
     </div>
 </main></div>
 <footer class="footer">
-    <p>© 2024 Платформа Реєстрів.</p>
+    <p>© 2023 Платформа Реєстрів.</p>
     <img src="../../../../../_/static/images/made-in-ua.png" class="made-in-ua-logo"/>
 </footer><script id="site-script" src="../../../../../_/js/site.js" data-ui-root-path="../../../../../_"></script>
 <script async src="../../../../../_/js/vendor/highlight.js"></script>
