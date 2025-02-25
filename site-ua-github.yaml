@@ -10,7 +10,7 @@ runtime:
 content:
   sources:
     - url: https://github.com/diia-engine/diia-engine-documentation
-      branches: [ "1.9.7-docs", "main" ]
+      branches: ["1.9.7-docs", "main"]
       start_path: docs/ua
 
 output:
