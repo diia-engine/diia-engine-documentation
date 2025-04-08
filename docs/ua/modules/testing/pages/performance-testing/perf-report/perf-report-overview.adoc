@@ -12,5 +12,5 @@
 
 👉 *Актуальні звіти доступні за посиланнями:*
 
-* xref:testing:performance-testing/perf-report/1-9-8/perf-test-1-9-8-1500-2.adoc[]
+* xref:testing:performance-testing/perf-report/1-9-8/perf-test-1-9-8-1500-1.adoc[]
 * xref:testing:performance-testing/perf-report/1-9-8/perf-test-1-9-8-1000-1.adoc[]
