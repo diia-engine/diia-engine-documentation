@@ -73,6 +73,7 @@
 **** xref:admin:backup-restore/control-plane-backup-restore.adoc[]
 **** xref:admin:backup-restore/backup-schedule-registry-components.adoc[]
 **** xref:admin:backup-restore/postgres-backup-restore.adoc[]
+*** xref:admin:backup-restore/backup-encryption.adoc[Шифрування резервних копій у MinIO (SSE-KMS)]
 +
 // Масштабування
 ** xref:admin:scaling/overview.adoc[]

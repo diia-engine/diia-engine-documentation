@@ -1,0 +1,53 @@
+= Backup encryption in MinIO (SSE-KMS)
+include::platform:ROOT:partial$templates/document-attributes/default-set-en.adoc[]
+
+include::platform:ROOT:partial$admonitions/language-en.adoc[]
+
+To mitigate the risk of exposing unencrypted backup data in case of unauthorized access, the Platform implements server-side encryption (SSE-KMS).
+This mechanism ensures that all stored objects are encrypted at rest, without requiring any changes in how users or services interact with MinIO.
+
+This document outlines how SSE-KMS encryption works in the Platform's MinIO environment, which relies on integration with KES Server and Platform Vault.
+
+== What is SSE-KMS and how does it work?
+
+*Server-Side Encryption with KMS (SSE-KMS)* enables automatic encryption of files on the server side before they are written to disk. Encryption happens *in flight*—as each object is uploaded to MinIO. When the object is retrieved, it is automatically decrypted. From the user's perspective, everything works the same way as before.
+
+- All data is stored in encrypted form on disk.
+- Encryption keys are securely stored in Vault.
+
+[NOTE]
+====
+SSE-KMS does not replace full disk encryption (FS-level encryption); it complements it by encrypting objects at the application layer within MinIO. For optimal protection, both layers should be used together.
+====
+
+== Backup encryption diagram
+
+The diagram below shows a high-level view of how the components interact to encrypt backup data.
+
+.Component integration: MinIO, KES Server, and Vault
+image::admin:backup-restore/backup-encryption.svg[]
+
+- *MinIO* — Object storage that holds backup data.
+- *KES Server* — A service or agent that acts as a KMS proxy for MinIO and a client to Vault.
+- *Vault* — A secret management system that stores encryption keys.
+
+{empty}
+
+How the components interact ::
+
+. *KES Server* authenticates to *Vault* using the `AppRole` method with a `role_id` and `secret_id`.
+. *Vault* returns a temporary token (`Vault Token`).
+. Using this token, *KES Server* either retrieves or creates the encryption key (if not already present).
+. *MinIO* sends encryption/decryption requests to *KES Server*, which acts as a proxy to Vault-stored keys.
+
+[NOTE]
+====
+*KES Server* is not a backend system in itself. It runs as a local service alongside MinIO. It receives encryption-related requests from MinIO and independently communicates with Vault to fulfill them.
+====
+
+== Useful links
+
+- https://min.io/docs/kes/cli/kes-server/[KES Server]
+- https://min.io/docs/kes/tutorials/kes-for-minio/[KES for MinIO]
+- https://min.io/docs/kes/integrations/hashicorp-vault-keystore/[KES and Vault Integration]
+- https://min.io/docs/minio/container/operations/server-side-encryption/configure-minio-kes.html[How to configure SSE-KMS in MinIO]
