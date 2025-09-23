@@ -291,7 +291,7 @@ export MINIO_DEST_SSE="true"/"false"
 ----
 +
 TIP: За замовчуванням це значення дорівнює - "false". Приклад значення при увімкненому шифруванні резервної копії на кластері DEST: `*"true"*`.
-
++
 [WARNING]
 ====
 У випадку, коли реєстр попередньо був мігрований на кластер SRC, а не розгорнутий на цій Платформі, виконайте додатковий *`export`*:
@@ -309,11 +309,25 @@ export VAULT_KEY="<назва ключа>"
 ----
 key_name        = "autounseal-migration"
 ----
+====
++
+[NOTE]
+====
+У випадку, коли в реєстрі була налаштована інтеграція з зовнішнім S3 сховищем і це сховище доступно з DEST_CLUSTER,
+то в процессі міграції можна пропустити шаг з перенесенням данних які стосуються реплікації.
+Для цього треба виконати наступну команду:
+
+----
+export BUCKET_MIGRATION=false
+----
+
+Інтеграція з зовнішнім s3 буде перенесена разом з values.yaml (xref:_підготовка_до_відновлення_на_кластері_dest[]).
 
 ====
 
 . Збережіть link:{attachmentsdir}/migrate-registry/registry-migration.zip[архів], розархівуйте його в нову директорію наступною командою:
 +
+
 ----
 unzip registry-migration.zip -d registry-migration
 ----
@@ -327,12 +341,11 @@ bash migration.sh
 +
 [NOTE]
 ====
-Якщо виконання скрипта завершилось з помилкою на етапі міграції бакетів (наприклад, через помилку Helm), то процес міграції бакетів можна запустити окремо, виконавши наступну команду:
+Якщо скрипт міграції був запущений без флагу BUCKET_MIGRATION і виконання скрипта завершилось з помилкою на етапі міграції бакетів (наприклад, через помилку Helm),
+то процес міграції бакетів можна запустити окремо, виконавши наступну команду:
 
 ----
-
 export MIGRATE_BUCKETS_ONLY="true"
-
 ----
 
 Якщо необхідно замінити посилання на MinIO SRC, виконайте команду:
@@ -427,157 +440,6 @@ NOTE: Дочекайтеся створення директорії `<назв�
 ====
 . Перейдіть у консоль Jenkins, змініть конфігурацію *MASTER-Build-`<назва реєстру>`*: +
 Перейдіть до *MASTER-Build-`<назва реєстру>`* > *Configure*, та у секції *Build Triggers* приберіть прапорець на параметрі *Disable this project*. Далі збережіть зміни кнопкою *`Save`*.
-
-
-. Заміна файла в репозиторії *backup-management*
-+
-Цей розділ описує процес заміни файлу *`bucket-replication/templates/configmap.yaml`* у репозиторії *`backup-management`*.
-+
-Кроки виконання:
-
-1. **Знайти версію backup-management для змін:**
-
-* Відкрити гілку *`cluster-mgmt`*.
-* Перейти у файл *`properties/cluster-mgmt.yaml`*.
-* Знайти версію у релізі *backup-management*, яка використовується.
-
-2. **Зробити зміни у версії backup-management:**
-+
-Замість поточного файлу *`bucket-replication/templates/configmap.yaml`* потрібно додати наступний код:
-+
-```go-template
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "bucket-replication.fullname" . }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "bucket-replication.labels" . | nindent 4 }}
-data:
-  bucket-replication.sh: |
-    #!/usr/bin/env bash
-    set -e
-    rook_s3_endpoint=$(oc get cephobjectstore/mdtuddm -n openshift-storage -o=jsonpath='{.status.info.endpoint}')
-    bucket=$(oc get objectbucketclaim/"${OBJECT_BUCKET_CLAIM}" -n ${REGISTRY_NAMESPACE} -o=jsonpath="{.spec.bucketName}")
-    access_key_rook=$(oc get secret/"${OBJECT_BUCKET_CLAIM}" -n "${REGISTRY_NAMESPACE}" -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 -d)
-    access_secret_key_rook=$(oc get secret/"${OBJECT_BUCKET_CLAIM}" -n "${REGISTRY_NAMESPACE}" -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)
-
-    mkdir -p ~/.config/rclone
-    echo "
-    ["${BACKUP_BUCKET}"]
-    type = s3
-    provider = Other
-    endpoint = ${S3_ENDPOINT}
-    env_auth = true
-    {{- if .Values.global.registryBackup.obc.sse }}
-    server_side_encryption = aws:kms
-    {{- end }}
-    region = ${S3_REGION}
-
-    [rook]
-    type = s3
-    provider = Ceph
-    env_auth = false
-    access_key_id = ${access_key_rook}
-    secret_access_key = ${access_secret_key_rook}
-    endpoint = ${rook_s3_endpoint}
-    acl = bucket-owner-full-control
-    bucket_acl = authenticated-read" > ~/.config/rclone/rclone.conf
-    # append only bucket - data bucket strategy (by label) - copy / other sync
-    rclone_command="rclone copy --progress --no-traverse --metadata --s3-no-check-bucket --transfers=16 --checkers=32 --buffer-size=32Mi"
-
-{{- if .Values.global.registryBackup.obc.extraArgs }}
-    additional_args="{{ .Values.global.registryBackup.obc.extraArgs | join " " }}"
-    rclone_command="${rclone_command} ${additional_args}"
-{{- end }}
-
-{{- if eq .Values.registryBackup.obc.action "replication" }}
-
-    if [[ -z $(rclone lsd ${additional_args} ${BACKUP_BUCKET}:${BACKUP_BUCKET}/obc-backups/${REGISTRY_NAMESPACE}  | grep ${OBJECT_BUCKET_CLAIM}) ]]; then
-       echo "[INFO] Destination folder empty, copy full bucket to destination"
-    else
-       echo "[INFO] Destination folder exists, copy bucket data for ${MAX_AGE}"
-       rclone_command="${rclone_command} --max-age ${MAX_AGE}"
-    fi
-
-    $rclone_command rook:${bucket} ${BACKUP_BUCKET}:/${BACKUP_BUCKET}/obc-backups/${REGISTRY_NAMESPACE}/${OBJECT_BUCKET_CLAIM}/
-{{- else }}
-    $rclone_command ${BACKUP_BUCKET}:/${BACKUP_BUCKET}/obc-backups/${REGISTRY_NAMESPACE}/${OBJECT_BUCKET_CLAIM} rook:${bucket}
-{{- end }}
-```
-+
-Вставте цей код, замінивши поточний вказаний файл у відповідній версії backup-management.
-+
-[NOTE]
-====
-У випадку коли на Minio DEST кластеру увімкнене шифрування, треба зробити додаткові зміни в *`bucket-replication/values.yaml`*. Зміни передбачають додавання значення для ключа *.global.registryBackup.obc.sse* зі значенням *true* наступним чином:
-
-```yaml
-global:
-  registryBackup:
-    obc:
-      sse: true
-```
-====
-
-. Оновити версію `edp-library-stages-fork`
-
-1. **Визначити поточну версію `edp-library-stages-fork`:**
-* Відкрити Jenkins pipeline `Restore-registry*`.
-* Перейти до секції *Configure* у пайплайні.
-* У *Pipeline script* знайти поточну версію `edp-library-stages-fork`.
-
-2. **Оновити репозиторій `edp-library-stages-fork`:**
-* У файлі репозиторію `edp-library-stages-fork` за шляхом:
-+
-```
-src/com/epam/edp/customStages/impl/registrytenanttemplate/RestoreRegistry.groovy
-```
-+
-Знайти ряд:
-+
-```groovy
-deployHelper.deployOBCBackupRestoreHelm(
-        "${veleroNamespace}",
-        "${backupManagementDir}/bucket-replication",
-        "s3-restore-${script.env.NAMESPACE}",
-        parametersMap,
-        "${context.workDir}/${context.helmValuesPath}",
-        true
-)
-```
-+
-Видалити прапорець та замініть їх на:
-+
-```groovy
-deployHelper.deployOBCBackupRestoreHelm(
-        "${veleroNamespace}",
-        "${backupManagementDir}/bucket-replication",
-        "s3-restore-${script.env.NAMESPACE}",
-        parametersMap,
-        "${context.workDir}/${context.helmValuesPath}",
-        false
-)
-```
-
-. **Зберегти зміни у Gerrit:**
-* Перейти в репозиторій `edp-library-stages-fork` у Gerrit.
-* Виконати необхідні правки в файлі, створивши новий change.
-* Після цього підтвердити зміни:
-- Проставити позначки *(Code-Review +2)*.
-- Виконати злиття змін за допомогою кнопки `Submit`.
-
-. **Перевірити оновлення:**
-* Переконатися, що зміни в репозиторії збережені.
-* У Jenkins pipeline `Restore-registry*` підтвердити, що застосовано нову версію репозиторію `edp-library-stages-fork`.
-
-3. **Змініть файл і змерджіть зміни:**
-
-* Виконайте заміну файлу *`bucket-replication/templates/configmap.yaml`* у відповідній гілці репозиторію *backup-management*.
-* Надішліть зміни на Code Review.
-* Дочекайтеся підтвердження змін (*Code-Review +2*).
-* Натисніть *Submit* для злиття змін.
-
 
 == Відновлення реєстру на кластері DEST
 
