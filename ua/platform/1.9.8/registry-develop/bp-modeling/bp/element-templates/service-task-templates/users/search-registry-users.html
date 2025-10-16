@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Пошук користувачів реєстру за атрибутами: Search registry users by attributes :: Платформа для розгортання та супроводження державних електронних реєстрів</title>
+    <title>Пошук користувачів реєстру: Search registry users :: Платформа для розгортання та супроводження державних електронних реєстрів</title>
     <meta name="generator" content="Antora 3.1.1">
     <link rel="stylesheet" href="../../../../../../../../_/css/site.css">
   </head>
@@ -1164,7 +1164,7 @@
     <a class="nav-link" href="save-officer-user-attributes-to-kc.html">Збереження атрибутів надавача послуг в Keycloak: <em>Save officer user attributes to Keycloak</em></a>
   </li>
   <li class="nav-item is-current-page" data-depth="7">
-    <a class="nav-link" href="search-registry-users-by-attributes.html">Пошук користувачів реєстру за атрибутами: <em>Search registry users by attributes</em></a>
+    <a class="nav-link" href="search-registry-users.html">Пошук користувачів реєстру: <em>Search registry users</em></a>
   </li>
   <li class="nav-item" data-depth="7">
     <a class="nav-link" href="get-users-by-role-from-keycloak.html">Отримання користувачів за роллю з Keycloak: <em>Get users by role from Keycloak</em></a>
@@ -3786,21 +3786,21 @@
     <li><a href="../../element-templates-overview.html">Інтеграційні розширення бізнес-процесів</a></li>
     <li>Інтеграційні розширення сервісних завдань: <em>Service task templates</em></li>
     <li>Керування користувачами та атрибутами</li>
-    <li><a href="search-registry-users-by-attributes.html">Пошук користувачів реєстру за атрибутами: <em>Search registry users by attributes</em></a></li>
+    <li><a href="search-registry-users.html">Пошук користувачів реєстру: <em>Search registry users</em></a></li>
   </ul>
 </nav>
 <div class="page-versions">
   <button class="version-menu-toggle" title="Show other versions of page">1.9.8</button>
   <div class="version-menu">
-    <a class="version is-current" href="search-registry-users-by-attributes.html">1.9.8</a>
-    <a class="version" href="../../../../../../../1.9.7/registry-develop/bp-modeling/bp/element-templates/service-task-templates/users/search-registry-users-by-attributes.html">1.9.7</a>
+    <a class="version is-current" href="search-registry-users.html">1.9.8</a>
+    <a class="version is-missing" href="../../../../../../../1.9.7/index.html">1.9.7</a>
   </div>
 </div>
 <div class="page-languages">
     <button class="language-menu-toggle" title="Show other languages of page">Українська</button>
     <div class="language-menu">
-        <a class="language is-current" href="../../../../../../../../../ua/platform/1.9.8/registry-develop/bp-modeling/bp/element-templates/service-task-templates/users/search-registry-users-by-attributes.html">Українська</a>
-        <a class="language " href="../../../../../../../../../en/platform/1.9.8/registry-develop/bp-modeling/bp/element-templates/service-task-templates/users/search-registry-users-by-attributes.html">English</a>
+        <a class="language is-current" href="../../../../../../../../../ua/platform/1.9.8/registry-develop/bp-modeling/bp/element-templates/service-task-templates/users/search-registry-users.html">Українська</a>
+        <a class="language " href="../../../../../../../../../en/platform/1.9.8/registry-develop/bp-modeling/bp/element-templates/service-task-templates/users/search-registry-users.html">English</a>
     </div>
 </div></div>
     <div class="content">
@@ -3808,7 +3808,7 @@
   <div class="toc-menu"></div>
 </aside>
             <article class="doc">
-<h1 class="page">Пошук користувачів реєстру за атрибутами: <em>Search registry users by attributes</em></h1>
+<h1 class="page">Пошук користувачів реєстру: <em>Search registry users</em></h1>
 <div id="toc" class="toc">
 <div id="toctitle">На цій сторінці:</div>
 <ul class="sectlevel1">
@@ -3825,14 +3825,13 @@
 </li>
 </ul>
 </li>
-<li><a href="#_приклад">4. Приклад</a></li>
-<li><a href="#_повязані_сторінки">5. Пов&#8217;язані сторінки</a></li>
+<li><a href="#_повязані_сторінки">4. Пов&#8217;язані сторінки</a></li>
 </ul>
 </div>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Цей документ надає інструкції щодо використання інтеграційного розширення для пошуку користувачів у реєстрі за атрибутами через REST API.</p>
+<p>Цей документ надає інструкції щодо використання інтеграційного розширення для пошуку користувачів у реєстрі через REST API.</p>
 </div>
 </div>
 </div>
@@ -3840,7 +3839,7 @@
 <h2 id="_загальна_інформація"><a class="anchor" href="#_загальна_інформація"></a><a class="link" href="#_загальна_інформація">1. Загальна інформація</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Інтеграційне розширення <strong>Search registry users by attributes</strong> надає змогу виконувати пошук користувачів у реєстрі за різними атрибутами, сприяючи оптимізації процесів взаємодії з користувачами.</p>
+<p>Інтеграційне розширення <strong>Search registry users</strong> надає змогу виконувати пошук користувачів у реєстрі за різними атрибутами, роллю сприяючи оптимізації процесів взаємодії з користувачами.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <caption class="title">Таблиця 1. Короткі відомості про делегат</caption>
@@ -3857,15 +3856,15 @@
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Бізнес-назва інтеграційного розширення</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Search registry users by attributes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Search registry users</strong></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Службова назва інтеграційного розширення</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><code>${searchRegistryUsersByAttributes}</code></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><code>${searchRegistryUsersByRoleAndAttributes}</code></strong></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Назва файлу у бібліотеці розширень</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><em>searchRegistryUsersByAttributes.json</em></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><em>searchRegistryUsersByRoleAndAttributes.json</em></strong></p></td>
 </tr>
 </tbody>
 </table>
@@ -3897,7 +3896,7 @@
 <h2 id="_налаштування_делегата"><a class="anchor" href="#_налаштування_делегата"></a><a class="link" href="#_налаштування_делегата">3. Налаштування делегата</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Делегат <strong>Search registry users by attributes</strong> призначений для використання у сервісних завданнях (Service Task) бізнес-процесу. Він дозволяє виконати пошук користувачів у реєстрі за заданими атрибутами. Keycloak API отримує <code>GET</code>-запити із заданими параметрами та повертає масив імен (username) користувачів, які надалі можна використати у бізнес-процесі.</p>
+<p>Делегат <strong>Search registry users</strong> призначений для використання у сервісних завданнях (Service Task) бізнес-процесу. Він дозволяє виконати пошук користувачів у реєстрі за заданими атрибутами, роллю. Keycloak API отримує <code>POST</code>-запити із заданими параметрами та повертає масив користувачів, які надалі можна використати у бізнес-процесі.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -3907,7 +3906,7 @@
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Наразі обов&#8217;язковими атрибутами для всіх реєстрів є <code><strong>edrpou</strong></code>, <code><strong>drfo</strong></code> та <code><strong>fullName</strong></code>.</p>
+<p>Наразі обов&#8217;язковими атрибутами для всіх реєстрів є <code><strong>drfo</strong></code> та <code><strong>fullName</strong></code>.</p>
 </div>
 <div class="paragraph">
 <p>Реєстри можуть також використовувати довільні атрибути. Наприклад, <code><strong>hierachy_code</strong></code>.</p>
@@ -3932,7 +3931,7 @@
 <li>
 <p>Застосуйте шаблон делегата, обравши відповідний зі списку в налаштуваннях завдання.</p>
 <div class="paragraph">
-<p><span class="image"><img src="../../../../../_images/bp-modeling/bp/element-temp/service-task/search-registry-users-by-attributes/search-registry-users-by-attributes-01.png" alt="search registry users by attributes 01"></span></p>
+<p><span class="image"><img src="../../../../../_images/bp-modeling/bp/element-temp/service-task/search-registry-users/search-registry-users-01.png" alt="search registry users 01"></span></p>
 </div>
 </li>
 </ol>
@@ -3972,7 +3971,7 @@
 <div class="title">Приклад JSON</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
-  "Attributes Equals": {
+  "attributesEquals": {
     "department": "HR",
     "role": "manager"
   }
@@ -3993,7 +3992,7 @@
 <div class="title">Приклад JSON</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
-  "Attributes Starts With": {
+  "attributesStartsWith": {
     "lastName": "Iva"
   }
 }</code></pre>
@@ -4013,7 +4012,7 @@
 <div class="title">Приклад JSON</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
-  "Attributes that are start for": {
+  "attributesThatAreStartFor": {
     "projectCode": "Proj123"
   }
 }</code></pre>
@@ -4053,10 +4052,19 @@
 <p><strong>Realm</strong>: Вкажіть реалм (<code>OFFICER</code> або <code>CITIZEN</code>), у якому потрібно здійснити пошук користувачів.</p>
 </li>
 <li>
-<p><strong>Limit</strong>: Максимальна кількість користувачів для виведення. Якщо не задано або ≤ 0, буде повернуто весь список користувачів.</p>
+<p><strong>Status</strong>: Статус облікового запису користувача в Keycloak (<code>ENABLED</code>, <code>DISABLED</code> або <code>ALL</code>). Якщо не задано використовує <code>ALL</code>.</p>
 </li>
 <li>
-<p><strong>Continue token</strong>: Токен, що вказує на початок сторінки. У відповіді кожного пошуку користувачів від цього розширення буде <code>continueToken</code>, який вказує на наступну сторінку.</p>
+<p><strong>Username</strong>: Ім&#8217;я облікового запису користувача в Keycloak.</p>
+</li>
+<li>
+<p><strong>Rolename</strong>: Роль користувача.</p>
+</li>
+<li>
+<p><strong>Limit</strong>: Кількість користувачів, яких потрібно повернути у відповіді. Якщо не задано або ≤ 0, застосовується значення 100. Максимально допустиме значення — 100.</p>
+</li>
+<li>
+<p><strong>Offset</strong>: Кількість користувачів, яких слід пропустити перед поверненням результатів. Якщо не задано, використовується значення 0.</p>
 </li>
 </ol>
 </div>
@@ -4073,6 +4081,9 @@
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
   "hierarchy_code": "${initiator().attributes["hierarchy_code"].get(0)}",
   "realm": "OFFICER",
+  "status": "all",
+  "username": "acde070d-8c4c-4f0d-9d8a-162843c10333",
+  "role": "officer",
   "limit": 10
 }</code></pre>
 </div>
@@ -4086,7 +4097,8 @@
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
   "users": [
     {
-      "id": "userId",
+      "enabled": true,
+      "id": "c4f8dad1-298b-44ee-9ca2-c83088f160e4",
       "userName": "userName",
       "fullName": "Іванов Іван Іванович",
       "attributes": {
@@ -4095,7 +4107,8 @@
       }
     },
     {
-      "id": "userId2",
+      "enabled": true,
+      "id": "acde070d-8c4c-4f0d-9d8a-162843c10333",
       "userName": "userName2",
       "fullName": "Петров Петро Петрович",
       "attributes": {
@@ -4103,10 +4116,7 @@
         "drfo": "2020202020"
       }
     }
-  ],
-  "pagination": {
-    "continueToken": 42
-  }
+  ]
 }</code></pre>
 </div>
 </div>
@@ -4115,64 +4125,10 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_приклад"><a class="anchor" href="#_приклад"></a><a class="link" href="#_приклад">4. Приклад</a></h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Нижче наведено референтний приклад, який демонструє використання делегата <strong>Search registry users by attributes</strong>:</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="../../../../../_images/bp-modeling/bp/element-temp/service-task/search-registry-users-by-attributes/search-registry-users-by-attributes-02.png" alt="search registry users by attributes 02">
-</div>
-<div class="title">Зображення 1. Приклад. Референтний процес. Отримання списку користувачів реалму</div>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="../../../../../_images/bp-modeling/bp/element-temp/service-task/search-registry-users-by-attributes/search-registry-users-by-attributes-03.png" alt="search registry users by attributes 03">
-</div>
-<div class="title">Зображення 2. Приклад. Референтний процес. Отримання списку користувачів реалму. Attributes Starts With</div>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="ПІДКАЗКА"></i>
-</td>
-<td class="content">
-<details>
-<summary class="title">Де можна знайти приклад референтного бізнес-процесу?</summary>
-<div class="content">
-<div class="paragraph">
-<p>Адміністратор Платформи може розгорнути для вас <em>демо-реєстр</em>&#8201;&#8212;&#8201;еталонний реєстр, що містить <em>референтні та інші приклади файлів для створення цифрового регламенту</em>. Він містить різноманітні елементи для розробки моделі даних, бізнес-процесів, UI-форм, аналітичної звітності, витягів, сповіщень, зовнішніх інтеграцій та багато іншого.</p>
-</div>
-<div class="paragraph">
-<p>Еталонний регламент з прикладами для України зберігається в репозиторії <strong><code>ua-registry-demo-regulation</code></strong>.</p>
-</div>
-<div class="paragraph">
-<p>Детальну інструкцію щодо розгортання демо-реєстру та отримання референтних прикладів моделювання ви знайдете на сторінці <a href="../../../../../registry-admin/cp-deploy-consent-data.html" class="xref page">Розгортання демо-реєстру із референтними прикладами</a>.</p>
-</div>
-<div class="paragraph">
-<p>Приклад BPMN-схеми процесу буде доступний у регламенті демо-реєстру за пошуком по ключовим словам&#8201;&#8212;&#8201;<strong><em>reference-officers-management</em></strong>. Назви форм ви можете знайти всередині відповідних користувацьких задач бізнес-процесу у полі <strong><code>Form key</code></strong>.</p>
-</div>
-</div>
-</details>
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_повязані_сторінки"><a class="anchor" href="#_повязані_сторінки"></a><a class="link" href="#_повязані_сторінки">5. Пов&#8217;язані сторінки</a></h2>
+<h2 id="_повязані_сторінки"><a class="anchor" href="#_повязані_сторінки"></a><a class="link" href="#_повязані_сторінки">4. Пов&#8217;язані сторінки</a></h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
-<li>
-<p><a href="create-keycloak-officer-user.html" class="xref page">Створення користувача в Keycloak: <em>Create Keycloak officer user</em></a></p>
-</li>
-<li>
-<p><a href="save-officer-user-attributes-to-kc.html" class="xref page">Збереження атрибутів надавача послуг в Keycloak: <em>Save officer user attributes to Keycloak</em></a></p>
-</li>
 <li>
 <p><a href="../../../../../registry-admin/hierarchical-model.html" class="xref page">Ієрархічна модель</a></p>
 </li>
