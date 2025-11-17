@@ -5004,13 +5004,13 @@ columnName="type" operator="eq" value="'text'"/&gt;
 <details>
 <summary class="title"><em>Приклад OpenAPI специфікації</em></summary>
 <div class="content">
-      <div id="swagger-ui_A6G8QT3JVI9XLGH3H7SU968RD0RP4D3K"></div>
+      <div id="swagger-ui_OIF87D381H9BMLPUF3DQODY8DM85HIWC"></div>
 
       <script>
         document.addEventListener('DOMContentLoaded', function() {
           SwaggerUIBundle({
             url: "../../../_attachments/data-model/sc/pagination/swagger-offset.yml",
-            dom_id: "#swagger-ui_A6G8QT3JVI9XLGH3H7SU968RD0RP4D3K",
+            dom_id: "#swagger-ui_OIF87D381H9BMLPUF3DQODY8DM85HIWC",
             presets: [
               SwaggerUIBundle.presets.apis,
               SwaggerUIStandalonePreset
@@ -5135,13 +5135,13 @@ columnName="type" operator="eq" value="'text'"/&gt;
 <details>
 <summary class="title"><em>Приклад OpenAPI специфікації</em></summary>
 <div class="content">
-      <div id="swagger-ui_SVMVS9A016HHVMWHCRXHX3NWYXJ981E0"></div>
+      <div id="swagger-ui_F1D6CM7XPQA2C5GDPEJPS1IPPU4KX6D1"></div>
 
       <script>
         document.addEventListener('DOMContentLoaded', function() {
           SwaggerUIBundle({
             url: "../../../_attachments/data-model/sc/pagination/swagger-page.yml",
-            dom_id: "#swagger-ui_SVMVS9A016HHVMWHCRXHX3NWYXJ981E0",
+            dom_id: "#swagger-ui_F1D6CM7XPQA2C5GDPEJPS1IPPU4KX6D1",
             presets: [
               SwaggerUIBundle.presets.apis,
               SwaggerUIStandalonePreset
@@ -5640,6 +5640,27 @@ implementation="CHECK (VALUE ~ '^[АВЕІКМНОРСТХ]{2}[0-9]{6}$)"/&gt;
 </div>
 </div>
 </details>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="УВАГА"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>Використовуйте <em>ЛИШЕ</em> тип <strong>UUID</strong> для первинного ключа таблиць і функцію uuid_generate_v4() як значення за замовчуванням. Ця функція згенерує  випадкове числове значення (<em>див. <a href="https://www.uuidgenerator.net/version4" class="bare">https://www.uuidgenerator.net/version4</a></em>).</p>
+</li>
+<li>
+<p>Поле головної таблиці, що містить посилання на підпорядковану таблицю має <strong>обов&#8217;язково</strong> посилатися на первинні ключі та бути масивом.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="admonitionblock tip">
 <table>
 <tr>
