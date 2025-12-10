@@ -5,75 +5,86 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 
 Виконання цього завдання має на меті: ::
 
-* [*] Навчити налаштовувати окремі сервіси реєстру на прикладі відключення *`sidecar`*-контейнера *`istio`* для поду криптосервісу *`digital-signature-ops`*.
+* [*] Навчити керувати ресурсами реєстру на прикладі налаштування лімітів контейнерів пам’яті та CPU. Це запобігатиме надмірному використанню ресурсів окремими контейнерами та забезпечує ефективний розподіл ресурсів між сервісами.
+
+[NOTE]
+====
+Щоб Kubernetes-кластер працював стабільно, необхідно правильно налаштувати ресурси для кожного контейнера — *пам’ять і CPU*.
+
+* Встановлюйте однакові значення *Request і Limit* для пам’яті контейнерів в OKD/Kubernetes. Якщо не встановити ліміти пам’яті для контейнерів, то при різкому зростанні споживання пам’яті контейнер може перевищити доступні ресурси. Це може знизити продуктивність або спричинити аварійне завершення роботи інших контейнерів на ноді.
+
+
+* Використовуйте *НЕ більше 3 реплік* одного сервісу. Особливо для Java-застосунків ефективнішим є вертикальне масштабування — збільшення ресурсів для однієї репліки, а не створення додаткових. Використання понад 3 реплік для сервісу із Java-застосунками призведе до суттєвого збільшення споживання пам’яті через значне використання ресурсів кожною реплікою. Це неефективно розподілить ресурси, що погіршить загальну продуктивність системи.
+====
 
 == Передумови
 
 . Ознайомтеся із можливими доступними для налаштування сервісами та процедурою внесення змін на сторінці
- xref:admin:registry-management/control-plane-registry-resources.adoc[].
+ xref:admin:registry-management/control-plane-registry-resources.adoc[Керування ресурсами реєстру].
 
 == Процес виконання завдання
 
-[configure-registry-services]
-=== Налаштування сервісів реєстру
+Налаштуйте сервіс `Container limits` компоненти bpms реєстру, використовуючи інструкцію, наведену нижче.
+
+. Перевірте поточний стан  в консолі OKD.
+Відкрийте OpenShift (Console),  меню Workloads (попередньо обравши потрібний проект, якщо вам доступно декілька проектів) в пункті Deployments знайдіть bpms
+image:registry-admin-study/task-registry-resources-management/image-1.png[]
+На вкладці Environment ми побачимо поточні значення.
+image:registry-admin-study/task-registry-resources-management/image-2.png[]
+
+. Перейдіть до редагування реєстру та відкрийте вкладку Ресурси реєстру. Оберіть в переліку компонент bpms, натисніть «Додати».
+image:registry-admin-study/task-registry-resources-management/image-3.png[]
+В «змінних оточення» змінна JAVA_OPTS має дефолтне значення Value  -Xms1536m -Xmx1536m
+(Xms – скільки ресурсів виділяємо для java-додатку, Xmx – це максимум.)
+
+. Внесіть нове значення -Xms2000m -Xmx2000m (завжди виставляємо однакові значення в обох параметрах).
+Якщо ви збільшуєте ці параметри, то також не забудьте встановіти ліміти Container limits (не переплутайте з лімітами на ISTIO SIDECAR).
+. Встановіть значення 3500Mi в оба поля
+
+image:registry-admin-study/task-registry-resources-management/image-4.png[]
+[NOTE]
+====
+Зверніть увагу, що дані значення використовуються у завданні як приклад для ознайомлення. Рекомендація по встановленню лімітів від вендора для навантажених проектів – ліміти повинні бути в 1,5 рази більше ніж внесенні значення. Як вирахувати ліміти – дуже залежить від реєстру.
+
+Для великих значень цей коефіцієнт можна зменшити, наприклад, до 1,2. Але в цьому прикладі ми додаємо більше ніж рекомендується, бо на таких маленьких значеннях ресурсів може не вистачити для нормальної роботи службових завдань контейнера.
+====
+
+
+Підтвердьте зміни, відкрийте Запити на оновлення та схваліть новий запит.
+
+image:registry-admin-study/task-registry-resources-management/image-5.png[]
+
+Перейдіть до сервісу Jenkins за посиланням CI.
+image:registry-admin-study/task-registry-resources-management/image-6.png[]
+
+Проконтролюйте процес виконання пайплайну MASTER-Build-<registry-name>.
+
+image:registry-admin-study/task-registry-resources-management/image-7.png[]
+
+Після завершення процесу виконання зі статусом SUCCESS, перевірте результат в OKD-консолі.
+image:registry-admin-study/task-registry-resources-management/image-8.png[]
+
+
+Перейдіть до Workloads > Deployments > відкрийте bpms і знайдіть containers на вкладці YAML.
+
+В блоці containers з’явиться блок з вказаними значеннями в resourses
+image:registry-admin-study/task-registry-resources-management/image-9.png[]
 
 [NOTE]
 ====
-Деякі ключі, особливо тестові, можуть не працювати з увімкненим `istio`, тому може виникнути необхідність вимкнути `sidecar`-контейнер `istio` для поду криптосервісу `digital-signature-ops`.
+Зверніть увагу, що налаштування лімітів є важливою складовою роботи реєстру і вказано в вимогах при аудиті реєстру.
 
-Якщо такий контейнер не вимкнути, то не працюватиме системний підпис у бізнес-процесах, зокрема користувачі не зможуть виконувати наступні операції підпису:
-
-* Підписання даних, які необхідно зберегти із бізнес-процесу (BPMS) до Фабрики даних реєстру.
-* Підписання даних документів, які генеруються системою, для користувачів реєстру. Наприклад, витяги тощо.
-
-CAUTION: Також можливе проявлення проблеми: із тестовим ключем не буде працювати авторизація у Кабінетах!
-
-Детальніше про типи ключів системного підпису див. на сторінці xref:admin:registry-management/system-keys/system-keys-overview.adoc[].
+*Важливо* проводити xref:registry-develop:audit/registry-audit/registry-audit-instruction.adoc[аудит реєстру] на відповідність вимогам.
 ====
 
-Налаштуйте сервіс *`digital-signature-ops`* реєстру, використовуючи інструкцію, наведену нижче.
+== Як побачити проблему (на практиці):
 
-. Перевірте поточний стан та наявність `sidecar`-контейнера `istio` в консолі `OKD`.
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/01-check-current state.png[]
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/02-check-istio-availability.png[]
+1. Якщо контейнер буде часто перезавантажуватися.
+image:registry-admin-study/task-registry-resources-management/image-10.png[]
+2. В дашборді Графани Spring Boot, при відображенні роботи обраної поди, на графіку використання пам’яті буде нерівномірне навантаження. Наприклад
+image:registry-admin-study/task-registry-resources-management/image-11.png[]
 
-. Вимкніть `sidecar`-контейнер `istio` для поду `digital-signature-ops`. Для цього виконайте наступні кроки:
+* Також, якщо Heep Used доходить або майже доходить до червоної зони – це є ще одним додатковим показником необхідності додати ресурсів.
 
-.. Перейдіть до редагування реєстру та відкрийте вкладку *Ресурси реєстру*.
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/03-registry-resources-editing.png[]
-
-.. Знайдіть сервіс `digital-signature-ops` та вимкніть `sidecar`-контейнер `istio`.
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/04-istio-enabled.png[]
-
-.. Підтвердьте зміни, відкрийте *Запити на оновлення* та схваліть новий запит.
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/05-change-request-confirming.png[]
-
-.. Перейдіть до сервісу *Jenkins* за посиланням *CI*.
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/06-configuration.png[]
-
-.. Проконтролюйте процес виконання пайплайну *MASTER-Build-`<registry-name>`*.
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/07-jenkins.png[]
-
-. Після завершення процесу виконання зі статусом *`SUCCESS`*, перевірте под `digital-signature-ops` в OKD-консолі.
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/08-check-success-status.png[]
-
-* Перейдіть до *Workloads* > *Pods* > *Pod details*> *Details* > *Containers*.
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/09-okd-console.png[]
-+
-image:registry-develop:registry-admin-study/task-registry-resources-management/10-check-containers.png[]
-
-[NOTE]
-====
-Результатом цього завдання буде виконання у поді _ЛИШЕ_ основного контейнера криптосервісу `digital-signature-ops`. +
-
-Sidecar-контейнер `іstio` має зникнути, адже його було вимкнено.
-====
+Правильний графік виглядає так
+image:registry-admin-study/task-registry-resources-management/image-12.png[]
