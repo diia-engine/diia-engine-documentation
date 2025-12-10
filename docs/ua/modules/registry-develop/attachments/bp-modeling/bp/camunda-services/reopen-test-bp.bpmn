@@ -1,0 +1,801 @@
+<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:rrm="http://registry-regulation-management" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" exporter="Camunda Modeler" exporterVersion="5.0.0" id="Definitions_0cjpvm2" rrm:created="2025-02-11T13:14:05.719Z" rrm:modified="2025-02-14T16:11:10.548Z" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:collaboration id="Collaboration_0pn1cv8">
+    <bpmn:participant id="Participant_02zjlbh" name="Відображення статистики по БП " processRef="reopen-test-bp"/>
+  </bpmn:collaboration>
+  <bpmn:process id="reopen-test-bp" isExecutable="true" name="Відображення статистики по БП ">
+    <bpmn:sequenceFlow id="Flow_01kv6mn" sourceRef="Event_1dh8s72" targetRef="Activity_1bzo2o9"/>
+    <bpmn:scriptTask id="findRunningInstsncesScript" name="Виявлення запущених та завершених інстансів" scriptFormat="groovy">
+      <bpmn:incoming>Flow_199lzm2</bpmn:incoming>
+      <bpmn:incoming>Flow_1cckvzl</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wjq37z</bpmn:outgoing>
+      <bpmn:script>import org.camunda.bpm.engine.form.TaskFormData
+import java.text.SimpleDateFormat
+
+def officers = usersOutput.collect { user -&gt;
+   [
+       userName: user.userName,
+       fullName: user.fullName
+   ]
+}
+
+def historyService = execution.getProcessEngine().getHistoryService()
+def repositoryService = execution.getProcessEngine().getRepositoryService()
+def runtimeService = execution.getProcessEngine().getRuntimeService()
+def taskService = execution.getProcessEngine().getTaskService();
+
+def completedProcesses = historyService.createHistoricProcessInstanceQuery()
+    .finished() 
+    .list()
+
+def processInstances = runtimeService.createProcessInstanceQuery()
+    .list()
+
+def count = 0
+def activeCount = 0
+def processNames = [] as Set
+def processesFinishedInfo = []
+def sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm")
+
+processNames &lt;&lt; "Всі процеси"
+
+processInstances.each { processInstance -&gt; 
+    def processDefinitionId = processInstance.getProcessDefinitionId()
+    def processDefinition = repositoryService.createProcessDefinitionQuery()
+        .processDefinitionId(processDefinitionId)
+        .singleResult()
+
+    def processName = processDefinition.getName()
+    def processId = processInstance.getId()
+    def processDefinitionKey = processDefinition.getKey()
+    def businessKey = processInstance.getBusinessKey()
+
+    def historicProcessInstance = historyService.createHistoricProcessInstanceQuery()
+        .processInstanceId(processDefinitionId)
+        .singleResult();
+
+    def startTime = historyService.createHistoricProcessInstanceQuery()
+        .processInstanceId(processId)
+        .singleResult()
+        .getStartTime()  
+
+    def startUserId = historyService.createHistoricProcessInstanceQuery()
+        .processInstanceId(processId)
+        .singleResult()
+        .getStartUserId()
+
+    processNames &lt;&lt; processName
+
+    def tasks = taskService.createTaskQuery()
+        .processInstanceId(processId)
+        .active()
+        .list();
+
+    def assignee
+    tasks.each { task -&gt;
+        assignee = task.getAssignee()
+}
+
+    activeCount++
+    processesFinishedInfo.add([
+        "processName": processName,
+        "processId": processId,
+        "startUserId": findFullName(assignee, officers), 
+        "startTime": sdf.format(startTime),
+        "status" : "активний",
+        "processDefinitionKey" : processDefinitionKey,
+        "businessKey": businessKey
+    ])
+} 
+
+completedProcesses.each { historicProcess -&gt;
+    def processName = historicProcess.getProcessDefinitionName()
+    def startTime = historicProcess.getStartTime()
+    def endTime = historicProcess.getEndTime()
+    def duration = historicProcess.getDurationInMillis()
+    def instatceId = historicProcess.getId()
+    def userId = historicProcess.getStartUserId()
+    def businessKey = historicProcess.getBusinessKey()
+
+    def processDefinition = repositoryService.createProcessDefinitionQuery()
+        .processDefinitionId(historicProcess.getProcessDefinitionId())
+        .singleResult()
+
+    def processDefinitionKey = processDefinition.getKey()
+
+    processNames &lt;&lt; processName
+
+    count++
+    processesFinishedInfo.add([
+        "processName": processName,
+        "processId": instatceId,
+        "startUserId": findFullName(userId, officers), 
+        "startTime": sdf.format(startTime),
+        "endTime": sdf.format(endTime),
+        "duration": duration,
+        "status" : "завершений",
+        "processDefinitionKey" : processDefinitionKey,
+        "businessKey": businessKey
+    ])
+}
+
+def payload = [:]
+payload['name'] = " "
+payload['processNames'] = processNames
+payload['activeProcess'] = processesFinishedInfo
+payload['finishedProcessCount'] = count
+payload['activeProcessCount'] = activeCount
+
+set_variable('payload', S(payload, 'application/json'))
+
+println "\n\npayload $payload"
+
+def findFullName(userName, officers) {
+    def officer = officers.find { it.userName == userName }
+    return officer ? officer.fullName : "Не знайдено"
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_199lzm2" sourceRef="Event_19lf8pm" targetRef="findRunningInstsncesScript"/>
+    <bpmn:intermediateCatchEvent id="Event_19lf8pm" name="повернутись на початок">
+      <bpmn:outgoing>Flow_199lzm2</bpmn:outgoing>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1kd9usb" name="toStart"/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_0wjq37z" sourceRef="findRunningInstsncesScript" targetRef="InformationAboutInstance"/>
+    <bpmn:exclusiveGateway id="Gateway_0ki8cz0">
+      <bpmn:incoming>Flow_0mua2s5</bpmn:incoming>
+      <bpmn:outgoing>Flow_1yuuna1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1tvyzhk</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask camunda:assignee="${initiator}" camunda:formKey="information-about-instances" camunda:modelerTemplate="formUserTaskTemplate" id="InformationAboutInstance" name="Вивід статистики">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate">${payload}</camunda:inputParameter>
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value=""/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0wjq37z</bpmn:incoming>
+      <bpmn:outgoing>Flow_0mua2s5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0mua2s5" sourceRef="InformationAboutInstance" targetRef="Gateway_0ki8cz0"/>
+    <bpmn:sequenceFlow id="Flow_1yuuna1" name="вихід" sourceRef="Gateway_0ki8cz0" targetRef="Event_0yuryqn">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('InformationAboutInstance').formData.hasProp('_action_code') &amp;&amp; submission('InformationAboutInstance').formData.prop('_action_code').value().equals('exit')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="Event_0yuryqn" name="вихід">
+      <bpmn:incoming>Flow_1yuuna1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="Activity_0g0au0c" name="Завершити активний процес" scriptFormat="groovy">
+      <bpmn:incoming>Flow_1u5yxdi</bpmn:incoming>
+      <bpmn:outgoing>Flow_0m3jr60</bpmn:outgoing>
+      <bpmn:script>import org.camunda.bpm.engine.runtime.ProcessInstance
+
+def data = submission('InformationAboutInstance').formData
+println "\n\n data $data"
+def process = data.prop('statistics').elements()[0]
+
+def runtimeService = execution.getProcessEngine().getRuntimeService()
+def processId = process.prop('processId').value()   
+def processName = process.prop('processName').value();
+
+def processInstance = runtimeService.createProcessInstanceQuery()
+    .processInstanceId(processId)
+    .singleResult()
+
+def reason = "Процес завершено"
+runtimeService.deleteProcessInstance(processId, reason)
+
+
+def checkProcessInstance = runtimeService.createProcessInstanceQuery()
+    .processInstanceId(processId)
+    .singleResult()
+
+if (checkProcessInstance == null) {
+    println "Процесс с ID ${processId} завершён."
+} else {
+    if (checkProcessInstance.isEnded()) {
+        println "Процесс с ID ${processId} завершён."
+    } else {
+        println "Процесс с ID ${processId} активный."
+    }
+}
+
+def closedBp = processId + " - " + processName
+println "closedBp $closedBp"
+def payload = [bp: closedBp]
+execution.setVariable("dataPayload", S(payload, 'application/json')) 
+
+println "\n\n payload $payload"
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="Event_13gnjnw" name="вихід">
+      <bpmn:incoming>Flow_0kzh269</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gateway_0vehrxc">
+      <bpmn:incoming>Flow_1fzvu57</bpmn:incoming>
+      <bpmn:outgoing>Flow_10ya1yh</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1klng2d</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_0xijtah" name="вихід">
+      <bpmn:incoming>Flow_1klng2d</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask camunda:assignee="${initiator}" camunda:formKey="bp-delete-success" camunda:modelerTemplate="formUserTaskTemplate" id="deleteBp" name="Повідомлення про успішне видалення">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate">${dataPayload}</camunda:inputParameter>
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value=""/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0m3jr60</bpmn:incoming>
+      <bpmn:outgoing>Flow_1fzvu57</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="Event_1g537sx" name="повернутись на початок">
+      <bpmn:incoming>Flow_10ya1yh</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_10qx5r7" name="toStart"/>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent attachedToRef="deleteBp" id="Event_0wl35cq">
+      <bpmn:outgoing>Flow_0kzh269</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1scyeqy">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="Gateway_0kt28w8">
+      <bpmn:incoming>Flow_0g9rc72</bpmn:incoming>
+      <bpmn:outgoing>Flow_16neltf</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0c2aeux</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1u5yxdi</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1v6zopz</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask camunda:assignee="${initiator}" camunda:formKey="process-instance-details" camunda:modelerTemplate="formUserTaskTemplate" id="showDetails" name="Переглянути деталі процесу">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate">${payload}</camunda:inputParameter>
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value=""/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0sxnqvd</bpmn:incoming>
+      <bpmn:outgoing>Flow_0g9rc72</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1v6zopz" sourceRef="Gateway_0kt28w8" targetRef="Activity_1j9fo8x">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('showDetails').formData.hasProp('_action_code') &amp;&amp; submission('showDetails').formData.prop('_action_code').value().equals('redirect')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1u5yxdi" name="завершити процес" sourceRef="Gateway_0kt28w8" targetRef="Activity_0g0au0c">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('showDetails').formData.hasProp('_action_code') &amp;&amp; submission('showDetails').formData.prop('_action_code').value().equals('close')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0m3jr60" sourceRef="Activity_0g0au0c" targetRef="deleteBp"/>
+    <bpmn:sequenceFlow id="Flow_0kzh269" sourceRef="Event_0wl35cq" targetRef="Event_13gnjnw"/>
+    <bpmn:sequenceFlow id="Flow_1fzvu57" sourceRef="deleteBp" targetRef="Gateway_0vehrxc"/>
+    <bpmn:sequenceFlow id="Flow_10ya1yh" sourceRef="Gateway_0vehrxc" targetRef="Event_1g537sx">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('deleteBp').formData.hasProp('_action_code') &amp;&amp; submission('deleteBp').formData.prop('_action_code').value().equals('back')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1klng2d" sourceRef="Gateway_0vehrxc" targetRef="Event_0xijtah">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('deleteBp').formData.hasProp('_action_code') &amp;&amp; submission('deleteBp').formData.prop('_action_code').value().equals('exit')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0sxnqvd" sourceRef="Activity_1jn1jz7" targetRef="showDetails"/>
+    <bpmn:sequenceFlow id="Flow_0g9rc72" sourceRef="showDetails" targetRef="Gateway_0kt28w8"/>
+    <bpmn:sequenceFlow id="Flow_16neltf" sourceRef="Gateway_0kt28w8" targetRef="Event_1q5v7x7">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('showDetails').formData.hasProp('_action_code') &amp;&amp; submission('showDetails').formData.prop('_action_code').value().equals('back')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0c2aeux" sourceRef="Gateway_0kt28w8" targetRef="Event_07f1tcn">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('showDetails').formData.hasProp('_action_code') &amp;&amp; submission('showDetails').formData.prop('_action_code').value().equals('exit')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:scriptTask id="Activity_1jn1jz7" name="Підготувати дані" scriptFormat="groovy">
+      <bpmn:incoming>Flow_1tvyzhk</bpmn:incoming>
+      <bpmn:outgoing>Flow_0sxnqvd</bpmn:outgoing>
+      <bpmn:script>import org.camunda.bpm.engine.form.TaskFormData
+import org.camunda.bpm.engine.variable.VariableMap
+import org.camunda.bpm.engine.variable.value.TypedValue
+import org.camunda.bpm.engine.task.Task 
+import java.text.SimpleDateFormat
+
+def repositoryService = execution.getProcessEngine().getRepositoryService()
+def runtimeService = execution.getProcessEngine().getRuntimeService()
+def formService = execution.getProcessEngine().getFormService()
+def taskService = execution.getProcessEngine().getTaskService()
+
+def officers = usersOutput.collect { user -&gt;
+   [
+       userName: user.userName,
+       fullName: user.fullName
+   ]
+}
+
+def result = submission('InformationAboutInstance').formData.prop('statistics').elements()[0]
+
+def instanceId = result.prop('processId').value()
+def status = result.prop('status').value()
+def sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm")
+
+def formKey
+def taskId
+def taskName
+def assignee
+def taskDefinitionKey
+def startTimeTask
+def vars
+def completedTaskInfo
+
+if (status.equals("активний")) {
+def tasks = taskService.createTaskQuery()
+        .processInstanceId(instanceId)
+        .active()
+        .list();
+
+def completedTasks = historyService.createHistoricTaskInstanceQuery()
+        .processInstanceId(instanceId)
+        .finished()
+        .list();
+
+completedTaskInfo = completedTasks.collect { task -&gt;
+
+def date1 = sdf.format(task.startTime)
+def date2 = sdf.format(task.endTime)
+        [
+            "taskId"        : task.id,
+            "taskNameCompleted"      : task.name,
+            "assignee1"      : findFullName(task.assignee, officers),
+            "taskStartDateCompleted" : date1,
+            "endStartDateCompleted" : date2,
+            "taskKeyCompleted" : task.taskDefinitionKey
+        ]
+    };
+
+tasks.each { task -&gt;
+        taskId = task.getId()
+        taskName = task.getName()
+        assignee = findFullName(task.getAssignee(), officers)
+        taskDefinitionKey = task.getTaskDefinitionKey()
+        def dateS = sdf.format(task.getCreateTime())
+        startTimeTask = dateS
+}
+
+def variables = taskService.getVariables(taskId)
+
+vars = variables["start_form_ceph_key"]
+}
+
+def dataPayload = [:]
+dataPayload['name'] = result.prop('processName').value()
+dataPayload['instanceId'] = instanceId 
+dataPayload['status'] = status
+
+dataPayload['startTime'] = result.prop('startTime').value()
+
+if (status.equals("завершений")) {
+    dataPayload['endTime'] = result.prop('endTime').value()
+    dataPayload['endTime1'] = result.prop('duration').value()
+} else {
+    dataPayload['taskName'] = taskName
+    dataPayload['taskKey'] = taskDefinitionKey
+    dataPayload['assignee'] = assignee
+    dataPayload['taskStartDate'] = startTimeTask
+    dataPayload['vars'] = vars
+
+    dataPayload['completedTasks'] = completedTaskInfo
+
+}
+dataPayload['initiator'] = result.prop('startUserId').value()
+dataPayload['definitionKey'] = result.prop('processDefinitionKey').value()
+dataPayload['businessKey'] = result?.prop('businessKey')?.value() ?: "-"
+
+
+set_variable('payload', S(dataPayload, 'application/json'))
+
+println "\n\npayload $payload"
+
+def findFullName(userName, officers) {
+    def officer = officers.find { it.userName == userName }
+    return officer ? officer.fullName : "Не знайдено"
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:intermediateThrowEvent id="Event_1q5v7x7" name="повернутись на початок">
+      <bpmn:incoming>Flow_16neltf</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0evhyvl" name="toStart"/>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:serviceTask camunda:delegateExpression="${keycloakGetUsersConnectorDelegate}" camunda:modelerTemplate="getUsersByRoleFromKeycloak" id="Activity_1j9fo8x" name="Знайти користувачів з роллю officer">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="limit"/>
+          <camunda:inputParameter name="offset"/>
+          <camunda:inputParameter name="role_name">officer</camunda:inputParameter>
+          <camunda:outputParameter name="usersOutput">${ usersByRole }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1v6zopz</bpmn:incoming>
+      <bpmn:outgoing>Flow_13r0nf8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="Activity_0jzgmja" name="Підготовка даних для форми" scriptFormat="groovy">
+      <bpmn:incoming>Flow_13r0nf8</bpmn:incoming>
+      <bpmn:outgoing>Flow_179k9vx</bpmn:outgoing>
+      <bpmn:script>def officers = usersOutput.collect { user -&gt;
+   [
+       id: user.id,
+       userName: user.userName,
+       fullName: user.fullName
+   ]
+}
+
+def pay = submission('showDetails').formData
+
+def processName = pay.prop('name').value()
+def processId = pay.prop('instanceId').value()
+def uniqueProcesses = []
+uniqueProcesses &lt;&lt; [
+        id: pay.prop('name').value(), 
+        name: pay.prop('instanceId').value()
+    ]
+
+def officersPayload = [officers: officers, name: processName, processId: processId]
+execution.setVariable("officersList", S(officersPayload, 'application/json')) 
+
+println "\n\npayload $officersList"</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:userTask camunda:assignee="${initiator}" camunda:formKey="choose-officer-to-update" camunda:modelerTemplate="formUserTaskTemplate" id="chooseOfficer" name="Вибір офіцера для виконання активного інстансу">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate">${officersList}</camunda:inputParameter>
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value=""/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_179k9vx</bpmn:incoming>
+      <bpmn:outgoing>Flow_1l3ixd1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Event_0lgo1bu" name="вихід">
+      <bpmn:incoming>Flow_1qhs9jw</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway default="Flow_0j2lmdx" id="Gateway_0avurv1">
+      <bpmn:incoming>Flow_1l3ixd1</bpmn:incoming>
+      <bpmn:outgoing>Flow_0j2lmdx</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0goz1dj</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1xm71lt</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_1x91d3m" name="вихід">
+      <bpmn:incoming>Flow_0goz1dj</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="Activity_1fbqwnc" name="Змінення раніше запущених інстансів" scriptFormat="groovy">
+      <bpmn:incoming>Flow_0j2lmdx</bpmn:incoming>
+      <bpmn:outgoing>Flow_11phrts</bpmn:outgoing>
+      <bpmn:script>import java.time.LocalDateTime
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+
+def data = submission('chooseOfficer').formData
+println "\n\ndata $data"
+
+def repositoryService = execution.getProcessEngine().getRepositoryService()
+def runtimeService = execution.getProcessEngine().getRuntimeService()
+def taskService = execution.getProcessEngine().getTaskService()
+
+def userName = data.prop('userName').prop('userName').value()
+def processId = data.prop('processId').value()
+
+def tasks = taskService.createTaskQuery()
+    .processInstanceId(processId)
+    .list()
+
+def currentTime = Timestamp.valueOf(LocalDateTime.now())
+
+runtimeService.setVariable(processId, "startReopenTime", currentTime )
+
+ tasks.each { task -&gt;
+
+    taskService.setAssignee(task.getId(), userName)
+    println "StartReopenTime: ${runtimeService.getVariable(processId, 'startReopenTime')}"
+}
+
+runtimeService.setVariable(processId, "initiator", userName)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:intermediateThrowEvent id="Event_0dl5rfk" name="повернутись на початок">
+      <bpmn:incoming>Flow_11phrts</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_01bb7y5" name="toStart"/>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="Event_1689pqw" name="повернутись на початок">
+      <bpmn:incoming>Flow_1xm71lt</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1sq1gu1" name="toStart"/>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent attachedToRef="chooseOfficer" id="Event_03qffud">
+      <bpmn:outgoing>Flow_1qhs9jw</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1kez23c">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="Event_07f1tcn" name="вихід">
+      <bpmn:incoming>Flow_0c2aeux</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_13r0nf8" sourceRef="Activity_1j9fo8x" targetRef="Activity_0jzgmja"/>
+    <bpmn:sequenceFlow id="Flow_179k9vx" sourceRef="Activity_0jzgmja" targetRef="chooseOfficer"/>
+    <bpmn:sequenceFlow id="Flow_1l3ixd1" sourceRef="chooseOfficer" targetRef="Gateway_0avurv1"/>
+    <bpmn:sequenceFlow id="Flow_1qhs9jw" sourceRef="Event_03qffud" targetRef="Event_0lgo1bu"/>
+    <bpmn:sequenceFlow id="Flow_0j2lmdx" sourceRef="Gateway_0avurv1" targetRef="Activity_1fbqwnc"/>
+    <bpmn:sequenceFlow id="Flow_0goz1dj" sourceRef="Gateway_0avurv1" targetRef="Event_1x91d3m">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('chooseOfficer').formData.hasProp('_action_code') &amp;&amp; submission('chooseOfficer').formData.prop('_action_code').value().equals('exit')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1xm71lt" sourceRef="Gateway_0avurv1" targetRef="Event_1689pqw">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('chooseOfficer').formData.hasProp('_action_code') &amp;&amp; submission('chooseOfficer').formData.prop('_action_code').value().equals('back')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_11phrts" sourceRef="Activity_1fbqwnc" targetRef="Event_0dl5rfk"/>
+    <bpmn:sequenceFlow id="Flow_1tvyzhk" sourceRef="Gateway_0ki8cz0" targetRef="Activity_1jn1jz7">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${submission('InformationAboutInstance').formData.hasProp('_action_code') &amp;&amp; submission('InformationAboutInstance').formData.prop('_action_code').value().equals('details')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:startEvent camunda:initiator="initiator" id="Event_1dh8s72">
+      <bpmn:extensionElements>
+        <camunda:properties>
+          <camunda:property name="businessKeyExpression" value="${submission('addLabFormActivity').formData.prop('name').value().concat(' ').concat(submission('addLabFormActivity').formData.prop('edrpou').value())}"/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_01kv6mn</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask camunda:delegateExpression="${keycloakGetUsersConnectorDelegate}" camunda:modelerTemplate="getUsersByRoleFromKeycloak" id="Activity_1bzo2o9" name="Знайти користувачів з роллю officer">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="limit"/>
+          <camunda:inputParameter name="offset"/>
+          <camunda:inputParameter name="role_name">officer</camunda:inputParameter>
+          <camunda:outputParameter name="usersOutput">${ usersByRole }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_01kv6mn</bpmn:incoming>
+      <bpmn:outgoing>Flow_1cckvzl</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1cckvzl" sourceRef="Activity_1bzo2o9" targetRef="findRunningInstsncesScript"/>
+  </bpmn:process>
+  <bpmn:error id="Error_11ddrup" name="Error_09c29ei"/>
+  <bpmn:error id="Error_0hpfqmx" name="Error_0agefa5"/>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane bpmnElement="Collaboration_0pn1cv8" id="BPMNPlane_1">
+      <bpmndi:BPMNShape bpmnElement="Participant_02zjlbh" id="Participant_02zjlbh_di" isHorizontal="true">
+        <dc:Bounds height="670" width="2000" x="-510" y="540"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="findRunningInstsncesScript" id="Activity_1bkoj71_di">
+        <dc:Bounds height="80" width="100" x="-200" y="800"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_19lf8pm" id="Event_1fg6r85_di">
+        <dc:Bounds height="36" width="36" x="-168" y="712"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="27" width="82" x="-190" y="682"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Gateway_0ki8cz0" id="Gateway_0ki8cz0_di" isMarkerVisible="true">
+        <dc:Bounds height="50" width="50" x="75" y="815"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="InformationAboutInstance" id="Activity_06j0wyz_di">
+        <dc:Bounds height="80" width="100" x="-60" y="800"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_0yuryqn" id="Event_0yuryqn_di">
+        <dc:Bounds height="36" width="36" x="82" y="712"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="28" x="86" y="688"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_0g0au0c" id="Activity_0cmlou5_di">
+        <dc:Bounds height="80" width="100" x="540" y="800"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_13gnjnw" id="Event_13gnjnw_di">
+        <dc:Bounds height="36" width="36" x="762" y="712"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="28" x="767" y="693"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Gateway_0vehrxc" id="Gateway_0vehrxc_di" isMarkerVisible="true">
+        <dc:Bounds height="50" width="50" x="865" y="815"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_0xijtah" id="Event_0xijtah_di">
+        <dc:Bounds height="36" width="36" x="872" y="712"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="28" x="877" y="693"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="deleteBp" id="Activity_1sn0kof_di">
+        <dc:Bounds height="80" width="100" x="700" y="800"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_1g537sx" id="Event_08gkkjf_di">
+        <dc:Bounds height="36" width="36" x="982" y="822"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="27" width="82" x="959" y="865"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Gateway_0kt28w8" id="Gateway_0kt28w8_di" isMarkerVisible="true">
+        <dc:Bounds height="50" width="50" x="435" y="815"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="showDetails" id="Activity_1qrvk1n_di">
+        <dc:Bounds height="80" width="100" x="300" y="800"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1jn1jz7" id="Activity_0orywo5_di">
+        <dc:Bounds height="80" width="100" x="160" y="800"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_1q5v7x7" id="Event_168tb0w_di">
+        <dc:Bounds height="36" width="36" x="442" y="722"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="27" width="82" x="419" y="692"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1j9fo8x" id="Activity_059mmn5_di">
+        <dc:Bounds height="80" width="100" x="540" y="990"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_0jzgmja" id="Activity_0jnytpk_di">
+        <dc:Bounds height="80" width="100" x="700" y="990"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="chooseOfficer" id="Activity_0qb8cxz_di">
+        <dc:Bounds height="80" width="100" x="860" y="990"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_0lgo1bu" id="BPMNShape_1ex28xg">
+        <dc:Bounds height="36" width="36" x="922" y="1132"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="28" x="926" y="1178"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Gateway_0avurv1" id="Gateway_0avurv1_di" isMarkerVisible="true">
+        <dc:Bounds height="50" width="50" x="1025" y="1005"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_1x91d3m" id="Event_1x91d3m_di">
+        <dc:Bounds height="36" width="36" x="1032" y="1132"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="28" x="1036" y="1175"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1fbqwnc" id="Activity_1hei1z2_di">
+        <dc:Bounds height="80" width="100" x="1140" y="990"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_0dl5rfk" id="Event_0vzuyzv_di">
+        <dc:Bounds height="36" width="36" x="1312" y="1012"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="27" width="82" x="1289" y="1055"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_1689pqw" id="Event_187e0ze_di">
+        <dc:Bounds height="36" width="36" x="1032" y="932"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="27" width="82" x="1009" y="902"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_07f1tcn" id="Event_07f1tcn_di">
+        <dc:Bounds height="36" width="36" x="442" y="1132"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="28" x="446" y="1175"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="white" bioc:stroke="black" bpmnElement="Event_1dh8s72" id="Event_1dh8s72_di">
+        <dc:Bounds height="36" width="36" x="-398" y="822"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="43" x="-289" y="865"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1bzo2o9" id="BPMNShape_14sm4x7">
+        <dc:Bounds height="80" width="100" x="-340" y="800"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_03qffud" id="Event_12z4m12_di">
+        <dc:Bounds height="36" width="36" x="922" y="1052"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_0wl35cq" id="Event_122nydb_di">
+        <dc:Bounds height="36" width="36" x="762" y="782"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="Flow_01kv6mn" id="Flow_01kv6mn_di">
+        <di:waypoint x="-362" y="840"/>
+        <di:waypoint x="-340" y="840"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_199lzm2" id="Flow_199lzm2_di">
+        <di:waypoint x="-150" y="748"/>
+        <di:waypoint x="-150" y="800"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0wjq37z" id="Flow_0wjq37z_di">
+        <di:waypoint x="-100" y="840"/>
+        <di:waypoint x="-60" y="840"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0mua2s5" id="Flow_0mua2s5_di">
+        <di:waypoint x="40" y="840"/>
+        <di:waypoint x="75" y="840"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1yuuna1" id="Flow_1yuuna1_di">
+        <di:waypoint x="100" y="815"/>
+        <di:waypoint x="100" y="748"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="28" x="66" y="787"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1v6zopz" id="Flow_1v6zopz_di">
+        <di:waypoint x="460" y="865"/>
+        <di:waypoint x="460" y="1030"/>
+        <di:waypoint x="540" y="1030"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1u5yxdi" id="Flow_1u5yxdi_di">
+        <di:waypoint x="485" y="840"/>
+        <di:waypoint x="540" y="840"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="27" width="57" x="471" y="806"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0m3jr60" id="Flow_0m3jr60_di">
+        <di:waypoint x="640" y="840"/>
+        <di:waypoint x="700" y="840"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0kzh269" id="Flow_0kzh269_di">
+        <di:waypoint x="780" y="782"/>
+        <di:waypoint x="780" y="748"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1fzvu57" id="Flow_1fzvu57_di">
+        <di:waypoint x="800" y="840"/>
+        <di:waypoint x="865" y="840"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_10ya1yh" id="Flow_10ya1yh_di">
+        <di:waypoint x="915" y="840"/>
+        <di:waypoint x="982" y="840"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1klng2d" id="Flow_1klng2d_di">
+        <di:waypoint x="890" y="815"/>
+        <di:waypoint x="890" y="748"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0sxnqvd" id="Flow_0sxnqvd_di">
+        <di:waypoint x="260" y="840"/>
+        <di:waypoint x="300" y="840"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0g9rc72" id="Flow_0g9rc72_di">
+        <di:waypoint x="400" y="840"/>
+        <di:waypoint x="435" y="840"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_16neltf" id="Flow_16neltf_di">
+        <di:waypoint x="460" y="815"/>
+        <di:waypoint x="460" y="758"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0c2aeux" id="Flow_0c2aeux_di">
+        <di:waypoint x="460" y="865"/>
+        <di:waypoint x="460" y="1132"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_13r0nf8" id="Flow_13r0nf8_di">
+        <di:waypoint x="640" y="1030"/>
+        <di:waypoint x="700" y="1030"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_179k9vx" id="Flow_179k9vx_di">
+        <di:waypoint x="800" y="1030"/>
+        <di:waypoint x="860" y="1030"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1l3ixd1" id="Flow_1l3ixd1_di">
+        <di:waypoint x="960" y="1030"/>
+        <di:waypoint x="1025" y="1030"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1qhs9jw" id="Flow_1qhs9jw_di">
+        <di:waypoint x="940" y="1088"/>
+        <di:waypoint x="940" y="1132"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0j2lmdx" id="Flow_0j2lmdx_di">
+        <di:waypoint x="1075" y="1030"/>
+        <di:waypoint x="1140" y="1030"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0goz1dj" id="Flow_0goz1dj_di">
+        <di:waypoint x="1050" y="1055"/>
+        <di:waypoint x="1050" y="1132"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1xm71lt" id="Flow_1xm71lt_di">
+        <di:waypoint x="1050" y="1005"/>
+        <di:waypoint x="1050" y="968"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_11phrts" id="Flow_11phrts_di">
+        <di:waypoint x="1240" y="1030"/>
+        <di:waypoint x="1312" y="1030"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1tvyzhk" id="Flow_1tvyzhk_di">
+        <di:waypoint x="125" y="840"/>
+        <di:waypoint x="160" y="840"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1cckvzl" id="Flow_1cckvzl_di">
+        <di:waypoint x="-240" y="840"/>
+        <di:waypoint x="-200" y="840"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
