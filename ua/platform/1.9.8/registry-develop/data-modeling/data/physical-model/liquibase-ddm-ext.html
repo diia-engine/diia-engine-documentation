@@ -4544,6 +4544,9 @@ columnName="type" operator="eq" value="'text'"/&gt;
 <p>Якщо вказати створення індексу без вказання поля пошуку, то буде згенерована помилка.</p>
 </li>
 <li>
+<p>Для полів типу дати (TIMESTAMPTZ, DATE), що використовуються для пошуку, слід явно вказувати тип, наприклад <code>type="TIMESTAMPTZ"</code>, інакше під час створення індексу може виникнути помилка.</p>
+</li>
+<li>
 <p>Перший тег <code>&lt;ext:condition&gt;</code> в умові <code>&lt;ext:where&gt;</code> не повинен містити атрибуту <code>logicOperator</code>, всі інші теги <code>&lt;ext:condition&gt;</code> — повинні.</p>
 </li>
 <li>
@@ -5004,13 +5007,13 @@ columnName="type" operator="eq" value="'text'"/&gt;
 <details>
 <summary class="title"><em>Приклад OpenAPI специфікації</em></summary>
 <div class="content">
-      <div id="swagger-ui_SHXTM14BQFLHH73TRN1QNEQTR4ICLXUN"></div>
+      <div id="swagger-ui_AJN28BJLUSF2HQFFVFD64OBI5HPMOXU5"></div>
 
       <script>
         document.addEventListener('DOMContentLoaded', function() {
           SwaggerUIBundle({
             url: "../../../_attachments/data-model/sc/pagination/swagger-offset.yml",
-            dom_id: "#swagger-ui_SHXTM14BQFLHH73TRN1QNEQTR4ICLXUN",
+            dom_id: "#swagger-ui_AJN28BJLUSF2HQFFVFD64OBI5HPMOXU5",
             presets: [
               SwaggerUIBundle.presets.apis,
               SwaggerUIStandalonePreset
@@ -5135,13 +5138,13 @@ columnName="type" operator="eq" value="'text'"/&gt;
 <details>
 <summary class="title"><em>Приклад OpenAPI специфікації</em></summary>
 <div class="content">
-      <div id="swagger-ui_Y6MKRI05XFDP27WAXCVOFCMTOROSN5BS"></div>
+      <div id="swagger-ui_CN0TTBXG0825LOQ5M2SPVREMUBHVPMFN"></div>
 
       <script>
         document.addEventListener('DOMContentLoaded', function() {
           SwaggerUIBundle({
             url: "../../../_attachments/data-model/sc/pagination/swagger-page.yml",
-            dom_id: "#swagger-ui_Y6MKRI05XFDP27WAXCVOFCMTOROSN5BS",
+            dom_id: "#swagger-ui_CN0TTBXG0825LOQ5M2SPVREMUBHVPMFN",
             presets: [
               SwaggerUIBundle.presets.apis,
               SwaggerUIStandalonePreset
