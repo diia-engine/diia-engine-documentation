@@ -5487,6 +5487,52 @@ set_transient_variable('dataPayload', signedFormData)</code></pre>
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p><strong>Налаштування події обробки помилок</strong></p>
+</div>
+<div class="paragraph">
+<p>Для обробки помилок, які можуть виникнути на етапі збереження даних в Дата фабрику, необхідно додати та налаштувати подію обробки помилок. Для цього з бокового меню необхідно додати на сервісну задача “Зберегти дані в Дата фабрику” Intermediate/Boundary event (1), в налаштуваннях обрати тип події - Error boundary event (2) і виконати наступні налаштування (3):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>в полі Global error reference обрати “Create new”</p>
+</li>
+<li>
+<p>в полі Name – назва помилки, яку буде відловлювати делегат, Exception</p>
+</li>
+<li>
+<p>в полі Code – java.lang.Exception</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><span class="image"><img src="../../_images/study-project/task-3/t5-2.png" alt="t5 2"></span></p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="ПРИМІТКА"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>В змінну Message variable (errorMsg) буде зберігатись текст помилки. Зверніть увагу, що текст помилки буде повертатись тільки якщо реєстр оновлено до версії <strong>1.9.8.68.15</strong>. Якщо версія вашого реєстра нижча треба його оновити.</p>
+</li>
+<li>
+<p>В змінну Code variable (errorCode) буде зберігатись код помилки. Зверніть увагу, що більшість помилок не належать до типу BpmnError, тому змінна Code variable у таких випадках залишатиметься порожньою.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Детальніше про налаштування <a href="../../bp-modeling/bp/bpmn/subprocesses/transaction-subprocess/error-event-transaction.html" class="xref page">Події обробки помилок</a>.</p>
+</div>
 </div>
 </div>
 <div class="sect3">
