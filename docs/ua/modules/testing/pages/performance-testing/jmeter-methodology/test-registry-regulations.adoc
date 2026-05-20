@@ -1,0 +1,258 @@
+// docs/ua/modules/testing/pages/performance-testing/jmeter-methodology/test-registry-regulations.adoc
+= Регламент тестового реєстру
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
+
+Цей розділ описує стандарти організації моделі даних та структуру Liquibase-міграцій для реєстрів, що проходять навантажувальне тестування. Дотримання цих правил гарантує відтворюваність середовища та дозволяє оптимізувати час розгортання в CI/CD пайплайнах.
+
+[#data-model]
+== Структура моделі даних
+
+Модель даних реєстру організована за принципом "директорія як сутність". Кожна директорія відповідає за окрему таблицю в базі даних PostgreSQL, що забезпечує високий рівень модульності та зручність підтримки коду.
+
+Структура директорії `data-model`:
+
+[source,text]
+----
+data-model/
+├── account
+│   ├── partialUpdate.xml
+│   ├── populate.xml
+│   ├── searchConditions.xml
+│   └── tables.xml
+├── addColumns.xml
+├── analyze.sql
+├── createCompositeEntities.xml
+├── createPartialUpdates.xml
+├── createSearchConditions.xml
+├── createTables.xml
+├── createTestTable.xml
+├── data-load
+│   ├── feature
+│   │   └── Factors_test.csv
+│   └── reference
+│       └── async_update_accounts.csv
+├── factor
+│   ├── populate.xml
+│   ├── searchConditions.xml
+│   └── tables.xml
+├── laboratory_with_multiple_file
+│   └── tables.xml
+├── main-liquibase.xml
+├── orders
+│   ├── addColumns.xml
+│   └── tables.xml
+├── person_edu_profile
+│   └── tables.xml
+├── person_profile
+│   └── tables.xml
+├── populateTables.xml
+└── transaction
+    ├── compositeEntities.xml
+    └── tables.xml
+----
+
+[IMPORTANT]
+====
+Уникайте дублювання `changeSet ID` у файлах.
+Рекомендується описувати дію з використанням назви таблиці для кожного id
+(наприклад, *`id="create table account"`*), щоб уникнути конфліктів у таблиці *`ddm_db_changelog`*.
+====
+
+[#liquibase]
+== Порядок виконання міграцій (main-liquibase.xml)
+
+Для забезпечення цілісності структури та продуктивності бази даних, виконання міграцій відбувається у суворо визначеній послідовності:
+
+1. **Створення структур:** Виконання `createTables.xml`.
+2. **Оптимізація:** Запуск `analyze.sql`. Цей крок є критичним — оновлення статистики системних каталогів PostgreSQL після створення таблиць перед створенням індексів чи умов пошуку мінімізує ризики неефективних планів виконання запитів.
+3. **Розширення:** Виконання `addColumns.xml`.
+4. **Формування логіки:** Створення композитних сутностей та налаштування часткових оновлень: `createCompositeEntities.xml` і `createPartialUpdates.xml`. Виконання тільки на операційному інстансі: `context="pub"`.
+5. **Наповнення:** Виконання `populateTables.xml`. Виконання тільки на операційному інстансі і заборона виконання в пайплайні `code-review`.
+6. **Індексація:** Створення умов пошуку (`createSearchConditions.xml`).
+
+.Приклад файлу `main-liquibase.xml`
+[source,xml]
+----
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/dbchangelog/4.5/dbchangelog-4.5.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
+
+    <include file="data-model/createTestTable.xml"/>
+    <include file="data-model/createTables.xml"/>
+    <changeSet id="analyze after create tables" author="registry owner" runInTransaction="false">
+        <comment>DB planner optimization. Must be placed after createTables and before createSearchConditions.</comment>
+        <sqlFile path="data-model/analyze.sql" relativeToChangelogFile="false"/>
+    </changeSet>
+    <include file="data-model/addColumns.xml"/>
+    <include file="data-model/createCompositeEntities.xml" context="pub"/>
+    <include file="data-model/createPartialUpdates.xml" context="pub"/>
+    <include file="data-model/populateTables.xml" context="pub and !code-review"/>
+    <include file="data-model/createSearchConditions.xml"/>
+
+</databaseChangeLog>
+----
+
+.Приклад файлу `createTables.xml`
+[source,xml]
+----
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/dbchangelog/4.5/dbchangelog-4.5.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
+
+    <include file="data-model/person_profile/tables.xml"/>
+    <include file="data-model/person_edu_profile/tables.xml"/>
+    <include file="data-model/orders/tables.xml"/>
+    <include file="data-model/transaction/tables.xml"/>
+    <include file="data-model/account/tables.xml"/>
+    <include file="data-model/laboratory_with_multiple_file/tables.xml"/>
+    <include file="data-model/factor/tables.xml"/>
+
+</databaseChangeLog>
+----
+
+.Приклад файлу `analyze.sql`
+[source,sql]
+----
+ANALYZE pg_catalog.pg_class;
+ANALYZE pg_catalog.pg_attribute;
+ANALYZE pg_catalog.pg_namespace;
+
+ANALYZE pg_catalog.pg_index;
+ANALYZE pg_catalog.pg_constraint;
+ANALYZE pg_catalog.pg_am;
+
+ANALYZE pg_catalog.pg_type;
+ANALYZE pg_catalog.pg_attrdef;
+ANALYZE pg_catalog.pg_description;
+
+ANALYZE pg_catalog.pg_depend;
+ANALYZE pg_catalog.pg_trigger;
+ANALYZE pg_catalog.pg_proc;
+ANALYZE pg_catalog.pg_rewrite;
+----
+
+.Приклад файлу `addColumns.xml`
+[source,xml]
+----
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/dbchangelog/4.5/dbchangelog-4.5.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
+
+    <include file="data-model/orders/addColumns.xml" />
+    <changeSet id="analyze after orders" author="registry owner" runInTransaction="false">
+        <comment>DB planner optimization. Must be placed after createTables and before createSearchConditions.</comment>
+        <sqlFile path="data-model/analyze.sql" relativeToChangelogFile="false"/>
+    </changeSet>
+
+</databaseChangeLog>
+----
+
+.Приклад файлу `createCompositeEntities.xml`
+[source,xml]
+----
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/dbchangelog/4.5/dbchangelog-4.5.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
+
+    <include file="data-model/transaction/compositeEntities.xml" />
+
+</databaseChangeLog>
+----
+
+.Приклад файлу `createPartialUpdates.xml`
+[source,xml]
+----
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/dbchangelog/4.5/dbchangelog-4.5.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
+
+    <include file="data-model/account/partialUpdate.xml" />
+
+</databaseChangeLog>
+----
+
+.Приклад файлу `populateTables.xml`
+[source,xml]
+----
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/dbchangelog/4.5/dbchangelog-4.5.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
+
+    <include file="data-model/account/populate.xml" />
+    <include file="data-model/factor/populate.xml" />
+
+</databaseChangeLog>
+----
+
+.Приклад файлу `createSearchConditions.xml`
+[source,xml]
+----
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/dbchangelog/4.5/dbchangelog-4.5.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://artifactory.control-plane-nexus/nexus/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
+
+    <include file="data-model/account/searchConditions.xml" />
+    <include file="data-model/factor/searchConditions.xml" />
+
+</databaseChangeLog>
+----
+
+[#liquibase-contexts]
+== Використання контекстів Liquibase
+
+Для оптимізації часу виконання збірки регламента реєстру у CI/CD, міграції розподілені за контекстами:
+
+* `pub` (Publisher): Чейнджсети, необхідні для генерації бізнес-логіки та API на операційному інстансі.
+* `!code-review`: Оптимізація пайплайнів. Чейнджсети наповнення даних (`populateTables.xml`) виконуються *тільки* на операційному інстансі (Publisher) і *НЕ* виконуються під час запуску тестів у `MASTER-Code-review` пайплайні, що суттєво економить час ресурсів кластера.
+
+[NOTE]
+====
+Перед початком тестування переконайтеся, що всі зміни в `data-model` відповідають поточним специфікаціям бізнес-процесів, оскільки зміни в структурі БД можуть вимагати актуалізації JMeter-скриптів.
+====
+
+== Набір ролей необхідних для роботи реєстра
+
+Для роботи реєстра вистачить стандартних ролей для отримувачів послуг (citizen) і необхідно додати ролі для надавачів послуг (officer):
+
+.Приклад файлу `roles/officer.yml`
+[source, yaml]
+----
+roles:
+  - name: officer
+    description: Officer role
+  - name: op-regression
+    description: Available all business processes
+----
+
+[#preparing]
+== Підготовка регламента реєстра для тестових сценаріїв
+
+* xref:testing:performance-testing/jmeter-methodology/registry/unregistered-role.adoc[Реєстрація користувача (UNREGISTERED)]
+* xref:testing:performance-testing/jmeter-methodology/registry/nested-entity.adoc[Реєстрація складної сутності]
+* xref:testing:performance-testing/jmeter-methodology/registry/mass-update.adoc[Асинхронне оновлення сутностей]
+* xref:testing:performance-testing/jmeter-methodology/registry/read-grid.adoc[Читання великих масивів даних]
+* xref:testing:performance-testing/jmeter-methodology/registry/file-upload.adoc[Завантаження файлів]
+* xref:testing:performance-testing/jmeter-methodology/registry/file-download.adoc[Генерація витягів]

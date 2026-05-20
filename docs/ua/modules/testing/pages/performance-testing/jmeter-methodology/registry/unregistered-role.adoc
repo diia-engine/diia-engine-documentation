@@ -1,0 +1,66 @@
+// docs/ua/modules/testing/pages/performance-testing/jmeter-methodology/registry/unregistered-role.adoc
+= Регламент: Реєстрація користувача (UNREGISTERED)
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
+
+Цей розділ описує налаштування регламенту реєстра для проведення навантажувального тестування процесу реєстрації користувача, який не має облікового запису (UNREGISTERED).
+
+[#liquibase]
+== Вимоги до моделі даних (Liquibase)
+
+Для тестування реєстрацій користувачів не передбачено створення спеціальних таблиць в моделі даних.
+
+[#integration-prerequisites]
+== Інтеграційні передумови
+
+Процес реєстрації передбачає взаємодію із зовнішніми компонентами (Keycloak).
+
+1. **Keycloak:**
+- Тестові користувачі будуть згенеровані за допомогою Gradle task.
+
+> !!! 🔗 <<лінк на сторінку інструкцій з Gradle task>>
+
+- Тестові користувачі будуть завантажені в Keycloak за допомогою JMeter feature-unregistered-role.jmx
+
+> !!! 🔗 <<лінк на сторінку інструкцій з моделюванням тесту>>
+
+[#bp-config-and-rbac-setup]
+== Конфігурація бізнес-процесів та RBAC доступ
+
+Платформа повинна мати розгорнуту дефініцію бізнес-процесу реєстрації.
+
+[cols="1,1", options="header"]
+|===
+| Параметр | Опис
+| Process Definition ID | `feature-unregistered-role`
+| Process Definition Name | `Процес для перевірки автоматичного старту після автентифікації користувача з роллю UNREGISTERED`
+2+| RBAC
+| bp-auth/citizen.yml | `unregistered-individual`
+| bp-auth/citizen.yml | `unregistered-legal`
+| bp-auth/citizen.yml | `unregistered-entrepreneur`
+|===
+
+[#rbac-setup]
+=== Налаштування RBAC
+
+RBAC доступ до бізнес процеса налаштовується в файлі `bp-auth/citizen.yml`:
+
+[source,yaml]
+----
+authorization:
+  realm: 'citizen'
+  process_definitions:
+    - process_definition_id: "feature-unregistered-role"
+      process_name: "Процес для перевірки автоматичного старту після автентифікації користувача з роллю UNREGISTERED"
+      process_description: "Процес для перевірки автоматичного старту після автентифікації користувача з роллю UNREGISTERED"
+      roles:
+        - unregistered-individual
+        - unregistered-legal
+        - unregistered-entrepreneur
+----
+
+[TIP]
+====
+Використовуйте файл _link:{attachmentsdir}/jmeter-methodology/feature-unregistered-role.bpmn[feature-unregistered-role.bpmn]_ із готовою схемою бізнес-процесу для прикладу.
+====

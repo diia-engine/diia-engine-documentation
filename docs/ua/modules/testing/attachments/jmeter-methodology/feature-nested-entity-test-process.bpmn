@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:rrm="http://registry-regulation-management" exporter="Camunda Modeler" exporterVersion="5.4.1" id="Definitions_1dk8stw" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.15.0" rrm:created="2023-05-30T09:47:18.000Z" rrm:modified="2026-04-27T16:23:52.649Z" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:collaboration id="Collaboration_1dkjf4v">
+    <bpmn:participant id="Participant_1hi6l98" name="nested entity test process" processRef="feature-nested-entity-test-process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="feature-nested-entity-test-process" isExecutable="true" name="Процес для перевірки збереження декількох сутностей в рамках однієї транзакції - nested entity">
+    <bpmn:scriptTask id="Activity_1" name="Підготовка даних для запису (transient var)" scriptFormat="groovy">
+      <bpmn:incoming>Flow_08bdlxh</bpmn:incoming>
+      <bpmn:outgoing>Flow_0o0zzbr</bpmn:outgoing>
+      <bpmn:script>def cephData = [:]
+
+        def formData = submission('signPersonProfileActivity').formData
+
+        cephData['lastName'] = formData.prop('last_name').value()
+        cephData['firstName'] = formData.prop('first_name').value()
+        cephData['secondName'] = formData.prop('second_name').value()
+        cephData['birthday'] = formData.prop('birthday').value() + "T13:17:10.952Z"
+
+        set_transient_variable('createPersonPayload', S(cephData, 'application/json'))</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask camunda:delegateExpression="${dataFactoryConnectorCreateDelegate}" camunda:modelerTemplate="dataFactoryConnectorCreateDelegate" id="createProfile" name="Створити профайл">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="resource">person-profile</camunda:inputParameter>
+          <camunda:inputParameter name="payload">${createPersonPayload}</camunda:inputParameter>
+          <camunda:inputParameter name="x_access_token">${completer('signPersonProfileActivity').accessToken}</camunda:inputParameter>
+          <camunda:inputParameter name="x_digital_signature_ceph_key">${sign_submission('signPersonProfileActivity').signatureDocumentId}</camunda:inputParameter>
+          <camunda:inputParameter name="x_digital_signature_derived_ceph_key">${person_profile_system_signature_ceph_key}</camunda:inputParameter>
+          <camunda:outputParameter name="createPersonProfileResponse">${ response }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1uz8dbe</bpmn:incoming>
+      <bpmn:outgoing>Flow_0oev8fz</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="Activity_2" name="Підготовка даних" scriptFormat="groovy">
+      <bpmn:incoming>Flow_0oev8fz</bpmn:incoming>
+      <bpmn:outgoing>Flow_1m7ycx9</bpmn:outgoing>
+      <bpmn:script>def personProfileId = createPersonProfileResponse.responseBody.prop('id').value()
+
+        def personEduProfile = ['personProfileId':personProfileId]
+
+        def formData = submission('signPersonProfileActivity').formData
+        def orders = [:]
+        orders['ordersType'] = formData.prop('order_type').value()
+        orders['ordersNumber'] = formData.prop('order_number').value()
+        orders['ordersDate'] = formData.prop('order_date').value() + "T13:17:10.952Z"
+        orders['personProfileId'] = personProfileId
+
+        println 'start add to list'
+
+        println 'get file data1 ' + formData.prop('file')
+        println 'get file data3 ' + formData.prop('file').elements().get(0)
+
+        def listFileObj = []
+        def fileObj = [:]
+        fileObj.id = formData.prop('file').elements().get(0).prop('id').stringValue()
+        fileObj.checksum = formData.prop('file').elements().get(0).prop('checksum').stringValue()
+        listFileObj &lt;&lt; fileObj
+
+        orders['files'] = listFileObj
+
+        println 'orders' + orders
+
+        println 'orders' + orders['files']
+
+
+        def cephData = ['personEduProfile': personEduProfile, 'orders': orders]
+
+        def createComplexPayload = S(cephData, 'application/json')
+
+        println 'createComplexPayload  ' + createComplexPayload
+
+        set_transient_variable('createComplexPayload', createComplexPayload)
+
+        println 'cephData ' + cephData
+        println 'createComplexPayload after ' + createComplexPayload
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:userTask camunda:assignee="${initiator}" camunda:formKey="feature-form-add-signd" camunda:modelerTemplate="officerSignTaskTemplate" id="signPersonProfileActivity" name="Підписати дані про освітній профіль">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate">${submission('addPersonProfileActivity').formData}</camunda:inputParameter>
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value=""/>
+          <camunda:property name="eSign" value="true"/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0s2v0lc</bpmn:incoming>
+      <bpmn:outgoing>Flow_08bdlxh</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask camunda:assignee="${initiator}" camunda:formKey="feature-form-add-dataprof" camunda:modelerTemplate="formUserTaskTemplate" id="addPersonProfileActivity" name="Внести дані про освітній профіль">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate"/>
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value=""/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1qcxlak</bpmn:incoming>
+      <bpmn:outgoing>Flow_0s2v0lc</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:startEvent camunda:initiator="initiator" id="Event_1urmx3v" name="start">
+      <bpmn:outgoing>Flow_1qcxlak</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask camunda:delegateExpression="${dataFactoryConnectorNestedCreateDelegate}" camunda:modelerTemplate="dataFactoryConnectorNestedCreateDelegate" id="createComplex" name="Збереження даних">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="resource">nested-transaction-entity</camunda:inputParameter>
+          <camunda:inputParameter name="payload">${createComplexPayload}</camunda:inputParameter>
+          <camunda:inputParameter name="x_access_token">${completer('signPersonProfileActivity').accessToken}</camunda:inputParameter>
+          <camunda:inputParameter name="x_digital_signature_ceph_key">${sign_submission('signPersonProfileActivity').signatureDocumentId}</camunda:inputParameter>
+          <camunda:inputParameter name="x_digital_signature_derived_ceph_key">${transaction_system_signature_ceph_key}</camunda:inputParameter>
+          <camunda:outputParameter name="response">${ response }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0bu7m67</bpmn:incoming>
+      <bpmn:outgoing>Flow_0en992v</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask camunda:delegateExpression="${dataFactoryConnectorReadDelegate}" camunda:modelerTemplate="dataFactoryConnectorReadDelegate" id="Activity_1aqj3xa" name="Get transaction">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="resource">transaction</camunda:inputParameter>
+          <camunda:inputParameter name="x_access_token">${completer('signPersonProfileActivity').accessToken}</camunda:inputParameter>
+          <camunda:inputParameter name="id">${response.value.responseBody.prop('id').value()}</camunda:inputParameter>
+          <camunda:outputParameter name="txResponse">${ response }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0en992v</bpmn:incoming>
+      <bpmn:outgoing>Flow_1hxelnx</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask camunda:delegateExpression="${dataFactoryConnectorReadDelegate}" camunda:modelerTemplate="dataFactoryConnectorReadDelegate" id="Activity_1kzfnkh" name="пошук даних по ордеру">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="resource">orders</camunda:inputParameter>
+          <camunda:inputParameter name="x_access_token">${completer('signPersonProfileActivity').accessToken}</camunda:inputParameter>
+          <camunda:inputParameter name="id">${txResponse.value.responseBody.prop('ordersId').value()}</camunda:inputParameter>
+          <camunda:outputParameter name="ordResponse">${ response }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1hxelnx</bpmn:incoming>
+      <bpmn:outgoing>Flow_0w4cisl</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="Activity_1fbwjwd" name="скрипт для прездаполнения на форму" scriptFormat="groovy">
+      <bpmn:incoming>Flow_0w4cisl</bpmn:incoming>
+      <bpmn:outgoing>Flow_08xq8gk</bpmn:outgoing>
+      <bpmn:script>execution.setVariable("tx", txResponse.responseBody)
+execution.setVariable("order", ordResponse.responseBody)
+
+data=[:]
+data['order_type'] = order.prop('ordersType').value()
+data['order_number'] = order.prop('ordersNumber').value()
+data['order_date'] = order.prop('ordersDate').value()
+
+def listFileObj = []
+def fileObj = [:]
+fileObj.id = order.prop('files').elements().get(0).prop('id').stringValue()
+fileObj.checksum = order.prop('files').elements().get(0).prop('checksum').stringValue()
+listFileObj &lt;&lt; fileObj
+
+data['files'] = listFileObj
+
+
+execution.setVariable('payload', S(data, 'application/json'))
+println "payload : " + payload</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:userTask camunda:assignee="${initiator}" camunda:formKey="feature-form-add-thirdform" camunda:modelerTemplate="formUserTaskTemplate" id="Activity_11jqc4d" name="переглянути дані та внести зміни">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate">${payload}</camunda:inputParameter>
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value=""/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_08xq8gk</bpmn:incoming>
+      <bpmn:outgoing>Flow_01p5c2s</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask camunda:assignee="${initiator}" camunda:formKey="feature-form-add-fourth" camunda:modelerTemplate="officerSignTaskTemplate" id="signDataActivity" name="Підписати дані про освітній профіль">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate">${submission('Activity_11jqc4d').formData}</camunda:inputParameter>
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value=""/>
+          <camunda:property name="eSign" value="true"/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_01p5c2s</bpmn:incoming>
+      <bpmn:outgoing>Flow_0qjemi2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Activity_0qmbuk9" name="Підготовка даних для запису (transient var)" scriptFormat="groovy">
+      <bpmn:incoming>Flow_0qjemi2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0jy1ssm</bpmn:outgoing>
+      <bpmn:script>println "begining Activity_0qmbuk9"
+println "tx : " + tx
+println "order : " + order
+
+def personProfileId = order.prop('personProfileId').value()
+def personEduProfileId = tx.prop('personEduProfileId').value()
+println "personProfileId : " + personProfileId
+println "personEduProfileId : " + personEduProfileId
+
+def personEduProfile =
+['personProfileId':personProfileId,
+'personEduProfileId':personEduProfileId]
+
+def formData = submission('signDataActivity').formData
+println "orderFormData : " + formData
+
+def orders = [:]
+orders['ordersType'] = formData.prop('order_type').value()
+orders['ordersNumber'] = formData.prop('order_number').value()
+orders['ordersDate'] = formData.prop('order_date').value() + "T13:17:10.952Z"
+orders['personProfileId'] = personProfileId
+orders['ordersId'] = tx.prop('ordersId').value()
+
+ def listFileObj = []
+        def fileObj = [:]
+        fileObj.id = formData.prop('files').elements().get(0).prop('id').stringValue()
+        fileObj.checksum = formData.prop('files').elements().get(0).prop('checksum').stringValue()
+        listFileObj &lt;&lt; fileObj
+
+orders['files'] = listFileObj
+
+def cephData = ['personEduProfile':personEduProfile,'orders':orders,
+'transactionId':tx.prop('transactionId').value()]
+
+def createComplexPayload = S(cephData, 'application/json')
+println "createComplexPayload : " + createComplexPayload
+
+set_transient_variable('createComplexPayload', createComplexPayload)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask camunda:delegateExpression="${dataFactoryConnectorNestedCreateDelegate}" camunda:modelerTemplate="dataFactoryConnectorNestedCreateDelegate" id="Activity_1i82dew" name="Збереження даних">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="resource">nested-transaction-entity</camunda:inputParameter>
+          <camunda:inputParameter name="payload">${createComplexPayload}</camunda:inputParameter>
+          <camunda:inputParameter name="x_access_token">${completer('signDataActivity').accessToken}</camunda:inputParameter>
+          <camunda:inputParameter name="x_digital_signature_ceph_key">${sign_submission('signDataActivity').signatureDocumentId}</camunda:inputParameter>
+          <camunda:inputParameter name="x_digital_signature_derived_ceph_key">${tx_system_signature_ceph_key}</camunda:inputParameter>
+          <camunda:outputParameter name="response">${ response }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1ufz4iq</bpmn:incoming>
+      <bpmn:outgoing>Flow_1tz5y7k</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask camunda:delegateExpression="${defineBusinessProcessStatusDelegate}" camunda:modelerTemplate="defineBusinessProcessStatusDelegate" id="Activity_0e614q3" name="Встановити результат бізнес-процеса">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="status">Комплексні сутності створені</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1tz5y7k</bpmn:incoming>
+      <bpmn:outgoing>Flow_0d34fo5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_0enz2z0">
+      <bpmn:incoming>Flow_0d34fo5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0o0zzbr" sourceRef="Activity_1" targetRef="Activity_0boy19l"/>
+    <bpmn:sequenceFlow id="Flow_08bdlxh" sourceRef="signPersonProfileActivity" targetRef="Activity_1"/>
+    <bpmn:sequenceFlow id="Flow_1m7ycx9" sourceRef="Activity_2" targetRef="Activity_1i69ckp"/>
+    <bpmn:sequenceFlow id="Flow_0oev8fz" sourceRef="createProfile" targetRef="Activity_2"/>
+    <bpmn:sequenceFlow id="Flow_0s2v0lc" sourceRef="addPersonProfileActivity" targetRef="signPersonProfileActivity"/>
+    <bpmn:sequenceFlow id="Flow_1qcxlak" sourceRef="Event_1urmx3v" targetRef="addPersonProfileActivity"/>
+    <bpmn:sequenceFlow id="Flow_0en992v" sourceRef="createComplex" targetRef="Activity_1aqj3xa"/>
+    <bpmn:sequenceFlow id="Flow_1hxelnx" sourceRef="Activity_1aqj3xa" targetRef="Activity_1kzfnkh"/>
+    <bpmn:sequenceFlow id="Flow_0w4cisl" sourceRef="Activity_1kzfnkh" targetRef="Activity_1fbwjwd"/>
+    <bpmn:sequenceFlow id="Flow_08xq8gk" sourceRef="Activity_1fbwjwd" targetRef="Activity_11jqc4d"/>
+    <bpmn:sequenceFlow id="Flow_01p5c2s" sourceRef="Activity_11jqc4d" targetRef="signDataActivity"/>
+    <bpmn:sequenceFlow id="Flow_0qjemi2" sourceRef="signDataActivity" targetRef="Activity_0qmbuk9"/>
+    <bpmn:sequenceFlow id="Flow_0jy1ssm" sourceRef="Activity_0qmbuk9" targetRef="Activity_1knu7j6"/>
+    <bpmn:sequenceFlow id="Flow_1tz5y7k" sourceRef="Activity_1i82dew" targetRef="Activity_0e614q3"/>
+    <bpmn:sequenceFlow id="Flow_0d34fo5" sourceRef="Activity_0e614q3" targetRef="Event_0enz2z0"/>
+    <bpmn:serviceTask camunda:delegateExpression="${digitalSystemSignatureDelegate}" camunda:modelerTemplate="digitalSystemSignatureDelegate" id="Activity_1i69ckp" name="Підписати дані системним ключем">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="payload">${createComplexPayload}</camunda:inputParameter>
+          <camunda:inputParameter name="x_access_token">${completer('signPersonProfileActivity').accessToken}</camunda:inputParameter>
+          <camunda:outputParameter name="transaction_system_signature_ceph_key">${ system_signature_storage_key }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1m7ycx9</bpmn:incoming>
+      <bpmn:outgoing>Flow_0bu7m67</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0bu7m67" sourceRef="Activity_1i69ckp" targetRef="createComplex"/>
+    <bpmn:sequenceFlow id="Flow_1uz8dbe" sourceRef="Activity_0boy19l" targetRef="createProfile"/>
+    <bpmn:serviceTask camunda:delegateExpression="${digitalSystemSignatureDelegate}" camunda:modelerTemplate="digitalSystemSignatureDelegate" id="Activity_0boy19l" name="Підписати дані системним ключем">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="payload">${createPersonPayload}</camunda:inputParameter>
+          <camunda:inputParameter name="x_access_token">${completer('signPersonProfileActivity').accessToken}</camunda:inputParameter>
+          <camunda:outputParameter name="person_profile_system_signature_ceph_key">${ system_signature_storage_key }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0o0zzbr</bpmn:incoming>
+      <bpmn:outgoing>Flow_1uz8dbe</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask camunda:delegateExpression="${digitalSystemSignatureDelegate}" camunda:modelerTemplate="digitalSystemSignatureDelegate" id="Activity_1knu7j6" name="Підписати дані системним ключем">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="payload">${createComplexPayload}</camunda:inputParameter>
+          <camunda:inputParameter name="x_access_token">${completer('signDataActivity').accessToken}</camunda:inputParameter>
+          <camunda:outputParameter name="tx_system_signature_ceph_key">${ system_signature_storage_key }</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0jy1ssm</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ufz4iq</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1ufz4iq" sourceRef="Activity_1knu7j6" targetRef="Activity_1i82dew"/>
+    <bpmn:textAnnotation id="TextAnnotation_0d1649b">
+      <bpmn:text>{
+          "secondName": "string",
+          "firstName": "string",
+          "lastName": "string",
+          "birthday": "2022-02-16T13:17:10.952Z"
+        }
+
+        set ${createPersonPayload}</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1n3wmif" sourceRef="Activity_1" targetRef="TextAnnotation_0d1649b"/>
+    <bpmn:textAnnotation id="TextAnnotation_0t5jdob">
+      <bpmn:text>{
+          "personEduProfile": {
+            "personProfileId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          },
+          "orders": {
+            "ordersType": "string",
+            "ordersNumber": "string",
+            "ordersDate": "2022-02-16T13:33:30.660Z",
+            "personProfileId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          }
+        }
+        set ${createComplexPayload}</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1jc6cbe" sourceRef="Activity_2" targetRef="TextAnnotation_0t5jdob"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane bpmnElement="Collaboration_1dkjf4v" id="BPMNPlane_1">
+      <bpmndi:BPMNShape bpmnElement="Participant_1hi6l98" id="Participant_1hi6l98_di" isHorizontal="true">
+        <dc:Bounds height="528" width="2810" x="180" y="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="#ffffff" bioc:stroke="#000000" bpmnElement="Activity_1" color:background-color="#ffffff" color:border-color="#000000" id="Activity_1bqhzc7_di">
+        <dc:Bounds height="80" width="100" x="610" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="#ffffff" bioc:stroke="#000000" bpmnElement="createProfile" color:background-color="#ffffff" color:border-color="#000000" id="Activity_0wqzzo8_di">
+        <dc:Bounds height="80" width="100" x="920" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_2" id="Activity_1fepyfq_di">
+        <dc:Bounds height="80" width="100" x="1080" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="white" bioc:stroke="black" bpmnElement="signPersonProfileActivity" id="Activity_0ctjzpg_di">
+        <dc:Bounds height="80" width="100" x="460" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="white" bioc:stroke="black" bpmnElement="addPersonProfileActivity" id="Activity_16wnijg_di">
+        <dc:Bounds height="80" width="100" x="310" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_1urmx3v" id="Event_1urmx3v_di">
+        <dc:Bounds height="36" width="36" x="232" y="200"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="22" x="240" y="243"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="createComplex" id="Activity_0vdl7a5_di">
+        <dc:Bounds height="80" width="100" x="1410" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1aqj3xa" id="Activity_1aqj3xa_di">
+        <dc:Bounds height="80" width="100" x="1580" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1kzfnkh" id="Activity_1kzfnkh_di">
+        <dc:Bounds height="80" width="100" x="1720" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1fbwjwd" id="Activity_1fbwjwd_di">
+        <dc:Bounds height="80" width="100" x="1870" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="white" bioc:stroke="black" bpmnElement="Activity_11jqc4d" id="Activity_11jqc4d_di">
+        <dc:Bounds height="80" width="100" x="2020" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="white" bioc:stroke="black" bpmnElement="signDataActivity" id="Activity_0i5zy29_di">
+        <dc:Bounds height="80" width="100" x="2170" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="#ffffff" bioc:stroke="#000000" bpmnElement="Activity_0qmbuk9" color:background-color="#ffffff" color:border-color="#000000" id="Activity_0qmbuk9_di">
+        <dc:Bounds height="80" width="100" x="2320" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1i82dew" id="Activity_1i82dew_di">
+        <dc:Bounds height="80" width="100" x="2620" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="white" bioc:stroke="black" bpmnElement="Activity_0e614q3" id="Activity_0e614q3_di">
+        <dc:Bounds height="80" width="100" x="2760" y="178"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_0enz2z0" id="Event_0enz2z0_di">
+        <dc:Bounds height="36" width="36" x="2932" y="200"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="12" x="2945" y="243"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1i69ckp" id="Activity_0z66ixp_di">
+        <dc:Bounds height="80" width="100" x="1240" y="178"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_0boy19l" id="Activity_090zopv_di">
+        <dc:Bounds height="80" width="100" x="760" y="178"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1knu7j6" id="BPMNShape_0apb0bk">
+        <dc:Bounds height="80" width="100" x="2470" y="178"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="TextAnnotation_0d1649b" id="TextAnnotation_0d1649b_di">
+        <dc:Bounds height="124" width="260" x="520" y="328"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="TextAnnotation_0t5jdob" id="TextAnnotation_0t5jdob_di">
+        <dc:Bounds height="180" width="400" x="1040" y="328"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0o0zzbr" id="Flow_0o0zzbr_di">
+        <di:waypoint x="710" y="218"/>
+        <di:waypoint x="760" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_08bdlxh" id="Flow_08bdlxh_di">
+        <di:waypoint x="560" y="218"/>
+        <di:waypoint x="610" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1m7ycx9" id="Flow_1m7ycx9_di">
+        <di:waypoint x="1180" y="218"/>
+        <di:waypoint x="1240" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0oev8fz" id="Flow_0oev8fz_di">
+        <di:waypoint x="1020" y="218"/>
+        <di:waypoint x="1080" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0s2v0lc" id="Flow_0s2v0lc_di">
+        <di:waypoint x="410" y="218"/>
+        <di:waypoint x="460" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1qcxlak" id="Flow_1qcxlak_di">
+        <di:waypoint x="268" y="218"/>
+        <di:waypoint x="310" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0en992v" id="Flow_0en992v_di">
+        <di:waypoint x="1510" y="218"/>
+        <di:waypoint x="1580" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1hxelnx" id="Flow_1hxelnx_di">
+        <di:waypoint x="1680" y="218"/>
+        <di:waypoint x="1720" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0w4cisl" id="Flow_0w4cisl_di">
+        <di:waypoint x="1820" y="218"/>
+        <di:waypoint x="1870" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_08xq8gk" id="Flow_08xq8gk_di">
+        <di:waypoint x="1970" y="218"/>
+        <di:waypoint x="2020" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_01p5c2s" id="Flow_01p5c2s_di">
+        <di:waypoint x="2120" y="218"/>
+        <di:waypoint x="2170" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0qjemi2" id="Flow_0qjemi2_di">
+        <di:waypoint x="2270" y="218"/>
+        <di:waypoint x="2320" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0jy1ssm" id="Flow_0jy1ssm_di">
+        <di:waypoint x="2420" y="218"/>
+        <di:waypoint x="2470" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1tz5y7k" id="Flow_1tz5y7k_di">
+        <di:waypoint x="2720" y="218"/>
+        <di:waypoint x="2760" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0d34fo5" id="Flow_0d34fo5_di">
+        <di:waypoint x="2860" y="218"/>
+        <di:waypoint x="2932" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0bu7m67" id="Flow_0bu7m67_di">
+        <di:waypoint x="1340" y="218"/>
+        <di:waypoint x="1410" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1uz8dbe" id="Flow_1uz8dbe_di">
+        <di:waypoint x="860" y="218"/>
+        <di:waypoint x="920" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1ufz4iq" id="Flow_1ufz4iq_di">
+        <di:waypoint x="2570" y="218"/>
+        <di:waypoint x="2620" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Association_1n3wmif" id="Association_1n3wmif_di">
+        <di:waypoint x="621" y="258"/>
+        <di:waypoint x="553" y="328"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Association_1jc6cbe" id="Association_1jc6cbe_di">
+        <di:waypoint x="1121" y="258"/>
+        <di:waypoint x="1105" y="328"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

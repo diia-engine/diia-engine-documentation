@@ -1,0 +1,207 @@
+// docs/ua/modules/testing/pages/performance-testing/jmeter-methodology/registry/nested-entity.adoc
+= Регламент: Реєстрація складної сутності (Nested Entity)
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
+
+Цей розділ описує налаштування регламенту реєстра (кодової бази) для проведення навантажувального тестування процесу транзакційного збереження декількох пов'язаних сутностей в рамках одного запиту (Nested Entity).
+
+[#liquibase]
+== Вимоги до моделі даних (Liquibase)
+
+Для тестування роботи зі складними сутностями регламент повинен містити відповідні міграції моделі даних:
+
+1. **Створення базових таблиць:**
+- `person_profile`
+- `person_edu_profile`
+- `orders`
+- `transaction`
+2. **Модифікація структури:**
+- Додавання нової колонки до існуючої таблиці `orders`.
+3. **Створення композитної сутності:**
+- Налаштування композитної сутності (Composite Entity) з назвою `nested_transaction_entity`, яка логічно об'єднує вищевказані таблиці для роботи через API Платформи.
+
+.Таблиця `person_profile` (data-model/person_profile/tables.xml):
+[source,xml]
+----
+<changeSet id="create table person-profile" author="registry owner">
+    <comment>CREATE TABLE person_profile</comment>
+    <createTable tableName="person_profile" ext:historyFlag="true">
+        <column name="person_profile_id" type="UUID">
+            <constraints nullable="false" primaryKey="true" primaryKeyName="pk_person_profile_id"/>
+        </column>
+        <column name="last_name" type="TEXT"/>
+        <column name="first_name" type="TEXT"/>
+        <column name="second_name" type="TEXT"/>
+        <column name="birthday" type="TIMESTAMPTZ"/>
+    </createTable>
+</changeSet>
+----
+
+.Таблиця `person_edu_profile` (data-model/person_edu_profile/tables.xml):
+[source,xml]
+----
+<changeSet id="create table person-edu-profile" author="registry owner">
+    <comment>CREATE TABLE person_edu_profile</comment>
+    <createTable tableName="person_edu_profile" ext:historyFlag="true">
+        <column name="person_edu_profile_id" type="UUID">
+            <constraints nullable="false" primaryKey="true" primaryKeyName="pk_person_edu_profile_id"/>
+        </column>
+        <column name="person_profile_id" type="UUID">
+            <constraints nullable="false"
+                         foreignKeyName="fk_pd_person_profile_id"
+                         referencedTableName="person_profile"
+                         referencedColumnNames="person_profile_id"/>
+        </column>
+    </createTable>
+</changeSet>
+----
+
+.Таблиця `orders` (data-model/orders/tables.xml):
+[source,xml]
+----
+<changeSet id="create table orders" author="registry owner">
+    <comment>CREATE TABLE orders</comment>
+    <createTable tableName="orders" ext:historyFlag="true">
+        <column name="orders_id" type="UUID">
+            <constraints nullable="false" primaryKey="true" primaryKeyName="pk_orders_id"/>
+        </column>
+        <column name="person_profile_id" type="UUID">
+            <constraints nullable="false"
+                         foreignKeyName="fk_pd_person_profile_id"
+                         referencedTableName="person_profile"
+                         referencedColumnNames="person_profile_id"/>
+        </column>
+        <column name="orders_type" type="TEXT"/>
+        <column name="orders_number" type="TEXT"/>
+        <column name="orders_date" type="TIMESTAMPTZ"/>
+    </createTable>
+</changeSet>
+----
+
+.Додавання колонки до таблиці `orders` (data-model/orders/addColumns.xml):
+[source,xml]
+----
+<changeSet id="add column files to orders" author="registry owner">
+    <ext:addColumn tableName="orders" ext:historyFlag="true">
+        <column name="files" type="type_file[]" remarks="Масив файлів"/>
+    </ext:addColumn>
+</changeSet>
+----
+
+.Таблиця `transaction` (data-model/transaction/tables.xml):
+[source,xml]
+----
+<changeSet id="create table transaction" author="registry owner">
+    <comment>CREATE TABLE transaction</comment>
+    <createTable tableName="transaction" ext:historyFlag="true">
+        <column name="transaction_id" type="UUID">
+            <constraints nullable="false" primaryKey="true" primaryKeyName="pk_transaction_id"/>
+        </column>
+        <column name="person_edu_profile_id" type="UUID">
+            <constraints nullable="false"
+                         foreignKeyName="fk_pd_person_edu_profile_id"
+                         referencedTableName="person_edu_profile"
+                         referencedColumnNames="person_edu_profile_id"/>
+        </column>
+        <column name="orders_id" type="UUID">
+            <constraints nullable="false"
+                         foreignKeyName="fk_pd_orders_id"
+                         referencedTableName="orders"
+                         referencedColumnNames="orders_id"/>
+        </column>
+    </createTable>
+</changeSet>
+----
+
+.Композитна сутність `nested_transaction_entity` (data-model/transaction/compositeEntities.xml):
+[source,xml]
+----
+<changeSet id="create complex entity transaction" author="registry owner">
+    <comment>CREATE complex entities for transaction table</comment>
+    <ext:createCompositeEntity name="nested_transaction_entity">
+        <ext:nestedEntity name="transaction" table="transaction">
+            <ext:link column="person_edu_profile_id" entity="personEduProfile"/>
+            <ext:link column="orders_id" entity="orders"/>
+        </ext:nestedEntity>
+
+        <ext:nestedEntity name="orders" table="orders"/>
+        <ext:nestedEntity name="personEduProfile" table="person_edu_profile"/>
+    </ext:createCompositeEntity>
+</changeSet>
+----
+
+[#ui-forms]
+== Форми (UI Forms)
+
+Регламент повинен містити **4 форми** користувацького інтерфейсу, які відповідають за введення даних користувачем на різних User Task кроках бізнес-процесу.
+
+* `feature-form-add-dataprof`
+** Використовуйте файл _link:{attachmentsdir}/jmeter-methodology/forms/feature-form-add-dataprof.json[feature-form-add-dataprof.json]_ із готовою формою для бізнес-процесу.
+* `feature-form-add-signd`
+** Використовуйте файл _link:{attachmentsdir}/jmeter-methodology/forms/feature-form-add-signd.json[feature-form-add-signd.json]_ із готовою формою для бізнес-процесу.
+* `feature-form-add-thirdform`
+** Використовуйте файл _link:{attachmentsdir}/jmeter-methodology/forms/feature-form-add-thirdform.json[feature-form-add-thirdform.json]_ із готовою формою для бізнес-процесу.
+* `feature-form-add-fourth`
+** Використовуйте файл _link:{attachmentsdir}/jmeter-methodology/forms/feature-form-add-fourth.json[feature-form-add-fourth.json]_ із готовою формою для бізнес-процесу.
+
+[#integration-prerequisites]
+== Інтеграційні передумови
+
+Процес ініціюється чиновником (Officer), тому перед запуском основного навантажувального тесту пайплайн виконує сувору послідовність кроків для підготовки тестових даних, оновлення моків та налаштування Keycloak.
+
+Загальний флоу підготовки виглядає наступним чином:
+
+1. **Генерація тестових даних (Gradle):** Запускається відповідна Gradle-таска, яка генерує масив тестових користувачів. Результатом виконання цього кроку є створення архіву `mock-users.tar.gz`.
+> !!! 🔗 <<лінк на сторінку: генерація тестових даних та робота з Gradle>>
+
+2. **Оновлення мок-сервісу:** Згенеровані дані використовуються для патчингу `ConfigMap` мок-сервісу, щоб зовнішні інтеграції під час тесту працювали коректно.
+> !!! 🔗 <<лінк на сторінку: оновлення ConfigMap для мок-сервісів>>
+
+3. **Очищення середовища Keycloak (JMeter):** Запускається допоміжний `jmx` скрипт, який видаляє старих тестових користувачів у Keycloak для уникнення конфліктів унікальності (наприклад, дублікатів email або РНОКПП).
+> !!! 🔗 <<лінк на сторінку: jmx скрипт видалення користувачів>>
+
+4. **Створення користувачів у Keycloak (JMeter):** Запускається інший допоміжний `jmx` скрипт, який виконує масове створення нових користувачів-чиновників (officers) у Keycloak на основі згенерованих раніше даних.
+> !!! 🔗 <<лінк на сторінку: jmx скрипт створення користувачів>>
+
+5. **Формування плану виконання (Execution Plan):** На основі створених користувачів генерується файл `execution-plan.csv`, який буде використовуватися головним тестом для розподілу навантаження між потоками.
+> !!! 🔗 <<лінк на сторінку: генерація execution-plan.csv>>
+
+6. **Запуск головного тесту:** Тільки після успішного виконання всіх вищезазначених кроків пайплайн запускає основний навантажувальний скрипт.
+> !!! 🔗 <<лінк на сторінку: моделювання та запуск головного jmx тесту>>
+
+[#bp-config-and-rbac-setup]
+== Конфігурація бізнес-процесів та RBAC доступ
+
+Регламент повинен мати розгорнуту дефініцію бізнес-процесу (`.bpmn` файл) для оркестрації збереження даних.
+
+[cols="1,1", options="header"]
+|===
+| Параметр | Опис
+| Process Definition ID | `feature-nested-entity-test-process`
+| Process Definition Name | `Процес для перевірки збереження декількох сутностей в рамках однієї транзакції - nested entity`
+2+| RBAC
+| bp-auth/officer.yml | `op-regression`
+|===
+
+[#rbac-setup]
+=== Налаштування RBAC
+
+RBAC доступ до бізнес-процесу для чиновників налаштовується в файлі `bp-auth/officer.yml`:
+
+[source,yaml]
+----
+authorization:
+  realm: 'officer'
+  process_definitions:
+    - process_definition_id: "feature-nested-entity-test-process"
+      process_name: "Процес для перевірки збереження декількох сутностей в рамках однієї транзакції - nested entity"
+      process_description: "Процес для перевірки збереження декількох сутностей в рамках однієї транзакції - nested entity"
+      roles:
+        - 'op-regression'
+----
+
+[TIP]
+====
+Використовуйте файл _link:{attachmentsdir}/jmeter-methodology/feature-nested-entity-test-process.bpmn[feature-nested-entity-test-process.bpmn]_ із готовою схемою бізнес-процесу для прикладу.
+====

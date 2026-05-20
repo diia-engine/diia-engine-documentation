@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:rrm="http://registry-regulation-management" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.6.0" rrm:created="2023-03-13T10:08:09.840Z" rrm:modified="2023-03-13T10:08:09.840Z">
+  <bpmn:process id="feature-unregistered-role" name="Процес для перевірки автоматичного старту після автентифікації користувача з роллю UNREGISTERED" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Початок" camunda:initiator="initiator">
+      <bpmn:outgoing>Flow_0vehii1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_16pp0sd" name="Завершення">
+      <bpmn:incoming>Flow_0eahcld</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0vehii1" sourceRef="StartEvent_1" targetRef="Activity_0fzx3m2" />
+    <bpmn:userTask id="Activity_0eqkf6e" name="Ввести дані користувача" camunda:modelerTemplate="formUserTaskTemplate" camunda:formKey="feature-auto-form-with-name-email" camunda:assignee="${initiator}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate" />
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value="" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0bayal3</bpmn:incoming>
+      <bpmn:outgoing>Flow_1l0g5ia</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_1rjrms1" name="Роль на початку">
+      <bpmn:incoming>Flow_1l0g5ia</bpmn:incoming>
+      <bpmn:outgoing>Flow_1us96fn</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1ip7cwf</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1fnjeex</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Activity_1srh2r9" name="Видалення ролі Unregistered Individual" camunda:modelerTemplate="removeRoleFromKeycloakUser" camunda:delegateExpression="${keycloakRemoveRoleConnectorDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="user_name">${initiator().userName}</camunda:inputParameter>
+          <camunda:inputParameter name="role">unregistered-individual</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1us96fn</bpmn:incoming>
+      <bpmn:outgoing>Flow_006lihq</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1us96fn" name="Unregisterd individual" sourceRef="Gateway_1rjrms1" targetRef="Activity_1srh2r9">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${initiator_role.equals('unregistered-individual')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_1vu12q9" name="Видалення ролі Unregistered Entepreneur" camunda:modelerTemplate="removeRoleFromKeycloakUser" camunda:delegateExpression="${keycloakRemoveRoleConnectorDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="role">unregistered-entrepreneur</camunda:inputParameter>
+          <camunda:inputParameter name="user_name">${initiator().userName}</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1fnjeex</bpmn:incoming>
+      <bpmn:outgoing>Flow_04t667b</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_08fo8ou" name="Видалення ролі Unregistered Legal" camunda:modelerTemplate="removeRoleFromKeycloakUser" camunda:delegateExpression="${keycloakRemoveRoleConnectorDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="user_name">${initiator().userName}</camunda:inputParameter>
+          <camunda:inputParameter name="role">unregistered-legal</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1ip7cwf</bpmn:incoming>
+      <bpmn:outgoing>Flow_1i7cjtm</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1ip7cwf" name="Unregistered Legal" sourceRef="Gateway_1rjrms1" targetRef="Activity_08fo8ou">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${initiator_role.equals('unregistered-legal')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1fnjeex" name="Unregistered Entrepreneur" sourceRef="Gateway_1rjrms1" targetRef="Activity_1vu12q9">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${initiator_role.equals('unregistered-entrepreneur')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_1idxopl" name="Додавання ролі Individual" camunda:modelerTemplate="addRoleToKeycloakUser" camunda:delegateExpression="${keycloakAddRoleConnectorDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="user_name">${initiator().userName}</camunda:inputParameter>
+          <camunda:inputParameter name="role">individual</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_006lihq</bpmn:incoming>
+      <bpmn:outgoing>Flow_1l8mvxv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_0sx8q84" name="Додавання ролі Entepreneur" camunda:modelerTemplate="addRoleToKeycloakUser" camunda:delegateExpression="${keycloakAddRoleConnectorDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="user_name">${initiator().userName}</camunda:inputParameter>
+          <camunda:inputParameter name="role">entrepreneur</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_04t667b</bpmn:incoming>
+      <bpmn:outgoing>Flow_1c7m4ft</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_0zlzc0t" name="Додавання ролі Legal" camunda:modelerTemplate="addRoleToKeycloakUser" camunda:delegateExpression="${keycloakAddRoleConnectorDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="user_name">${initiator().userName}</camunda:inputParameter>
+          <camunda:inputParameter name="role">legal</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1i7cjtm</bpmn:incoming>
+      <bpmn:outgoing>Flow_1jiys6n</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_006lihq" sourceRef="Activity_1srh2r9" targetRef="Activity_1idxopl" />
+    <bpmn:sequenceFlow id="Flow_04t667b" sourceRef="Activity_1vu12q9" targetRef="Activity_0sx8q84" />
+    <bpmn:sequenceFlow id="Flow_1i7cjtm" sourceRef="Activity_08fo8ou" targetRef="Activity_0zlzc0t" />
+    <bpmn:exclusiveGateway id="Gateway_0v8a3e5">
+      <bpmn:incoming>Flow_1l8mvxv</bpmn:incoming>
+      <bpmn:incoming>Flow_1c7m4ft</bpmn:incoming>
+      <bpmn:incoming>Flow_1jiys6n</bpmn:incoming>
+      <bpmn:outgoing>Flow_0eahcld</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1l8mvxv" sourceRef="Activity_1idxopl" targetRef="Gateway_0v8a3e5" />
+    <bpmn:sequenceFlow id="Flow_1c7m4ft" sourceRef="Activity_0sx8q84" targetRef="Gateway_0v8a3e5" />
+    <bpmn:sequenceFlow id="Flow_1jiys6n" sourceRef="Activity_0zlzc0t" targetRef="Gateway_0v8a3e5" />
+    <bpmn:sequenceFlow id="Flow_0eahcld" sourceRef="Gateway_0v8a3e5" targetRef="Event_16pp0sd" />
+    <bpmn:scriptTask id="Activity_0fzx3m2" name="Підготовка даних документа для показу" scriptFormat="groovy">
+      <bpmn:incoming>Flow_0vehii1</bpmn:incoming>
+      <bpmn:outgoing>Flow_0bayal3</bpmn:outgoing>
+      <bpmn:script>if(initiator().roles.contains('unregistered-individual')) {
+  execution.setVariable('initiator_role', 'unregistered-individual')
+} else if (initiator().roles.contains('unregistered-entrepreneur')) {
+  execution.setVariable('initiator_role', 'unregistered-entrepreneur')
+} else {
+  execution.setVariable('initiator_role', 'unregistered-legal')
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0bayal3" sourceRef="Activity_0fzx3m2" targetRef="Activity_0eqkf6e" />
+    <bpmn:sequenceFlow id="Flow_1l0g5ia" sourceRef="Activity_0eqkf6e" targetRef="Gateway_1rjrms1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="feature-unregistered-role">
+      <bpmndi:BPMNEdge id="Flow_0bayal3_di" bpmnElement="Flow_0bayal3">
+        <di:waypoint x="339" y="220" />
+        <di:waypoint x="380" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0eahcld_di" bpmnElement="Flow_0eahcld">
+        <di:waypoint x="1055" y="220" />
+        <di:waypoint x="1112" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1jiys6n_di" bpmnElement="Flow_1jiys6n">
+        <di:waypoint x="930" y="320" />
+        <di:waypoint x="1030" y="320" />
+        <di:waypoint x="1030" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1c7m4ft_di" bpmnElement="Flow_1c7m4ft">
+        <di:waypoint x="930" y="220" />
+        <di:waypoint x="1005" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1l8mvxv_di" bpmnElement="Flow_1l8mvxv">
+        <di:waypoint x="930" y="120" />
+        <di:waypoint x="1030" y="120" />
+        <di:waypoint x="1030" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1i7cjtm_di" bpmnElement="Flow_1i7cjtm">
+        <di:waypoint x="780" y="320" />
+        <di:waypoint x="830" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04t667b_di" bpmnElement="Flow_04t667b">
+        <di:waypoint x="780" y="220" />
+        <di:waypoint x="830" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_006lihq_di" bpmnElement="Flow_006lihq">
+        <di:waypoint x="780" y="120" />
+        <di:waypoint x="830" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1fnjeex_di" bpmnElement="Flow_1fnjeex">
+        <di:waypoint x="585" y="220" />
+        <di:waypoint x="680" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="587" y="186" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ip7cwf_di" bpmnElement="Flow_1ip7cwf">
+        <di:waypoint x="560" y="245" />
+        <di:waypoint x="560" y="320" />
+        <di:waypoint x="680" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="588" y="286" width="63" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1us96fn_di" bpmnElement="Flow_1us96fn">
+        <di:waypoint x="560" y="195" />
+        <di:waypoint x="560" y="120" />
+        <di:waypoint x="680" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="591" y="86" width="57" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0vehii1_di" bpmnElement="Flow_0vehii1">
+        <di:waypoint x="198" y="220" />
+        <di:waypoint x="239" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="224" y="102" width="42" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1l0g5ia_di" bpmnElement="Flow_1l0g5ia">
+        <di:waypoint x="480" y="220" />
+        <di:waypoint x="535" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="162" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="159" y="245" width="42" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_16pp0sd_di" bpmnElement="Event_16pp0sd">
+        <dc:Bounds x="1112" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1099" y="245" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1rjrms1_di" bpmnElement="Gateway_1rjrms1" isMarkerVisible="true">
+        <dc:Bounds x="535" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="527.5" y="263" width="83" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1srh2r9_di" bpmnElement="Activity_1srh2r9">
+        <dc:Bounds x="680" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1vu12q9_di" bpmnElement="Activity_1vu12q9" bioc:stroke="rgb(30, 136, 229)" bioc:fill="rgb(187, 222, 251)">
+        <dc:Bounds x="680" y="180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_08fo8ou_di" bpmnElement="Activity_08fo8ou" bioc:stroke="rgb(67, 160, 71)" bioc:fill="rgb(200, 230, 201)">
+        <dc:Bounds x="680" y="280" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1idxopl_di" bpmnElement="Activity_1idxopl">
+        <dc:Bounds x="830" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0sx8q84_di" bpmnElement="Activity_0sx8q84" bioc:stroke="rgb(30, 136, 229)" bioc:fill="rgb(187, 222, 251)">
+        <dc:Bounds x="830" y="180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0zlzc0t_di" bpmnElement="Activity_0zlzc0t" bioc:stroke="rgb(67, 160, 71)" bioc:fill="rgb(200, 230, 201)">
+        <dc:Bounds x="830" y="280" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0v8a3e5_di" bpmnElement="Gateway_0v8a3e5" isMarkerVisible="true">
+        <dc:Bounds x="1005" y="195" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fzx3m2_di" bpmnElement="Activity_0fzx3m2" bioc:stroke="#fb8c00" bioc:fill="#ffe0b2">
+        <dc:Bounds x="239" y="180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_05mrn86_di" bpmnElement="Activity_0eqkf6e">
+        <dc:Bounds x="380" y="180" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
