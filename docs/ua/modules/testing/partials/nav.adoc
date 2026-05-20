@@ -9,7 +9,7 @@
 ***** xref:testing:performance-testing/jmeter-methodology/registry/async-update.adoc[Асинхронне оновлення масових сутностей]
 ***** xref:testing:performance-testing/jmeter-methodology/registry/read-grid.adoc[Перегляд великих масивів даних]
 ***** xref:testing:performance-testing/jmeter-methodology/registry/file-upload.adoc[Завантаження файлів]
-***** xref:testing:performance-testing/jmeter-methodology/registry/file-download.adoc[Генерація витягів]
+***** xref:testing:performance-testing/jmeter-methodology/registry/excerpt-generation.adoc[Генерація витягів]
 **** Тестові сценарії
 ***** xref:testing:performance-testing/jmeter-methodology/scenarios/unregistered-role.adoc[Реєстрація користувача (UNREGISTERED)]
 ***** xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc[Реєстрація складної сутності]
