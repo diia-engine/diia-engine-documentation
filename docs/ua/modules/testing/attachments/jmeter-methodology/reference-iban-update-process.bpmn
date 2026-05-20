@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:rrm="http://registry-regulation-management" id="Definitions_1wi1g6n" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.29.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.18.0" rrm:created="2023-04-12T10:41:14.000Z" rrm:modified="2026-05-12T12:41:29.071Z">
+  <bpmn:collaboration id="Collaboration_1batv8u">
+    <bpmn:participant id="Participant_0f0a3j1" name="Async BP update. Оновлення IBAN" processRef="reference-iban-update-process" />
+  </bpmn:collaboration>
+  <bpmn:process id="reference-iban-update-process" name="Async BP update. Оновлення IBAN" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_UpdateIBAN" camunda:initiator="initiator">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="groovy">set_variable('limit', 10)</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_029hgbt</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="Activity_AccountSCLoop" name="Пошук та оновлення 1 партії аккаунтів">
+      <bpmn:extensionElements>
+        <camunda:inputOutput />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_029hgbt</bpmn:incoming>
+      <bpmn:outgoing>Flow_1f0lbea</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true">
+        <bpmn:loopCardinality xsi:type="bpmn:tFormalExpression">2147483647</bpmn:loopCardinality>
+        <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">${accountSCResponse.value.responseBody.elements().size() &lt; limit}</bpmn:completionCondition>
+      </bpmn:multiInstanceLoopCharacteristics>
+      <bpmn:startEvent id="StartEvent_UpdateOneBatch" name="Старт оновлення 1 партії акаунтів" camunda:asyncAfter="true">
+        <bpmn:outgoing>Flow_03x8wxl</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:subProcess id="Activity_AccountUpdate" name="Оновлення 1 аккунта">
+        <bpmn:extensionElements>
+          <camunda:inputOutput />
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_0ozbn2e</bpmn:incoming>
+        <bpmn:outgoing>Flow_01mudra</bpmn:outgoing>
+        <bpmn:multiInstanceLoopCharacteristics camunda:collection="${accountSCResponse.value.responseBody.elements()}" camunda:elementVariable="account" />
+        <bpmn:startEvent id="StartEvent_UpdateOneAccount" name="Старт оновлення 1 аккаунта">
+          <bpmn:outgoing>Flow_1yylmr7</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:scriptTask id="Script_PrepareBankNumberPayloak" name="Підготовка тіла запиту для оновлення" scriptFormat="groovy">
+          <bpmn:incoming>Flow_1fecxui</bpmn:incoming>
+          <bpmn:outgoing>Flow_0ds6zs6</bpmn:outgoing>
+          <bpmn:script>set_variable('payload', S(['bankNumber': 'UA' + account.prop('bankNumber').value()], 'application/json'))</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:endEvent id="EndEvent_UpdateAccountBankNumber" name="Кінець ітерації з оновленням">
+          <bpmn:incoming>Flow_01pkp9w</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:exclusiveGateway id="Gateway_014ab6r" name="Банківський рахунок має правильний формат?">
+          <bpmn:incoming>Flow_1yylmr7</bpmn:incoming>
+          <bpmn:outgoing>Flow_1fecxui</bpmn:outgoing>
+          <bpmn:outgoing>Flow_16lgo88</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:endEvent id="EndEvent_RightBankNumberFormat" name="Кінець ітерацї без оновлення">
+          <bpmn:incoming>Flow_16lgo88</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_1yylmr7" sourceRef="StartEvent_UpdateOneAccount" targetRef="Gateway_014ab6r" />
+        <bpmn:sequenceFlow id="Flow_1fecxui" name="Ні" sourceRef="Gateway_014ab6r" targetRef="Script_PrepareBankNumberPayloak">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!account.prop('bankNumber').value().contains('UA')}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_0ds6zs6" sourceRef="Script_PrepareBankNumberPayloak" targetRef="Delegate_SignUpdateBankNumberPayload" />
+        <bpmn:sequenceFlow id="Flow_16lgo88" name="Так" sourceRef="Gateway_014ab6r" targetRef="EndEvent_RightBankNumberFormat">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${account.prop('bankNumber').value().contains('UA')}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:serviceTask id="Delegate_SignUpdateBankNumberPayload" name="Підписати дані системним ключем" camunda:modelerTemplate="digitalSystemSignatureDelegate" camunda:delegateExpression="${digitalSystemSignatureDelegate}">
+          <bpmn:extensionElements>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="payload">${payload}</camunda:inputParameter>
+              <camunda:inputParameter name="x_access_token">${system_user().accessToken}</camunda:inputParameter>
+              <camunda:outputParameter name="signature">${ system_signature_storage_key }</camunda:outputParameter>
+            </camunda:inputOutput>
+          </bpmn:extensionElements>
+          <bpmn:incoming>Flow_0ds6zs6</bpmn:incoming>
+          <bpmn:outgoing>Flow_0qlmu9m</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="Flow_0qlmu9m" sourceRef="Delegate_SignUpdateBankNumberPayload" targetRef="Connector_PartialUpdateAccount" />
+        <bpmn:serviceTask id="Connector_PartialUpdateAccount" name="Часткове оновлення аккаунта" camunda:modelerTemplate="dataFactoryConnectorPartialUpdateDelegate" camunda:exclusive="false" camunda:delegateExpression="${dataFactoryConnectorPartialUpdateDelegate}">
+          <bpmn:extensionElements>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="resource">update-account-bank-number</camunda:inputParameter>
+              <camunda:inputParameter name="id">${account.prop('id').value()}</camunda:inputParameter>
+              <camunda:inputParameter name="payload">${payload}</camunda:inputParameter>
+              <camunda:inputParameter name="x_access_token">${system_user().accessToken}</camunda:inputParameter>
+              <camunda:inputParameter name="x_digital_signature_ceph_key">${signature}</camunda:inputParameter>
+              <camunda:inputParameter name="x_digital_signature_derived_ceph_key">${signature}</camunda:inputParameter>
+              <camunda:outputParameter name="response">${ response }</camunda:outputParameter>
+            </camunda:inputOutput>
+          </bpmn:extensionElements>
+          <bpmn:incoming>Flow_0qlmu9m</bpmn:incoming>
+          <bpmn:outgoing>Flow_01pkp9w</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="Flow_01pkp9w" sourceRef="Connector_PartialUpdateAccount" targetRef="EndEvent_UpdateAccountBankNumber" />
+      </bpmn:subProcess>
+      <bpmn:endEvent id="EndEvent_UpdateOneBatch" name="Кінець ітерації пошуку та оновлення партії аккаунтів">
+        <bpmn:incoming>Flow_01mudra</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_03x8wxl" sourceRef="StartEvent_UpdateOneBatch" targetRef="Connector_SearchAccount" />
+      <bpmn:sequenceFlow id="Flow_01mudra" sourceRef="Activity_AccountUpdate" targetRef="EndEvent_UpdateOneBatch" />
+      <bpmn:serviceTask id="Connector_SearchAccount" name="Пошук аккаунтів" camunda:modelerTemplate="dataFactoryConnectorSearchDelegate" camunda:delegateExpression="${dataFactoryConnectorSearchDelegate}">
+        <bpmn:extensionElements>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="resource">search-account-bank-number</camunda:inputParameter>
+            <camunda:inputParameter name="searchConditions">
+              <camunda:map>
+                <camunda:entry key="limit">${limit}</camunda:entry>
+                <camunda:entry key="offset">${limit * loopCounter}</camunda:entry>
+                <camunda:entry key="username">${initiator().userName}</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="x_access_token">${system_user().accessToken}</camunda:inputParameter>
+            <camunda:outputParameter name="accountSCResponse">${ response }</camunda:outputParameter>
+          </camunda:inputOutput>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_03x8wxl</bpmn:incoming>
+        <bpmn:outgoing>Flow_0ozbn2e</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_0ozbn2e" sourceRef="Connector_SearchAccount" targetRef="Activity_AccountUpdate" />
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_1f0lbea" sourceRef="Activity_AccountSCLoop" targetRef="EndEvent_UpdateIBAN" />
+    <bpmn:sequenceFlow id="Flow_029hgbt" sourceRef="StartEvent_UpdateIBAN" targetRef="Activity_AccountSCLoop" />
+    <bpmn:endEvent id="EndEvent_UpdateIBAN" name="Кінець процесу оновлення банківських номерів">
+      <bpmn:incoming>Flow_1f0lbea</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1batv8u">
+      <bpmndi:BPMNShape id="Participant_0f0a3j1_di" bpmnElement="Participant_0f0a3j1" isHorizontal="true">
+        <dc:Bounds x="160" y="70" width="1650" height="500" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0mq7r1g" bpmnElement="StartEvent_UpdateIBAN">
+        <dc:Bounds x="232" y="297" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="76" y="340" width="75" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_11fasnb_di" bpmnElement="EndEvent_UpdateIBAN">
+        <dc:Bounds x="1689" y="297" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1671" y="340" width="79" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_15fstpq_di" bpmnElement="Activity_AccountSCLoop" isExpanded="true">
+        <dc:Bounds x="350" y="110" width="1260" height="400" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0ykw2aq_di" bpmnElement="StartEvent_UpdateOneBatch">
+        <dc:Bounds x="392" y="292" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="368" y="335" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1nii0o2" bpmnElement="Activity_AccountUpdate" isExpanded="true">
+        <dc:Bounds x="640" y="159" width="820" height="291" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0n7s7bx" bpmnElement="StartEvent_UpdateOneAccount">
+        <dc:Bounds x="672" y="241" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="646" y="284" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0jdb4ta" bpmnElement="Script_PrepareBankNumberPayloak">
+        <dc:Bounds x="900" y="219" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0u3uyu6" bpmnElement="EndEvent_UpdateAccountBankNumber">
+        <dc:Bounds x="1372" y="241" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1349" y="284" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0amg3qf" bpmnElement="Gateway_014ab6r" isMarkerVisible="true">
+        <dc:Bounds x="775" y="234" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="773" y="173" width="63" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_129hfs4" bpmnElement="EndEvent_RightBankNumberFormat">
+        <dc:Bounds x="902" y="354" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="885" y="397" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0zbwigb_di" bpmnElement="Delegate_SignUpdateBankNumberPayload">
+        <dc:Bounds x="1060" y="219" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1tfa864" bpmnElement="Connector_PartialUpdateAccount">
+        <dc:Bounds x="1220" y="219" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_0tvqbn2" bpmnElement="Flow_1yylmr7">
+        <di:waypoint x="708" y="259" />
+        <di:waypoint x="775" y="259" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_02n0yzh" bpmnElement="Flow_1fecxui">
+        <di:waypoint x="825" y="259" />
+        <di:waypoint x="900" y="259" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="857" y="241" width="11" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_107ct84" bpmnElement="Flow_0ds6zs6">
+        <di:waypoint x="1000" y="259" />
+        <di:waypoint x="1060" y="259" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_17yb304" bpmnElement="Flow_16lgo88">
+        <di:waypoint x="800" y="284" />
+        <di:waypoint x="800" y="372" />
+        <di:waypoint x="902" y="372" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="806" y="325" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0qlmu9m_di" bpmnElement="Flow_0qlmu9m">
+        <di:waypoint x="1160" y="259" />
+        <di:waypoint x="1220" y="259" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_01pkp9w_di" bpmnElement="Flow_01pkp9w">
+        <di:waypoint x="1320" y="259" />
+        <di:waypoint x="1372" y="259" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_0h63idc_di" bpmnElement="EndEvent_UpdateOneBatch">
+        <dc:Bounds x="1512" y="292" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1489" y="335" width="87" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_02cbiko_di" bpmnElement="Connector_SearchAccount">
+        <dc:Bounds x="490" y="270" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_03x8wxl_di" bpmnElement="Flow_03x8wxl">
+        <di:waypoint x="428" y="310" />
+        <di:waypoint x="490" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_01mudra_di" bpmnElement="Flow_01mudra">
+        <di:waypoint x="1460" y="310" />
+        <di:waypoint x="1512" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ozbn2e_di" bpmnElement="Flow_0ozbn2e">
+        <di:waypoint x="590" y="310" />
+        <di:waypoint x="640" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1f0lbea_di" bpmnElement="Flow_1f0lbea">
+        <di:waypoint x="1610" y="315" />
+        <di:waypoint x="1689" y="315" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_029hgbt_di" bpmnElement="Flow_029hgbt">
+        <di:waypoint x="268" y="315" />
+        <di:waypoint x="350" y="315" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -252,7 +252,7 @@ roles:
 
 * xref:testing:performance-testing/jmeter-methodology/registry/unregistered-role.adoc[Реєстрація користувача (UNREGISTERED)]
 * xref:testing:performance-testing/jmeter-methodology/registry/nested-entity.adoc[Реєстрація складної сутності]
-* xref:testing:performance-testing/jmeter-methodology/registry/mass-update.adoc[Асинхронне оновлення сутностей]
+* xref:testing:performance-testing/jmeter-methodology/registry/async-update.adoc[Асинхронне оновлення сутностей]
 * xref:testing:performance-testing/jmeter-methodology/registry/read-grid.adoc[Читання великих масивів даних]
 * xref:testing:performance-testing/jmeter-methodology/registry/file-upload.adoc[Завантаження файлів]
 * xref:testing:performance-testing/jmeter-methodology/registry/file-download.adoc[Генерація витягів]

@@ -1,0 +1,177 @@
+// docs/ua/modules/testing/pages/performance-testing/jmeter-methodology/registry/async-update.adoc
+= Внесення змін в масову сутність (Асинхронне оновлення сутностей)
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
+
+Цей розділ описує налаштування регламенту реєстра (кодової бази) для проведення навантажувального тестування процесу асинхронного масового оновлення даних (на прикладі оновлення IBAN).
+
+[#liquibase]
+== Вимоги до моделі даних (Liquibase)
+
+Для тестування асинхронного оновлення регламент повинен містити наступні елементи моделі даних:
+
+1. **Базова таблиця:** `account`
+2. **Умови пошуку (Search Conditions):** `search-account-bank-number`
+
+.Таблиця `account` (data-model/account/tables.xml)
+[source, xml]
+----
+<changeSet id="create table account" author="registry owner">
+    <comment>CREATE TABLE account</comment>
+    <createTable tableName="account" ext:historyFlag="true">
+        <column name="id" type="UUID" defaultValueComputed="uuid_generate_v4()">
+            <constraints nullable="false" primaryKey="true" primaryKeyName="user_account_id"/>
+        </column>
+        <column name="username" type="TEXT">
+            <constraints nullable="false"/>
+        </column>
+        <column name="bank_number" type="TEXT">
+            <constraints nullable="false"/>
+        </column>
+    </createTable>
+</changeSet>
+----
+
+.Пошуковий критерій `search-account-bank-number` (data-model/account/searchConditions.xml)
+[source, xml]
+----
+<changeSet id="create SC search-account-bank-number" author="registry owner">
+    <ext:createSearchCondition name="search_account_bank_number" indexing="true">
+        <ext:table name="account">
+            <ext:column name="id" sorting="asc"/>
+            <ext:column name="bank_number"/>
+            <ext:column name="username" searchType="equal"/>
+        </ext:table>
+    </ext:createSearchCondition>
+</changeSet>
+----
+
+[#prepopulation]
+=== Препопуляція даних
+
+Для забезпечення достатнього обсягу даних перед стартом тесту, необхідно масово наповнити таблицю `account`. Це виконується за допомогою SQL-скрипта у відповідному Liquibase чейнджсеті.
+
+[WARNING]
+====
+Зверніть увагу на параметри `total_rows` та `max_officers` у блоці `WITH params`. Вони **обов'язково повинні корелюватися** з кількістю тестових користувачів, які генеруються для тесту. Недостатня або надлишкова кількість записів може призвести до хибних результатів або збою під час навантаження.
+====
+
+.Наповнення таблиці `account` (data-model/account/populate.xml)
+[source,xml]
+----
+<changeSet id="populate table account" author="registry owner" runInTransaction="false">
+    <sql dbms="postgresql" endDelimiter=";" splitStatements="true" stripComments="true">
+       TRUNCATE TABLE registry.account;
+       WITH params AS (
+          SELECT
+             -- Загальна кількість записів для генерації
+             10000 AS total_rows,
+             -- Кількість унікальних юзернеймів
+             1000 AS max_officers
+       )
+       INSERT INTO registry.account (
+          username,
+          bank_number,
+          ddm_created_by,
+          ddm_updated_by,
+          ddm_created_at,
+          ddm_updated_at
+       )
+       SELECT
+          'perf-test-officer-' || (((i - 1) % p.max_officers) + 1)::text,
+          lpad(floor(random() * 1000000000)::int::text, 9, '0') ||
+          lpad(floor(random() * 1000000000)::int::text, 9, '0') ||
+          lpad(floor(random() * 1000000000)::int::text, 9, '0'),
+          'admin',
+          'admin',
+           now(),
+           now()
+       FROM params p
+          CROSS JOIN generate_series(1, p.total_rows) AS s(i);
+       VACUUM ANALYZE registry.account;
+       REINDEX TABLE registry.account;
+    </sql>
+</changeSet>
+----
+
+[#partial-update]
+=== Часткове оновлення (Partial Update)
+
+Для виконання точкових (асинхронних) змін у масиві даних використовується механізм `ext:partialUpdate` для колонки `bank_number`.
+
+.Часткове оновлення `update_account_bank_number` (data-model/account/partialUpdate.xml)
+[source, xml]
+----
+<changeSet id="partial update account" author="registry owner">
+    <ext:partialUpdate name="update_account_bank_number">
+        <ext:table name="account">
+            <ext:column name="bank_number"/>
+        </ext:table>
+    </ext:partialUpdate>
+</changeSet>
+----
+
+[#ui-forms]
+== Форми (UI Forms)
+
+[NOTE]
+====
+Для даного сценарію **форми користувацького інтерфейсу відсутні**, оскільки процес виконується повністю асинхронно і не передбачає ручного введення даних через UI під час виконання навантажувального тесту.
+====
+
+[#integration-prerequisites]
+== Інтеграційні передумови
+
+Оскільки ініціатором масового оновлення є чиновник (Officer), перед запуском основного тесту пайплайн проходить наступні кроки для підготовки середовища:
+
+1. **Генерація користувачів (Gradle):** Виконання таски для генерації необхідної кількості унікальних чиновників.
+> !!! 🔗 <<лінк на сторінку: генерація тестових даних та робота з Gradle>>
+
+2. **Оновлення мок-сервісу:** Патчинг `ConfigMap` мок-сервісу для коректної інтеграції з нашими згенерованими даними.
+> !!! 🔗 <<лінк на сторінку: оновлення ConfigMap для мок-сервісів>>
+
+3. **Очищення середовища Keycloak (JMeter):** Видалення попередніх тестових користувачів через `jmx` скрипт для запобігання конфліктам.
+> !!! 🔗 <<лінк на сторінку: jmx скрипт видалення користувачів>>
+
+4. **Створення користувачів у Keycloak (JMeter):** Завантаження нових чиновників у Keycloak через відповідний `jmx` скрипт.
+> !!! 🔗 <<лінк на сторінку: jmx скрипт створення користувачів>>
+
+5. **Запуск головного тесту:** Тільки після завершення підготовки запускається основний JMX скрипт для генерації асинхронного навантаження.
+> !!! 🔗 <<лінк на сторінку: моделювання та запуск головного jmx тесту>>
+
+[#bp-config-and-rbac-setup]
+== Конфігурація бізнес-процесів та RBAC доступ
+
+Регламент повинен мати розгорнуту дефініцію бізнес-процесу для оркестрації асинхронного оновлення.
+
+[cols="1,1", options="header"]
+|===
+| Параметр | Опис
+| Process Definition ID | `reference-iban-update-process`
+| Process Definition Name | `Async BP update. Оновлення IBAN`
+2+| RBAC
+| bp-auth/officer.yml | `op-regression`
+|===
+
+[#rbac-setup]
+=== Налаштування RBAC
+
+Доступ до цього бізнес-процесу для чиновників налаштовується у файлі `bp-auth/officer.yml`:
+
+[source,yaml]
+----
+authorization:
+  realm: 'officer'
+  process_definitions:
+    - process_definition_id: "reference-iban-update-process"
+      process_name: "Async BP update. Оновлення IBAN"
+      process_description: "Async BP update. Оновлення IBAN"
+      roles:
+        - 'op-regression'
+----
+
+[TIP]
+====
+Використовуйте файл _link:{attachmentsdir}/jmeter-methodology/reference-iban-update-process.bpmn[reference-iban-update-process.bpmn]_ із готовою схемою бізнес-процесу для прикладу.
+====
