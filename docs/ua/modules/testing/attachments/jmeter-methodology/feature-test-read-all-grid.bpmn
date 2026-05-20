@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:rrm="http://registry-regulation-management" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" exporter="Camunda Modeler" exporterVersion="5.29.0" id="Definitions_1" rrm:created="2023-03-28T11:25:27.424Z" rrm:modified="2026-05-13T13:40:27.905Z" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:collaboration id="Collaboration_025vfsb">
+    <bpmn:participant id="Participant_1axvzig" name="Test Read ALL Grid" processRef="feature-test-read-all-grid"/>
+  </bpmn:collaboration>
+  <bpmn:process id="feature-test-read-all-grid" isExecutable="true" name="Процес для перегляду великої кількості записів">
+    <bpmn:startEvent camunda:initiator="initiator" id="StartEvent_1">
+      <bpmn:outgoing>Flow_1pzar1h</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_1se908t">
+      <bpmn:incoming>Flow_18j14kv</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1pzar1h" sourceRef="StartEvent_1" targetRef="firstFormActivity"/>
+    <bpmn:sequenceFlow id="Flow_18j14kv" sourceRef="firstFormActivity" targetRef="Event_1se908t"/>
+    <bpmn:userTask camunda:assignee="${initiator}" camunda:formKey="feature-first-grid" camunda:modelerTemplate="formUserTaskTemplate" id="firstFormActivity" name="Перша форма">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="userTaskInputFormDataPrepopulate"/>
+        </camunda:inputOutput>
+        <camunda:properties>
+          <camunda:property name="formVariables" value=""/>
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1pzar1h</bpmn:incoming>
+      <bpmn:outgoing>Flow_18j14kv</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane bpmnElement="Collaboration_025vfsb" id="BPMNPlane_1">
+      <bpmndi:BPMNShape bpmnElement="Participant_1axvzig" id="Participant_1axvzig_di" isHorizontal="true">
+        <dc:Bounds height="250" width="620" x="160" y="110"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="StartEvent_1" id="_BPMNShape_StartEvent_2">
+        <dc:Bounds height="36" width="36" x="210" y="212"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_1se908t" id="Event_1se908t_di">
+        <dc:Bounds height="36" width="36" x="662" y="212"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="firstFormActivity" id="Activity_0w6c6hf_di">
+        <dc:Bounds height="80" width="100" x="410" y="190"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1pzar1h" id="Flow_1pzar1h_di">
+        <di:waypoint x="246" y="230"/>
+        <di:waypoint x="410" y="230"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_18j14kv" id="Flow_18j14kv_di">
+        <di:waypoint x="510" y="230"/>
+        <di:waypoint x="662" y="230"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
