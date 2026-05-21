@@ -1,0 +1,161 @@
+= Видалення користувачів з Keycloak
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
+
+Цей документ описує технічний процес розробки та автоматизації сценарію видалення тестових користувачів з Keycloak. Це критичний крок для підтримки стабільності тестового середовища (Environment Cleanup), що дозволяє уникнути конфліктів при повторному запуску навантажувальних тестів.
+
+[#overview]
+== Огляд сценарію
+Мета цього сценарію — гарантувати, що перед кожним прогоном навантажувальних тестів реєстр користувачів Keycloak знаходиться у «чистому» стані.
+
+Схема роботи сценарію:
+
+. *Авторизація:* Отримання Bearer Token.
+. *Підготовка черги на видалення:* Ініціалізація і заповнення черги ID користувачів на видалення.
+. *Видалення:* Виконання `DELETE` запиту до Keycloak Admin API для кожного цільового користувача.
+
+[#prerequisites]
+== Підготовка до розробки
+Поточна документація описує процес створення `**.jmx*` сценарію на прикладі GUI Apache JMeter 5.6.3.
+
+[#jmeter-implementation]
+== Розробка .jmx файлу
+
+Створення скрипта відбувається поетапно.
+
+=== User Defined Variables
+
+. Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[User Defined Variables]
++
+[TIP]
+====
+Переконайтеся, що в дереві тесту елемент *User Defined Variables* підпорядковується кореневому елементу *Test Plan*
+====
+
+. Користувацькі змінні додаються шляхом натискання на кнопку Add в нижній частині екрана.
+image:testing:jmeter-methodology/141141744.jpg[]
+
+**User Defined Variables**
+[cols="1,1", options="header"]
+|===
+| Name | Value
+| keycloack_url | ${__P(KEYCLOAK_URL,platform-keycloak.apps.krrt-two.ncr.gov.ua)}
+| protocol | ${__P(PROTOCOL,https)}
+| port | ${__P(PORT,443)}
+| officer_client_id | ${__P(LOGIN,bpms-user-management)}
+| officer_client_secret | ${__P(PASSWORD,<Secret для bpms-user-management>)}
+| officer_realm | ${__P(OFFICER_REALM,ck-198-officer-portal)}
+| application | ${__P(APPLICATION, UNDEFINED)}
+|===
+
+[NOTE]
+====
+`+${__P(KEY, DEFAULT)}+` — це функція JMeter: `+__P = JMeter property+` (параметр запуску JVM / Jenkins / CLI).
+
+Якщо property не заданий, використовується DEFAULT.
+====
+[TIP]
+====
+`*client_id*` (bpms-user-management) — це OAuth2 client
+
+`*client_secret*` генерується в Keycloak
+====
+
+[IMPORTANT]
+====
+Змінна `application` передається через *JMeter Backend Listener* в *InfluxDB* і далі використовується *Grafana* для групування метрик.
+
+Вона задає “назву запуску” або “мітку середовища”, щоб різні JMX-тести можна було об’єднати в один загальний запуск у дашборді, навіть якщо вони виконуються окремо.
+
+Завдяки цьому *Grafana* не показує кожен тест як окрему історію, а збирає їх разом під одним ідентифікатором (`application`).
+====
+
+=== HTTP Request Defaults
+
+*HTTP Request Defaults* — це конфігураційний елемент (Configuration Element) у JMeter, який виконує роль "глобального шаблону" для всіх HTTP-запитів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[HTTP Request Defaults]
+
+image:testing:jmeter-methodology/141150130.jpg[]
+
+**Як це працює:**
+
+. *Сфера дії (Scope):* Елемент діє на всі запити, що знаходяться "під ним" або на тому ж рівні в дереві тест-плану.
+
+. *Перевизначення (Override):* Якщо в самому HTTP Request вказати значення (наприклад, інший шлях /login замість дефолтного /), JMeter надасть пріоритет налаштуванням конкретного запиту, ігноруючи дефолтні.
+
+**Значення для HTTP Request Defaults**
+
+* *Protocol:* `${protocol}`
+* *Server Name or IP:* `${keycloack_url}`
+* *Port Number:* `${port}`
+
+[TIP]
+====
+Завжди розміщуйте *HTTP Request Defaults* на рівні "*Test Plan*" (якщо налаштування стосуються всього тесту) або на рівні конкретної "*Thread Group*" (якщо потрібні різні налаштування для різних груп користувачів). Це найкращий спосіб уникнути "магічних значень", які потім важко знайти та виправити.
+====
+
+=== setUp Thread Group
+
+*setUp Thread Group* у JMeter виконується *один раз перед запуском основних Thread Group* і використовується для підготовчих операцій (preconditions / test data setup).
+
+У даному сценарії він виконує підготовчий етап перед основним тестом:
+
+. Ініціалізує структуру (чергу / контейнер) для збереження ID користувачів, які будуть видалятися в тесті.
+. Виконує запити до Keycloak для отримання списку користувачів за заданими умовами (фільтрація/пошук).
+. Зберігає отримані user ID у чергу для подальшого видалення основними потоками.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[setUp Thread Group]
+
+image:testing:jmeter-methodology/141160625.jpg[]
+
+**Значення для setUp Thread Group**
+
+* *Name:* setUp Thread Group
+* *Action to be taken after a Sample error:* Continue
+** помилки не зупиняють підготовчий етап, щоб не зірвати весь тест через одиничний збій
+* *Number of Threads (users):* 1
+** виконується одним потоком (послідовна ініціалізація)
+* *Ramp-up period (seconds):* 1
+** швидкий старт без розподіленого навантаження
+* *Loop Count:* 1
+** виконується лише один раз
+
+==== Init queue (JSR223 Sampler)
+
+*JSR223 Sampler* — це елемент Apache JMeter, який виконує власний скриптовий код для генерації або обробки тестових даних. Він дуже універсальний і дозволяє імітувати логіку, яку неможливо обробити стандартними запитами (наприклад, семплером HTTP-запитів), використовуючи такі мови програмування, як Groovy, JavaScript або Java.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[JSR223 Sampler]
+
+image:testing:jmeter-methodology/141162509.jpg[]
+
+**Значення для setUp Thread Group**
+
+* *Name:* Init queue
+* *Language:* groovy
+* *Script:*
++
+[source,groovy]
+----
+import java.util.concurrent.ConcurrentLinkedQueue
+props.put("usersQueue", new ConcurrentLinkedQueue<String>())
+vars.put("keepFetching", "true")
+----
+
+[IMPORTANT]
+====
+Створюється `*ConcurrentLinkedQueue*` — потокобезпечна (thread-safe) черга для спільного використання між потоками JMeter.
+====
+
+[IMPORTANT]
+====
+`*props*` — це *глобальний scope* JMeter. Змінні в props: видимі всім Thread Group, доступні всім потокам, живуть протягом усього тесту.
+====
+
+[TIP]
+====
+`*vars.put("keepFetching", "true")*` — створюється звичайна локальна змінна потоку. Ця змінна потрібна для керування циклом, наприклад поки `keepFetching == true` -- цикл продовжується.
+====
+
+==== Get token (Module Controller)

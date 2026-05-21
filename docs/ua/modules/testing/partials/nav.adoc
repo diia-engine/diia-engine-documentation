@@ -11,6 +11,8 @@
 ***** xref:testing:performance-testing/jmeter-methodology/registry/file-upload.adoc[Завантаження файлів]
 ***** xref:testing:performance-testing/jmeter-methodology/registry/excerpt-generation.adoc[Генерація витягів]
 **** xref:testing:performance-testing/jmeter-methodology/scenarios/overview.adoc[Тестові сценарії]
+***** xref:testing:performance-testing/jmeter-methodology/scenarios/keycloak-delete-users.adoc[Видалення користувачів з Keycloak]
+***** xref:testing:performance-testing/jmeter-methodology/scenarios/keycloak-create-users.adoc[Створення користувачів в Keycloak]
 ***** xref:testing:performance-testing/jmeter-methodology/scenarios/unregistered-role.adoc[Реєстрація користувача (UNREGISTERED)]
 ***** xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc[Реєстрація складної сутності]
 ***** xref:testing:performance-testing/jmeter-methodology/scenarios/async-update.adoc[Асинхронне оновлення масових сутностей]
