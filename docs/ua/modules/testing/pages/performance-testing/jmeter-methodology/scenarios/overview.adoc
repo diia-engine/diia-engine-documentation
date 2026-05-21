@@ -1,0 +1,5 @@
+// docs/ua/modules/testing/pages/performance-testing/jmeter-methodology/scenarios/overview.adoc
+= Тестові сценарії
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
