@@ -1,0 +1,593 @@
+= Створення користувачів в Keycloak
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
+
+Цей документ описує технічний процес розробки та автоматизації сценарію створення тестових користувачів у Keycloak. Це важливий крок для підготовки тестового середовища (Environment Setup) перед запуском навантажувальних тестів.
+
+[#overview]
+== Огляд сценарію
+Мета цього сценарію — забезпечити створення необхідної кількості тестових користувачів у Keycloak для подальшого використання в навантажувальних тестах.
+
+Схема роботи сценарію:
+
+. *Авторизація:* Отримання Bearer Token.
+. *Читання даних користувачів:* Зчитування інформації про користувачів з CSV-файлу.
+. *Створення користувачів:* Виконання `POST` запиту до Keycloak Admin API для кожного користувача.
+. *Призначення ролей:* Призначення відповідних ролей новоствореним користувачам.
+
+[#prerequisites]
+== Підготовка до розробки
+Поточна документація описує процес створення `**.jmx*` сценарію на прикладі GUI Apache JMeter 5.6.3.
+
+[#jmeter-implementation]
+== Розробка .jmx файлу
+
+Створення скрипта відбувається поетапно.
+
+[#user-defined-variables]
+=== User Defined Variables
+
+. Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[User Defined Variables]
++
+[TIP]
+====
+Переконайтеся, що в дереві тесту елемент *User Defined Variables* підпорядковується кореневому елементу *Test Plan*
+====
+
+. Користувацькі змінні додаються шляхом натискання на кнопку Add в нижній частині екрана.
+image:testing:jmeter-methodology/create-keycloak-users/142121307.jpg[]
+
+**User Defined Variables**
+[cols="1,1", options="header"]
+|===
+| Name | Value
+| keycloack_url | ${__P(KEYCLOAK_URL,platform-keycloak.apps.krrt-two.ncr.gov.ua)}
+| officer_user_name | ${__P(REALMS_LIST,perf-test-officer-)}
+| citizen_user_name | ${__P(REALMS_LIST,perf-test-citizen-)}
+| protocol | ${__P(PROTOCOL,https)}
+| port | ${__P(PORT,443)}
+| officer_client_id | ${__P(LOGIN,bpms-user-management)}
+| officer_client_secret | ${__P(PASSWORD,<Secret для bpms-user-management>)}
+| users_count | ${__P(KEYCLOAK_USERS_COUNT_PER_REALM,1)}
+| officer_realm | ${__P(OFFICER_REALM,ck-198-officer-portal)}
+| citizen_realm | ${__P(CITIZEN_REALM,ck-198-citizen-portal)}
+| user_index | 0
+| BaseDir | ${__groovy(org.apache.jmeter.services.FileServer.getFileServer().getBaseDir())}
+| testDataDir | ${__P(TEST_DATA_DIR, ../../../test-data)}
+| application | ${__P(APPLICATION, UNDEFINED)}
+|===
+
+[NOTE]
+====
+`+${__P(KEY, DEFAULT)}+` — це функція JMeter: `+__P = JMeter property+` (параметр запуску JVM / Jenkins / CLI).
+
+Якщо property не заданий, використовується DEFAULT.
+====
+[TIP]
+====
+`*client_id*` (bpms-user-management) — це OAuth2 client
+
+`*client_secret*` генерується в Keycloak
+====
+
+[IMPORTANT]
+====
+Змінна `application` передається через *JMeter Backend Listener* в *InfluxDB* і далі використовується *Grafana* для групування метрик.
+
+Вона задає “назву запуску” або “мітку середовища”, щоб різні JMX-тести можна було об’єднати в один загальний запуск у дашборді, навіть якщо вони виконуються окремо.
+
+Завдяки цьому *Grafana* не показує кожен тест як окрему історію, а збирає їх разом під одним ідентифікатором (`application`).
+====
+
+[#http-request-defaults]
+=== HTTP Request Defaults
+
+*HTTP Request Defaults* — це конфігураційний елемент (Configuration Element) у JMeter, який виконує роль "глобального шаблону" для всіх HTTP-запитів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[HTTP Request Defaults]
+
+image:testing:jmeter-methodology/create-keycloak-users/142121420.jpg[]
+
+**Як це працює:**
+
+. *Сфера дії (Scope):* Елемент діє на всі запити, що знаходяться "під ним" або на тому ж рівні в дереві тест-плану.
+
+. *Перевизначення (Override):* Якщо в самому HTTP Request вказати значення (наприклад, інший шлях /login замість дефолтного /), JMeter надасть пріоритет налаштуванням конкретного запиту, ігноруючи дефолтні.
+
+**Значення для HTTP Request Defaults**
+
+* *Protocol:* `${protocol}`
+* *Server Name or IP:* `${keycloack_url}`
+* *Port Number:* `${port}`
+
+[TIP]
+====
+Завжди розміщуйте *HTTP Request Defaults* на рівні "*Test Plan*" (якщо налаштування стосуються всього тесту) або на рівні конкретної "*Thread Group*" (якщо потрібні різні налаштування для різних груп користувачів). Це найкращий спосіб уникнути "магічних значень", які потім важко знайти та виправити.
+====
+
+[#thread-group]
+=== Thread Group
+
+Ця група потоків відповідає за паралельне створення користувачів у Keycloak.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[Thread Group]
+
+image:testing:jmeter-methodology/create-keycloak-users/142121547.jpg[]
+
+**Значення для Thread Group:**
+
+* *Name:* `Thread Group`
+* *Action to be taken after a Sample error:* `Continue`
+** Виконання має продовжуватися, навіть якщо створення конкретного користувача завершилося помилкою.
+* *Number of Threads (users):* `20`
+** Визначає кількість паралельних потоків для створення користувачів.
+* *Ramp-up period (seconds):* `10`
+** Час, за який стартують усі 20 потоків.
+* *Loop Count:* `-1` (Infinite)
+** Кожен потік виконує ітерації доки не закінчаться дані з CSV або не буде досягнуто умови зупинки.
+
+[#csv-keycloak-users]
+==== CSV Data Set Config
+
+*CSV Data Set Config* — це конфігураційний елемент JMeter, який дозволяє читати дані з CSV-файлу та використовувати їх як змінні у тест-плані. Це дозволяє легко параметризувати запити, використовуючи різні набори даних для кожного потоку або ітерації.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[CSV Data Set Config]
+
+image:testing:jmeter-methodology/create-keycloak-users/142121750.jpg[]
+
+**Значення для CSV Data Set Config:**
+
+* *Name:* `CSV Keycloak users`
+* *Filename:* `${testDataDir}/mock-users.csv`
+* *File Encoding:* `UTF-8`
+* *Delimiter:* `,`
+* *Variable Names:* `userName,fullName,edrpou,drfo`
+* *Ignore first line:* `true` (якщо CSV містить заголовок)
+* *Recycle on EOF:* `false` (не починати знову після закінчення файлу)
+* *Stop Thread on EOF:* `true` (зупинити потік, коли дані закінчаться)
+* *Sharing Mode:* `All threads` (кожен потік отримує унікальні дані)
+
+[#set-isusercreated]
+==== Set isUserCreated (JSR223 Sampler)
+
+Цей *JSR223 Sampler* ініціалізує змінну `isUserCreated` значенням `false` на початку кожної ітерації потоку. Ця змінна використовується для керування циклом створення користувача, дозволяючи повторювати спроби, якщо створення не вдалося з першого разу.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[JSR223 Sampler]
+
+image:testing:jmeter-methodology/create-keycloak-users/142121842.jpg[]
+
+**Значення для JSR223 Sampler:**
+
+* *Name:* `Set isUserCreated`
+* *Language:* `groovy`
+* *Script:*
++
+[source,groovy]
+----
+vars.put("isUserCreated", "false")
+----
+
+[#if-controller-token-expiry]
+==== If Controller (Перевірка токена)
+
+Цей контролер перевіряє, чи закінчився термін дії поточного токена доступу, і чи потрібно звернутися до Keycloak за новим.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[If Controller]
+
+image:testing:jmeter-methodology/create-keycloak-users/142121947.jpg[]
+
+*Expression (must evaluate to true or false):*
+
+`${__groovy(vars.get('tokenExpiry') == null || System.currentTimeMillis() > (vars.get('tokenExpiry') as long))}`
+
+*Evaluate for all children:* Зняти прапорець (перевірка виконується лише на вході в контролер).
+
+[TIP]
+====
+Вираз перевіряє дві умови: чи змінна `tokenExpiry` взагалі не існує (перша ітерація), або чи поточний системний час перевищив розрахований час смерті токена.
+====
+
+***** *Get token (Module Controller)*
++
+Якщо попередня умова (`If Controller`) виконується, викликається `Module Controller`, який перенаправляє виконання до існуючого `Test Fragment` для отримання нового токена.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
++
+У вікні налаштувань необхідно розгорнути дерево тест-плану і вибрати цільовий `Test Fragment` -> `Get token`.
+
+image:testing:jmeter-methodology/create-keycloak-users/142122102.jpg[]
+
+[NOTE]
+Детальний опис того, як саме налаштований запит за токеном і як обробляється відповідь, дивіться у <<#test-fragment-get-token, розділі "Get token (Test Fragment)">>.
+
+[#while-controller-create-user]
+==== While Controller (Створення користувача)
+
+Використовується для підтримки циклу створення користувача, доки змінна `isUserCreated` не стане `true`. Це дозволяє повторювати спроби створення користувача у випадку тимчасових помилок.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[While Controller]
+
+image:testing:jmeter-methodology/create-keycloak-users/142122139.jpg[]
+
+*Condition (function or variable):*
+
+`${__groovy(vars.get("isUserCreated") == "false")}`
+
+Цикл триватиме доти, доки `isUserCreated` не стане `true`.
+
+***** *Create user name (JSR223 Sampler)*
++
+Цей *JSR223 Sampler* використовується для розбиття повного імені користувача (`fullName`) на ім'я (`firstName`) та прізвище (`lastName`). Ці змінні потім використовуються у запиті на створення користувача.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[JSR223 Sampler]
++
+image:testing:jmeter-methodology/create-keycloak-users/142122243.jpg[]
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+def fullName = vars.get('fullName')
+def splitted = fullName.split(' ')
+vars.put('lastName', splitted[0])
+vars.put('firstName', splitted[1])
+----
+
+***** *Create user (HTTP Request)*
++
+Виконує безпосереднє створення користувача в Keycloak за його даними.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[HTTP Request]
++
+image:testing:jmeter-methodology/create-keycloak-users/142122326.jpg[]
++
+*Method:* `POST`
++
+*Path:* `/auth/admin/realms/${officer_realm}/users`
++
+*Body Data (JSON):*
++
+[source,json]
+----
+{
+  "createdTimestamp": "${__time()}",
+  "username": "${userName}",
+  "enabled": true,
+  "totp": false,
+  "emailVerified": false,
+  "firstName": "${firstName}",
+  "lastName": "${lastName}",
+  "disableableCredentialTypes": [],
+  "requiredActions": [],
+  "notBefore": 0,
+  "access": {
+    "manageGroupMembership": true,
+    "view": true,
+    "mapRoles": true,
+    "impersonate": true,
+    "manage": true
+  },
+  "attributes": {
+    "drfo": ["${drfo}"],
+    "edrpou": ["${edrpou}"],
+    "fullName": ["${fullName}"]
+  },
+  "realmRoles": ["officer"],
+  "credentials": [
+    {
+      "type": "password",
+      "value": "123",
+      "temporary": false
+    }
+  ]
+}
+----
+
+****** *HTTP Header Manager*
++
+Необхідно додати `HTTP Header Manager` як дочірній елемент до `Create user`, щоб передати токен авторизації та тип контенту.
++
+image:testing:jmeter-methodology/create-keycloak-users/142122401.jpg[]
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${access_token}`
+
+****** *JSR223 PostProcessor*
++
+Цей *JSR223 PostProcessor* перевіряє код відповіді після спроби створення користувача. Якщо код відповіді `201` (Created), змінна `isUserCreated` встановлюється на `true`, і цикл завершується. В іншому випадку, логується попередження, і потік чекає 3 секунди перед повторною спробою.
++
+image:testing:jmeter-methodology/create-keycloak-users/142122452.jpg[]
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+if (prev.getResponseCode().equals("201")) {
+    vars.put("isUserCreated", "true")
+    def userName = vars.get("userName")
+    log.info("User {} has been created", userName)
+} else {
+    log.warn("Помилка створення юзера. Чекаємо 3 сек і пробуємо знову...")
+    Thread.sleep(3000)
+}
+----
+
+****** *Get user id (Regular Expression Extractor)*
++
+Цей *Regular Expression Extractor* витягує ID новоствореного користувача з заголовка `Location` відповіді. ID зберігається у змінній `created_user_id` для подальшого використання.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Post-Processor] -> kbd:[Regular Expression Extractor]
++
+image:testing:jmeter-methodology/create-keycloak-users/142122606.jpg[]
++
+*Apply to:* `Main sample only`
++
+*Field to check:* `Response Headers` (оскільки ID знаходиться в заголовку Location)
++
+*Name of created variable:* `created_user_id`
++
+*Regular Expression:* `(?i)location:\s*.+?\/users\/([a-zA-Z0-9\-]+)`
++
+*Template:* `$1$`
++
+*Match No.:* `1`
++
+*Default Value:* `not_found`
+
+***** *Available roles (HTTP Request)*
++
+Цей запит отримує список доступних ролей для щойно створеного користувача. Це необхідно для того, щоб потім призначити користувачеві потрібні ролі.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[HTTP Request]
++
+image:testing:jmeter-methodology/create-keycloak-users/142122647.jpg[]
++
+*Method:* `GET`
++
+*Path:* `/auth/admin/realms/${officer_realm}/users/${created_user_id}/role-mappings/realm/available`
+
+****** *HTTP Header Manager*
++
+Необхідно додати `HTTP Header Manager` як дочірній елемент до `Available roles`.
++
+image:testing:jmeter-methodology/create-keycloak-users/142122728.jpg[]
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${access_token}`
+
+****** *Put roles (JSR223 PostProcessor)*
++
+Цей *JSR223 PostProcessor* обробляє JSON-відповідь із доступними ролями, вибирає потрібні ролі (наприклад, `officer`, `op-regression`) та зберігає їх у змінну `officer_roles` у форматі JSON для подальшого використання у запиті на призначення ролей.
++
+image:testing:jmeter-methodology/create-keycloak-users/142122819.jpg[]
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+import groovy.json.*
+
+def roles = prev.getResponseDataAsString()
+def data = new JsonSlurper().parseText(roles.replaceAll("\\\\n", ""))
+def role = vars.get('role')
+
+def officer_roles = data.findAll { it.name == role || it.name == 'officer' || it.name == 'op-regression'}
+vars.put("roles", JsonOutput.toJson(data))
+
+if (officer_roles) {
+    vars.put("officer_roles", JsonOutput.toJson(officer_roles))
+} else {
+    log.info("officer_roles not found")
+}
+----
+
+***** *Add role (HTTP Request)*
++
+Цей запит призначає ролі, отримані на попередньому кроці, новоствореному користувачеві.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[HTTP Request]
++
+image:testing:jmeter-methodology/create-keycloak-users/142122912.jpg[]
++
+*Method:* `POST`
++
+*Path:* `/auth/admin/realms/${officer_realm}/users/${created_user_id}/role-mappings/realm`
++
+*Body Data (JSON):*
++
+[source,json]
+----
+${officer_roles}
+----
+
+****** *HTTP Header Manager*
++
+Необхідно додати `HTTP Header Manager` як дочірній елемент до `Add role`.
++
+image:testing:jmeter-methodology/create-keycloak-users/142122956.jpg[]
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${access_token}`
+
+[#debug-sampler]
+==== Debug Sampler
+
+*Debug Sampler* — це корисний елемент JMeter для налагодження тест-планів. Він дозволяє переглядати значення всіх змінних JMeter, властивостей та системних властивостей під час виконання тесту. Зазвичай його вимикають для продуктивних запусків.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[Debug Sampler]
+
+image:testing:jmeter-methodology/create-keycloak-users/142123040.jpg[]
+
+**Значення для Debug Sampler:**
+
+* *Display JMeter Properties:* `false`
+* *Display JMeter Variables:* `true`
+* *Display System Properties:* `false`
+
+[#view-results-tree]
+=== View Results Tree
+
+Цей слухач (Listener) використовується для фіксації помилок при виконанні сценарію. Він дозволяє логувати деталі кожного запиту та відповіді, включаючи заголовки, тіло та коди статусів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[View Results Tree]
+
+image:testing:jmeter-methodology/create-keycloak-users/142123132.jpg[]
+
+*Налаштування шляху для збереження помилок*
+
+*Filename:* `${__P(errorLogPath, build/results/errors.xml)}`
+
+[WARNING]
+====
+Обов'язково включайте опцію Log/Display Only: Errors перед запуском в non-gui режимі. Ця опція буде логувати тільки помилки.
+====
+
+*Конфігурація Sample Result Save Configuration*
+
+image:testing:jmeter-methodology/create-keycloak-users/142123233.jpg[]
+
+[#summary-report]
+=== Summary Report
+
+Слухач, який агрегує результати виконання у вигляді таблиці, показуючи загальну кількість запитів, середній час відгуку, відсоток помилок та пропускну здатність (Throughput).
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Summary Report]
+
+image:testing:jmeter-methodology/create-keycloak-users/142123313.jpg[]
+
+[#backend-listener]
+=== Backend Listener
+
+Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у нашому випадку — InfluxDB.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Backend Listener]
+
+image:testing:jmeter-methodology/create-keycloak-users/142123355.jpg[]
+
+[TIP]
+Цей елемент повинен знаходитися безпосередньо в корені Test Plan, щоб перехоплювати метрики з усіх Thread Group (включно з підготовчими).
+
+*Основні налаштування Backend Listener*
+
+|===
+|Name |Value
+
+|*Backend Listener implementation*
+|`org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient`
+
+|*influxdbUrl:*
+|`http://influxdb:8086/write?db=jmeter`
+
+|*application:*
+|`${application}` (Ця змінна з User Defined Variables зв'язує результати тесту з конкретним прогоном у Grafana).
+
+|*measurement:*
+|`jmeter`
+
+|*summaryOnly*
+|`false`
+
+|*samplersRegex*
+|`.*`
+
+|*percentiles*
+|`90;95;99`
+
+|*testTitle*
+|`${application}-create-build_${__P(BUILD_ID,unknown)}`
+
+|*eventTags*
+|`${application}, setup, create-users`
+|===
+
+[#test-fragment-get-token]
+=== Get token (Test Fragment)
+
+Test Fragment — це спеціальний тип контролера, який знаходиться на рівні з Thread Group, але сам по собі не виконується, поки його не викличе Module Controller або Include Controller. Тут інкапсулюється логіка авторизації.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+image:testing:jmeter-methodology/create-keycloak-users/142123446.jpg[]
+
+Всередині цього фрагмента знаходиться структура з HTTP-запиту та трьох пост-процесорів:
+
+[#get-token-http-request]
+==== HTTP Request (Отримання токена)
+Запит до Keycloak Admin API для отримання токена доступу (Bearer Token) за допомогою client_credentials або іншого grant_type.
+
+image:testing:jmeter-methodology/create-keycloak-users/142123526.jpg[]
+
+- *Method:* `POST`
+- *Path:* `/auth/realms/${officer_realm}/protocol/openid-connect/token`
+
+У вкладці Parameters передаються:
+
+- *grant_type:* `client_credentials`
+- *client_id:* `${officer_client_id}`
+- *client_secret:* `${officer_client_secret}`
+
+[#extract-access-token]
+===== Get access token (Regular Expression Extractor)
+
+Пост-процессор Regular Expression Extractor використовується для витягнення даних за регулярним виразом. Цей пост-процессор дозволяє витягувати дані з тіла відповіді, заголовків, URL, кода відповіді чи Response Message.
+
+image:testing:jmeter-methodology/create-keycloak-users/142123600.jpg[]
+
+**Отримання `access_token`:**
+
+- *Apply to:* `Main sample only`
+- *Field to check:* `Body`
+- *Name of created variable:* `access_token`
+- *Regular Expression:* `access_token":"(.+?)"`
+- *Template:* `$1$`
+- *Match No.:* `1`
+- *Default Value:* `not_found`
+
+[#extract-expires-in]
+===== expiresIn (JSON Extractor)
+Оскільки відповідь повертається у форматі JSON, можна використати JSON Extractor, щоб зберегти час життя токена у локальні змінні потоку.
+
+image:testing:jmeter-methodology/create-keycloak-users/142123640.jpg[]
+
+**Отримання `expiresIn`:**
+
+- *Apply to:* `Main sample only`
+- *Names of created variables:* `expiresIn`
+- *JSON Path expressions:* `$.expires_in`
+- *Default Values:* `300`
+
+[#calculate-token-expiry-time]
+===== Калькуляція терміну дії (JSR223 PostProcessor)
+Keycloak повертає expires_in у секундах. Щоб потоки розуміли, коли саме токен "протухне" (і чи потрібно йти за новим), ми обчислюємо абсолютний Unix Timestamp часу його смерті.
+
+image:testing:jmeter-methodology/create-keycloak-users/142123733.jpg[]
+
+- Language: groovy
+- Script:
++
+[source,groovy]
+----
+// Беремо секунди життя токена (з JSON Extractor)
+long expiresInSec = vars.get("expiresIn").toLong()
+
+// Розраховуємо час смерті токена (Поточний час + час життя мінус 30 секунд буфера)
+long expiryTimestamp = System.currentTimeMillis() + (expiresInSec * 1000) - 30000
+
+// Зберігаємо цей час у змінну для If Controller
+vars.put("tokenExpiry", String.valueOf(expiryTimestamp))
+----
+
+[IMPORTANT]
+====
+Віднімання 30000 (30 секунд) є критичним буфером. Воно гарантує, що якщо запит на створення почнеться за мить до реального закінчення дії токена, він не "протухне" в польоті через мережеві затримки.
+====
