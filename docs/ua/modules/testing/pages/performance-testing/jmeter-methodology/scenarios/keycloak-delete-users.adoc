@@ -35,7 +35,7 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 ====
 
 . Користувацькі змінні додаються шляхом натискання на кнопку Add в нижній частині екрана.
-image:testing:jmeter-methodology/141141744.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/141141744.jpg[]
 
 **User Defined Variables**
 [cols="1,1", options="header"]
@@ -79,7 +79,7 @@ image:testing:jmeter-methodology/141141744.jpg[]
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[HTTP Request Defaults]
 
-image:testing:jmeter-methodology/141150130.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/141150130.jpg[]
 
 **Як це працює:**
 
@@ -111,7 +111,7 @@ image:testing:jmeter-methodology/141150130.jpg[]
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[setUp Thread Group]
 
-image:testing:jmeter-methodology/141160625.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/141160625.jpg[]
 
 **Значення для setUp Thread Group**
 
@@ -132,7 +132,7 @@ image:testing:jmeter-methodology/141160625.jpg[]
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[JSR223 Sampler]
 
-image:testing:jmeter-methodology/141162509.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/141162509.jpg[]
 
 **Значення для setUp Thread Group**
 
@@ -172,7 +172,7 @@ Module Controller — це елемент логіки JMeter, який дозв
 . Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
 . У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий Test Fragment, натиснувши на кнопку kbd:[Find target element].
 
-image:testing:jmeter-methodology/142091923.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/142091923.jpg[]
 
 [NOTE]
 Детальний опис того, як саме налаштований запит за токеном і як обробляється відповідь, дивіться у <<#test-fragment-get-token, розділі "Get token (Test Fragment)">>.
@@ -184,7 +184,7 @@ image:testing:jmeter-methodology/142091923.jpg[]
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[Thread Group]
 
-image:testing:jmeter-methodology/142101638.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/142101638.jpg[]
 
 **Значення для Thread Group:**
 
@@ -205,7 +205,7 @@ image:testing:jmeter-methodology/142101638.jpg[]
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[While Controller]
 
-image:testing:jmeter-methodology/142102813.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/142102813.jpg[]
 
 *Condition (function or variable):*
 
@@ -325,7 +325,7 @@ log.info("Deleting user ID: '{}'", vars.get('idToDelete'))
 
 *Конфігурація Sample Result Save Configuration*
 
-image:testing:jmeter-methodology/142105737.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/142105737.jpg[]
 
 [#summary-report]
 ==== Summary Report
@@ -377,7 +377,7 @@ Backend Listener відповідає за асинхронну передачу
 |`${application}, setup, create-users`
 |===
 
-image:testing:jmeter-methodology/142105924.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/142105924.jpg[]
 
 [#test-fragment-get-token]
 === Get token (Test Fragment)
@@ -386,7 +386,7 @@ Test Fragment — це спеціальний тип контролера, як�
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
 
-image:testing:jmeter-methodology/142092411.jpg[]
+image:testing:jmeter-methodology/delete-keycloak-users/142092411.jpg[]
 
 Всередині цього фрагмента знаходиться структура з HTTP-запиту та трьох пост-процесорів:
 
