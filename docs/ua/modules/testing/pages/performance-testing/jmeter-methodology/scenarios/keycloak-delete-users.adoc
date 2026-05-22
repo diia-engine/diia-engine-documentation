@@ -24,6 +24,7 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 
 Створення скрипта відбувається поетапно.
 
+[#user-defined-variables]
 === User Defined Variables
 
 . Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[User Defined Variables]
@@ -71,6 +72,7 @@ image:testing:jmeter-methodology/141141744.jpg[]
 Завдяки цьому *Grafana* не показує кожен тест як окрему історію, а збирає їх разом під одним ідентифікатором (`application`).
 ====
 
+[#http-request-defaults]
 === HTTP Request Defaults
 
 *HTTP Request Defaults* — це конфігураційний елемент (Configuration Element) у JMeter, який виконує роль "глобального шаблону" для всіх HTTP-запитів.
@@ -96,6 +98,7 @@ image:testing:jmeter-methodology/141150130.jpg[]
 Завжди розміщуйте *HTTP Request Defaults* на рівні "*Test Plan*" (якщо налаштування стосуються всього тесту) або на рівні конкретної "*Thread Group*" (якщо потрібні різні налаштування для різних груп користувачів). Це найкращий спосіб уникнути "магічних значень", які потім важко знайти та виправити.
 ====
 
+[#set-up]
 === setUp Thread Group
 
 *setUp Thread Group* у JMeter виконується *один раз перед запуском основних Thread Group* і використовується для підготовчих операцій (preconditions / test data setup).
@@ -122,6 +125,7 @@ image:testing:jmeter-methodology/141160625.jpg[]
 * *Loop Count:* 1
 ** виконується лише один раз
 
+[#init-queue]
 ==== Init queue (JSR223 Sampler)
 
 *JSR223 Sampler* — це елемент Apache JMeter, який виконує власний скриптовий код для генерації або обробки тестових даних. Він дуже універсальний і дозволяє імітувати логіку, яку неможливо обробити стандартними запитами (наприклад, семплером HTTP-запитів), використовуючи такі мови програмування, як Groovy, JavaScript або Java.
@@ -158,4 +162,291 @@ vars.put("keepFetching", "true")
 `*vars.put("keepFetching", "true")*` — створюється звичайна локальна змінна потоку. Ця змінна потрібна для керування циклом, наприклад поки `keepFetching == true` -- цикл продовжується.
 ====
 
+[#get-token-controller]
 ==== Get token (Module Controller)
+
+Module Controller — це елемент логіки JMeter, який дозволяє викликати інший фрагмент коду (Test Fragment), що знаходиться в цьому ж тест-плані. Це ключовий інструмент для дотримання принципу DRY (Don't Repeat Yourself).
+
+Замість того, щоб дублювати логіку отримання токена в setUp Thread Group та основній Thread Group, ми створюємо її один раз у Test Fragment, а звідси лише "посилаємося" на неї.
+
+. Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+. У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий Test Fragment, натиснувши на кнопку kbd:[Find target element].
+
+image:testing:jmeter-methodology/142091923.jpg[]
+
+[NOTE]
+Детальний опис того, як саме налаштований запит за токеном і як обробляється відповідь, дивіться у <<#test-fragment-get-token, розділі "Get token (Test Fragment)">>.
+
+[#thread-group]
+=== Thread Group
+
+Ця група потоків відповідає за паралельне вилучення ID користувачів з попередньо ініціалізованої черги та виконання запитів на їх видалення у Keycloak.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[Thread Group]
+
+image:testing:jmeter-methodology/142101638.jpg[]
+
+**Значення для Thread Group:**
+
+* *Name:* `Thread Group`
+* *Action to be taken after a Sample error:* `Continue`
+** Виконання має продовжуватися, навіть якщо видалення конкретного користувача завершилося помилкою (наприклад, користувач вже не існує).
+* *Number of Threads (users):* `50`
+** Визначає кількість паралельних потоків для обробки черги.
+* *Ramp-up period (seconds):* `10`
+** Час, за який стартують усі 50 потоків.
+* *Loop Count:* `1`
+** Кожен потік виконує ітерацію один раз, оскільки зациклення керується внутрішнім елементом `While Controller`.
+
+[#while-controller]
+==== While Controller
+
+Використовується для підтримки безперервного циклу виконання запитів, доки черга користувачів не стане порожньою.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[While Controller]
+
+image:testing:jmeter-methodology/142102813.jpg[]
+
+*Condition (function or variable):*
+
+`${__groovy(props.get('usersQueue') != null && !props.get('usersQueue').isEmpty())}`
+
+Цикл триватиме доти, доки черга `usersQueue` не порожня.
+
+* **Get from queue (JSR223 Sampler)**
++
+Цей скрипт відповідає за безпечне (thread-safe) вилучення наступного ID користувача з глобальної черги та передачу його у змінну потоку для подальшого використання у запиті на видалення.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[JSR223 Sampler]
++
+*Language:* groovy
++
+*Script:*
++
+[source,groovy]
+----
+def queue = props.get("usersQueue")
+if (queue != null) {
+    def id = queue.poll() // Беремо і видаляємо з черги потокобезпечно
+    if (id != null) {
+        vars.put("idToDelete", id)
+    } else {
+        vars.put("idToDelete", "EMPTY")
+    }
+}
+
+SampleResult.setIgnore()
+----
++
+[NOTE]
+====
+Метод `.poll()` вилучає та повертає елемент із голови черги. Якщо черга порожня, він повертає `null`. У такому випадку змінній `idToDelete` присвоюється значення `EMPTY`.
+====
+
+* **If Controller (Перевірка чи ID не порожнє)**
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[If Controller]
++
+*Name*: If idToDelete is not empty
++
+*Expression (must evaluate to true or false):*
++
+`${__groovy(vars.get('idToDelete') != 'EMPTY')}`
++
+*Evaluate for all children:* Зняти прапорець (перевірка виконується лише на вході в контролер).
+
+** **If Controller (Перевірка токена)**
++
+Цей контролер перевіряє, чи закінчився термін дії поточного токена доступу, і чи потрібно звернутися до Keycloak за новим.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[If Controller]
++
+*Expression (must evaluate to true or false):*
++
+`${__groovy(vars.get('tokenExpiry') == null || System.currentTimeMillis() > (vars.get('tokenExpiry') as long))}`
++
+*Evaluate for all children:* Зняти прапорець (перевірка виконується лише на вході в контролер).
++
+[TIP]
+====
+Вираз перевіряє дві умови: чи змінна `tokenExpiry` взагалі не існує (перша ітерація), або чи поточний системний час перевищив розрахований час смерті токена.
+====
+
+*** *Get token (Module Controller)*
++
+Якщо попередня умова (`If Controller`) виконується, викликається `Module Controller`, який перенаправляє виконання до існуючого `Test Fragment` для отримання нового токена.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
++
+У вікні налаштувань необхідно розгорнути дерево тест-плану і вибрати цільовий `Test Fragment` -> `Get token`.
+
+** *Delete user (HTTP Request)*
++
+Виконує безпосереднє видалення користувача з Keycloak за його ідентифікатором.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[HTTP Request]
++
+*Method:* `DELETE`
++
+*Path:* `/auth/admin/realms/${officer_realm}/users/${idToDelete}`
+
+**** *HTTP Header Manager*
++
+Необхідно додати `HTTP Header Manager` як дочірній елемент до `Delete user`, щоб передати токен авторизації.
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${accessToken}`
+
+**** *JSR223 PreProcessor*
++
+Логування в консоль.
++
+[source,groovy]
+----
+log.info("Deleting user ID: '{}'", vars.get('idToDelete'))
+----
+
+[#view-results-tree]
+==== View Results Tree
+
+Цей слухач (Listener) використовується для фіксації помилок при виконанні сценарію. Він дозволяє логувати деталі кожного запиту та відповіді, включаючи заголовки, тіло та коди статусів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[View Results Tree]
+
+*Налаштування шляху для збереження помилок*
+
+*Filename:* `${__P(errorLogPath, build/results/errors.xml)}`
+
+[WARNING]
+====
+Обов'язково включайте опцію Log/Display Only: Errors перед запуском в non-gui режимі. Ця опція буде логувати тільки помилки.
+====
+
+*Конфігурація Sample Result Save Configuration*
+
+image:testing:jmeter-methodology/142105737.jpg[]
+
+[#summary-report]
+==== Summary Report
+
+Слухач, який агрегує результати виконання у вигляді таблиці, показуючи загальну кількість запитів, середній час відгуку, відсоток помилок та пропускну здатність (Throughput).
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Summary Report]
+
+[#backend-listener]
+=== Backend Listener
+
+Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у нашому випадку — InfluxDB.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Backend Listener]
+
+[TIP]
+Цей елемент повинен знаходитися безпосередньо в корені Test Plan, щоб перехоплювати метрики з усіх Thread Group (включно з підготовчими).
+
+*Основні налаштування Backend Listener*
+
+|===
+|Name |Value
+
+|*Backend Listener implementation*
+|`org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient`
+
+|*influxdbUrl:*
+|`http://influxdb:8086/write?db=jmeter`
+
+|*application:*
+|`${application}` (Ця змінна з User Defined Variables зв'язує результати тесту з конкретним прогоном у Grafana).
+
+|*measurement:*
+|`jmeter`
+
+|*summaryOnly*
+|`false`
+
+|*samplersRegex*
+|`.*`
+
+|*percentiles*
+|`90;95;99`
+
+|*testTitle*
+|`${application}-create-build_${__P(BUILD_ID,unknown)}`
+
+|*eventTags*
+|`${application}, setup, create-users`
+|===
+
+image:testing:jmeter-methodology/142105924.jpg[]
+
+[#test-fragment-get-token]
+=== Get token (Test Fragment)
+
+Test Fragment — це спеціальний тип контролера, який знаходиться на рівні з Thread Group, але сам по собі не виконується, поки його не викличе Module Controller або Include Controller. Тут інкапсулюється логіка авторизації.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+image:testing:jmeter-methodology/142092411.jpg[]
+
+Всередині цього фрагмента знаходиться структура з HTTP-запиту та трьох пост-процесорів:
+
+[#get-token-http-request]
+==== HTTP Request (Отримання токена)
+Запит до Keycloak Admin API для отримання токена доступу (Bearer Token) за допомогою client_credentials або іншого grant_type.
+
+- *Method:* `POST`
+- *Path:* `/realms/${officer_realm}/protocol/openid-connect/token`
+
+У вкладці Parameters передаються:
+
+- *client_id:* `${officer_client_id}`
+- *client_secret:* `${officer_client_secret}`
+- *grant_type:* `client_credentials`
+
+[#extract-access-token]
+===== Get access token (Regular Expression Extractor)
+
+Пост-процессор Regular Expression Extractor використовується для витягнення даних за регулярним виразом. Цей пост-процессор дозволяє витягувати дані з тіла відповіді, заголовків, URL, кода відповіді чи Response Message.
+
+**Отримання `access_token`:**
+
+- *Apply to:* `Main sample only`
+- *Field to check:* `Body`
+- *Name of created variable:* `access_token`
+- *Regular Expression:* `access_token":"(.+?)"`
+- *Template:* `$1$`
+- *Match No.:* `1`
+- *Default Value:* `not_found`
+
+[#extract-expires-in]
+===== expiresIn (JSON Extractor)
+Оскільки відповідь повертається у форматі JSON, можна використати JSON Extractor, щоб зберегти час життя токена у локальні змінні потоку.
+
+**Отримання `expiresIn`:**
+
+- *Apply to:* `Main sample only`
+- *Names of created variables:* `expiresIn`
+- *JSON Path expressions:* `$.expires_in`
+- *Default Values:* `300`
+
+[#calculate-token-expiry-time]
+===== Калькуляція терміну дії (JSR223 PostProcessor)
+Keycloak повертає expires_in у секундах. Щоб потоки розуміли, коли саме токен "протухне" (і чи потрібно йти за новим), ми обчислюємо абсолютний Unix Timestamp часу його смерті.
+
+- Language: groovy
+- Script:
++
+[source,groovy]
+----
+// Беремо секунди життя токена (з JSON Extractor)
+long expiresInSec = vars.get("expiresIn").toLong()
+
+// Розраховуємо час смерті токена (Поточний час + час життя мінус 30 секунд буфера)
+long expiryTimestamp = System.currentTimeMillis() + (expiresInSec * 1000) - 30000
+
+// Зберігаємо цей час у змінну для If Controller
+vars.put("tokenExpiry", String.valueOf(expiryTimestamp))
+----
+
+[IMPORTANT]
+Віднімання 30000 (30 секунд) є критичним буфером. Воно гарантує, що якщо запит на видалення почнеться за мить до реального закінчення дії токена, він не "протухне" в польоті через мережеві затримки.
