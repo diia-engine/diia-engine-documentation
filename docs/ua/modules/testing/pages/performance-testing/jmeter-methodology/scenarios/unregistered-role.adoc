@@ -1,0 +1,1559 @@
+= Сценарій "Реєстрація користувача (UNREGISTERED ROLE)"
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
+
+Цей документ описує технічний процес розробки та автоматизації сценарію навантажувального тестування для функціоналу "Реєстрація користувача (UNREGISTERED ROLE)" у Keycloak та взаємодії з порталом. Сценарій включає підготовку тестових даних (створення та видалення користувачів), авторизацію та виконання основного бізнес-процесу.
+
+[#overview]
+== Огляд сценарію
+Мета цього сценарію — імітувати поведінку незареєстрованого користувача, який проходить процес авторизації, виконує певні дії на порталі та виходить із системи. Сценарій також включає підготовчі етапи для створення та видалення тестових користувачів.
+
+Схема роботи сценарію:
+
+. *Ініціалізація черги видалення:* Підготовка черги ID користувачів для видалення.
+. *Пошук та збір ID користувачів:* Збір ID існуючих тестових користувачів для подальшого видалення.
+. *Видалення користувачів:* Виконання `DELETE` запитів до Keycloak Admin API для очищення тестового середовища.
+. *Створення користувачів:* Створення нових тестових користувачів у Keycloak.
+. *Авторизація:* Проходження повного циклу авторизації на порталі.
+. *Основний бізнес-процес:* Виконання запитів, що імітують дії користувача на порталі.
+. *Вихід:* Завершення сесії користувача.
+
+[#prerequisites]
+== Підготовка до розробки
+Поточна документація описує процес створення `**.jmx*` сценарію на прикладі GUI Apache JMeter 5.6.3.
+
+[#jmeter-implementation]
+== Розробка .jmx файлу
+
+Створення скрипта відбувається поетапно.
+
+[#test-plan-setup]
+=== Налаштування Test Plan
+
+Для поточного сценарію буде використаний підхід з двома `setUp Thread Group`:
+
+. Група потоків для ініціалізації черги для видалення користувачів з Keycloak
+.. 1 потік, 1 сек (Ramp-up), 1 ітерація
+. Група потоків для безпосереднього видалення користувачів
+.. 50 потоків, 10 сек (Ramp-up), 1 ітерація
+. Основна група потоків для навантажувального тесту
+
+[IMPORTANT]
+====
+Оскільки працює два `setUp Thread Group`, JMeter їх запустить одночасно і вони будуть виконуватись паралельно. Щоб забезпечити виконання цих груп потоків чітко послідовно, необхідно в налаштуваннях `Test Plan` увімкнути опцію `*Run Thread Groups consecutively (i.e. one at a time)*`
+====
+
+[#user-defined-variables]
+=== User Defined Variables
+
+. Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[User Defined Variables]
++
+[TIP]
+====
+Переконайтеся, що в дереві тесту елемент *User Defined Variables* підпорядковується кореневому елементу *Test Plan*
+====
+
+. Користувацькі змінні додаються шляхом натискання на кнопку Add в нижній частині екрана.
+image:testing:jmeter-methodology/unregistered-role/142140300.jpg[]
+
+**User Defined Variables**
+
+* *keycloack_url:* `+${__P(KEYCLOAK_URL,platform-keycloak.apps.krrt-two.ncr.gov.ua)}+`
+* *citizen_user_name:* `+${__P(REALMS_LIST,perf-test-citizen-)}+`
+* *protocol:* `+${__P(PROTOCOL,https)}+`
+* *port:* `+${__P(PORT,443)}+`
+* *realm:* `+${__P(CITIZEN_REALM,ck-198-citizen-portal)}+`
+* *testDataDir:* `+${__P(TEST_DATA_DIR, ../test-data)}+`
+* *client_id:* `+${__P(CLIENT_ID,bpms-user-management)}+`
+* *client_secret:* `+${__P(CLIENT_SECRET,<Secret for client id>)}+`
+* *host:* `citizen-portal-ck-198-main.apps.krrt-two.ncr.gov.ua`
+* *userTaskManagementPath:* `api/user-task-management`
+* *userProcessManagementPath:* `/api/user-process-management`
+* *threads:* `+${__P(THREADS, 10)}+`
+* *rampUp:* `+${__P(RAMP_UP, ${__groovy( def t = (props.get('THREADS') ?: '100').toInteger(); return t < 20 ? 10 : (int)(t * 0.1) )})}+`
+* *errorLogPath:* `+${__P(ERROR_LOG_PATH, ${__groovy(org.apache.jmeter.services.FileServer.getFileServer().getBaseDir())}/../test-data/feature-unregistered-role/out/errors.xml)}+`
+* *application:* `${__P(APPLICATION, feature-unregistered-role)}`
+
+[NOTE]
+====
+`+${__P(KEY, DEFAULT)}+` — це функція JMeter: `+__P = JMeter property+` (параметр запуску JVM / Jenkins / CLI).
+
+Якщо property не заданий, використовується DEFAULT.
+====
+[TIP]
+====
+`*client_id*` та `*client_secret*` генеруються в Keycloak для відповідного клієнта.
+====
+
+[IMPORTANT]
+====
+Змінна `application` передається через *JMeter Backend Listener* в *InfluxDB* і далі використовується *Grafana* для групування метрик.
+
+Вона задає “назву запуску” або “мітку середовища”, щоб різні JMX-тести можна було об’єднати в один загальний запуск у дашборді, навіть якщо вони виконуються окремо.
+
+Завдяки цьому *Grafana* не показує кожен тест як окрему історію, а збирає їх разом під одним ідентифікатором (`application`).
+====
+
+[#http-request-defaults]
+=== HTTP Request Defaults
+
+*HTTP Request Defaults* — це конфігураційний елемент (Configuration Element) у JMeter, який виконує роль "глобального шаблону" для всіх HTTP-запитів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[HTTP Request Defaults]
+
+image:testing:jmeter-methodology/unregistered-role/142140643.jpg[]
+
+**Як це працює:**
+
+. *Сфера дії (Scope):* Елемент діє на всі запити, що знаходяться "під ним" або на тому ж рівні в дереві тест-плану.
+
+. *Перевизначення (Override):* Якщо в самому HTTP Request вказати значення (наприклад, інший шлях /login замість дефолтного /), JMeter надасть пріоритет налаштуванням конкретного запиту, ігноруючи дефолтні.
+
+**Значення для HTTP Request Defaults**
+
+* *Protocol:* `${protocol}`
+* *Server Name or IP:* `${keycloack_url}`
+* *Port Number:* `${port}`
+
+[TIP]
+====
+Завжди розміщуйте *HTTP Request Defaults* на рівні "*Test Plan*" (якщо налаштування стосуються всього тесту) або на рівні конкретної "*Thread Group*" (якщо потрібні різні налаштування для різних груп користувачів). Це найкращий спосіб уникнути "магічних значень", які потім важко знайти та виправити.
+====
+
+[#init-delete-queue]
+=== Init Delete queue (setUp Thread Group)
+
+*setUp Thread Group* у JMeter виконується *один раз перед запуском основних Thread Group* і використовується для підготовчих операцій (preconditions / test data setup). У цьому сценарії він відповідає за ініціалізацію черги для видалення користувачів та збір ID користувачів, які будуть видалені.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[setUp Thread Group]
+
+image:testing:jmeter-methodology/unregistered-role/142142118.jpg[]
+
+**Значення для Init Delete queue:**
+
+* *Name:* `Init Delete queue`
+* *Action to be taken after a Sample error:* `Continue`
+** Помилки не зупиняють підготовчий етап, щоб не зірвати весь тест через одиничний збій.
+* *Number of Threads (users):* `1`
+** Виконується одним потоком (послідовна ініціалізація).
+* *Ramp-up period (seconds):* `1`
+** Швидкий старт без розподіленого навантаження.
+* *Loop Count:* `1`
+** Виконується лише один раз.
+
+[#init-queue]
+==== Init queue (JSR223 Sampler)
+
+*JSR223 Sampler* — це елемент Apache JMeter, який виконує власний скриптовий код для генерації або обробки тестових даних. Він дуже універсальний і дозволяє імітувати логіку, яку неможливо обробити стандартними запитами.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[JSR223 Sampler]
+
+image:testing:jmeter-methodology/unregistered-role/142142344.jpg[]
+
+**Значення для Init queue:**
+
+* *Name:* `Init queue`
+* *Language:* `groovy`
+* *Script:*
++
+[source,groovy]
+----
+import java.util.concurrent.ConcurrentLinkedQueue
+props.put("usersQueue", new ConcurrentLinkedQueue<String>())
+vars.put("keepFetching", "true")
+SampleResult.setIgnore()
+----
+
+[IMPORTANT]
+====
+Створюється `*ConcurrentLinkedQueue*` — потокобезпечна (thread-safe) черга для спільного використання між потоками JMeter.
+====
+
+[IMPORTANT]
+====
+`*props*` — це *глобальний scope* JMeter. Змінні в props: видимі всім Thread Group, доступні всім потокам, живуть протягом усього тесту.
+====
+
+[TIP]
+====
+`*vars.put("keepFetching", "true")*` — створюється звичайна локальна змінна потоку. Ця змінна потрібна для керування циклом, наприклад поки `keepFetching == true` -- цикл продовжується.
+====
+
+[#get-token-module-controller]
+==== Get token (Module Controller)
+
+*Module Controller* — це елемент логіки JMeter, який дозволяє викликати інший фрагмент коду (Test Fragment), що знаходиться в цьому ж тест-плані. Це ключовий інструмент для дотримання принципу DRY (Don't Repeat Yourself).
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+image:testing:jmeter-methodology/unregistered-role/142142447.jpg[]
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий Test Fragment, натиснувши на кнопку kbd:[Find target element].
+
+[NOTE]
+Детальний опис того, як саме налаштований запит за токеном і як обробляється відповідь, дивіться у <<#test-fragment-get-token, розділі "Get token (Test Fragment)">>.
+
+[#while-controller-fetch-users]
+==== While Controller (Збір користувачів)
+
+Використовується для циклічного збору ID користувачів з Keycloak, доки не будуть отримані всі користувачі, що відповідають критеріям пошуку.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[While Controller]
+
+image:testing:jmeter-methodology/unregistered-role/142142543.jpg[]
+
+*Condition (function or variable):*
+
+`${__groovy(vars.get('keepFetching') == 'true')}`
+
+Цикл триватиме доти, доки змінна `keepFetching` має значення `true`.
+
+***** *Counter*
++
+*Counter* — це конфігураційний елемент, який генерує послідовні числа, починаючи з заданого стартового значення. У цьому випадку він використовується для керування параметром `offset` при пагінації запитів до Keycloak.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[Counter]
++
+image:testing:jmeter-methodology/unregistered-role/142142644.jpg[]
++
+*Start:* `0`
++
+*Increment:* `1000`
++
+*Reference Name:* `offset`
++
+*Track Counter Independently for each User:* `false`
+
+***** *Search users (HTTP Request)*
++
+Цей запит виконує пошук користувачів у Keycloak за певними критеріями та з використанням пагінації.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[HTTP Request]
++
+image:testing:jmeter-methodology/unregistered-role/142142758.jpg[]
++
+*Method:* `GET`
++
+*Path:* `/auth/admin/realms/${realm}/users`
++
+*Parameters:*
+** `search`: `perf-test-citizen-` (префікс для пошуку тестових користувачів)
+** `first`: `${offset}` (поточне зміщення для пагінації)
+** `max`: `1000` (максимальна кількість користувачів за запит)
+** `briefRepresentation`: `true` (отримати скорочене представлення користувачів)
+
+****** *JSON Extractor (fetchedIds)*
++
+*JSON Extractor* використовується для витягнення ID користувачів з JSON-відповіді.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Post-Processor] -> kbd:[JSON Extractor]
++
+image:testing:jmeter-methodology/unregistered-role/142142906.jpg[]
++
+*Names of created variables:* `fetchedIds`
++
+*JSON Path expressions:* `$[*].id`
++
+*Match No.:* `-1` (витягти всі відповідності)
+
+****** *JSR223 PostProcessor (process fetchedIds)*
++
+Цей *JSR223 PostProcessor* обробляє отримані ID користувачів, додає їх до глобальної черги `usersQueue` та перевіряє, чи потрібно продовжувати збір користувачів.
++
+image:testing:jmeter-methodology/unregistered-role/142142951.jpg[]
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+def countStr = vars.get("fetchedIds_matchNr")
+int count = countStr != null ? countStr.toInteger() : 0
+def queue = props.get("usersQueue")
+
+if (count > 0) {
+    for (int i = 1; i <= count; i++) {
+        queue.add(vars.get("fetchedIds_" + i))
+    }
+    log.info("Added to queue: " + count + " users. Total in queue: " + queue.size())
+}
+
+// If Keycloak returns < 1000 users (or 0) — this is finish, stop While Controller
+if (count < 1000) {
+    vars.put("keepFetching", "false")
+    log.info("Collect finished. Total count for deleting: " + queue.size())
+}
+----
+
+****** *HTTP Header Manager*
++
+Необхідно додати `HTTP Header Manager` як дочірній елемент до `Search users`, щоб передати токен авторизації.
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${access_token}`
+
+[#delete-keycloak-users]
+=== Delete Keycloak users (setUp Thread Group)
+
+Ця група потоків відповідає за паралельне вилучення ID користувачів з попередньо ініціалізованої черги та виконання запитів на їх видалення у Keycloak.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[setUp Thread Group]
+
+image:testing:jmeter-methodology/unregistered-role/142143110.jpg[]
+
+**Значення для Delete Keycloak users:**
+
+* *Name:* `Delete Keycloak users`
+* *Action to be taken after a Sample error:* `Continue`
+** Виконання має продовжуватися, навіть якщо видалення конкретного користувача завершилося помилкою (наприклад, користувач вже не існує).
+* *Number of Threads (users):* `50`
+** Визначає кількість паралельних потоків для обробки черги.
+* *Ramp-up period (seconds):* `10`
+** Час, за який стартують усі 50 потоків.
+* *Loop Count:* `1`
+** Кожен потік виконує ітерацію один раз, оскільки зациклення керується внутрішнім елементом `While Controller`.
+
+[#while-controller-delete-users]
+==== While Controller (Видалення користувачів)
+
+Використовується для підтримки безперервного циклу виконання запитів, доки черга користувачів не стане порожньою.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[While Controller]
+
+*Condition (function or variable):*
+
+`${__groovy(props.get('usersQueue') != null && !props.get('usersQueue').isEmpty())}`
+
+Цикл триватиме доти, доки черга `usersQueue` не порожня.
+
+***** *Extract id to delete (JSR223 Sampler)*
++
+Цей скрипт відповідає за безпечне (thread-safe) вилучення наступного ID користувача з глобальної черги та передачу його у змінну потоку для подальшого використання у запиті на видалення.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[JSR223 Sampler]
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+def queue = props.get("usersQueue")
+if (queue != null) {
+    def id = queue.poll() // Thread-safe removing
+    if (id != null) {
+        vars.put("idToDelete", id)
+    } else {
+        vars.put("idToDelete", "EMPTY")
+    }
+}
+
+SampleResult.setIgnore()
+----
++
+[NOTE]
+====
+Метод `.poll()` вилучає та повертає елемент із голови черги. Якщо черга порожня, він повертає `null`. У такому випадку змінній `idToDelete` присвоюється значення `EMPTY`.
+====
+
+***** *If idToDelete is not empty (If Controller)*
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[If Controller]
++
+*Name*: `If idToDelete is not empty`
++
+*Expression (must evaluate to true or false):*
++
+`${__groovy(vars.get('idToDelete') != 'EMPTY')}`
++
+*Evaluate for all children:* Зняти прапорець (перевірка виконується лише на вході в контролер).
+
+****** *If Controller (Перевірка токена)*
++
+Цей контролер перевіряє, чи закінчився термін дії поточного токена доступу, і чи потрібно звернутися до Keycloak за новим.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[If Controller]
++
+*Expression (must evaluate to true or false):*
++
+`${__groovy(vars.get('tokenExpiry') == null || System.currentTimeMillis() > (vars.get('tokenExpiry') as long))}`
++
+*Evaluate for all children:* Зняти прапорець (перевірка виконується лише на вході в контролер).
++
+[TIP]
+====
+Вираз перевіряє дві умови: чи змінна `tokenExpiry` взагалі не існує (перша ітерація), або чи поточний системний час перевищив розрахований час смерті токена.
+====
+
+******* *Get token (Module Controller)*
++
+Якщо попередня умова (`If Controller`) виконується, викликається `Module Controller`, який перенаправляє виконання до існуючого `Test Fragment` для отримання нового токена.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
++
+У вікні налаштувань необхідно розгорнути дерево тест-плану і вибрати цільовий `Test Fragment` -> `Get token`.
+
+****** *Delete user (HTTP Request)*
++
+Виконує безпосереднє видалення користувача з Keycloak за його ідентифікатором.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[HTTP Request]
++
+image:testing:jmeter-methodology/unregistered-role/142143443.jpg[]
++
+*Method:* `DELETE`
++
+*Path:* `/auth/admin/realms/${realm}/users/${idToDelete}`
+
+******* *HTTP Header Manager*
++
+Необхідно додати `HTTP Header Manager` як дочірній елемент до `Delete user`, щоб передати токен авторизації.
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${access_token}`
+
+******* *JSR223 PreProcessor*
++
+Логування в консоль.
++
+[source,groovy]
+----
+log.info("Deleting user ID: '{}'", vars.get('idToDelete'))
+----
+
+[#main-test]
+=== Main test (Thread Group)
+
+Ця група потоків відповідає за виконання основного сценарію навантаження, включаючи створення користувачів, авторизацію, виконання бізнес-логіки та вихід із системи.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[Thread Group]
+
+image:testing:jmeter-methodology/unregistered-role/142143540.jpg[]
+
+**Значення для Main test:**
+
+* *Name:* `Main test`
+* *Action to be taken after a Sample error:* `Continue`
+** Виконання має продовжуватися, навіть якщо якийсь запит завершився помилкою.
+* *Number of Threads (users):* `${threads}`
+** Визначає кількість паралельних потоків, що імітують користувачів. Значення береться зі змінної `threads`.
+* *Ramp-up period (seconds):* `${rampUp}`
+** Час, за який стартують усі потоки. Значення береться зі змінної `rampUp`.
+* *Loop Count:* `-1` (Infinite)
+** Кожен потік виконує ітерації доки не закінчаться дані з CSV або не буде досягнуто умови зупинки.
+
+[#csv-keycloak-users-main]
+==== CSV Data Set Config
+
+*CSV Data Set Config* дозволяє читати дані з CSV-файлу та використовувати їх як змінні у тест-плані.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[CSV Data Set Config]
+
+image:testing:jmeter-methodology/unregistered-role/142143648.jpg[]
+
+**Значення для CSV Data Set Config:**
+
+* *Filename:* `${testDataDir}/mock-users.csv`
+* *File Encoding:* `UTF-8`
+* *Delimiter:* `,`
+* *Variable Names:* `userName,fullName,edrpou,drfo,representative,subjectType,role`
+* *Ignore first line:* `true` (якщо CSV містить заголовок)
+* *Recycle on EOF:* `false` (не починати знову після закінчення файлу)
+* *Stop Thread on EOF:* `true` (зупинити потік, коли дані закінчаться)
+* *Sharing Mode:* `All threads` (кожен потік отримує унікальні дані)
+
+[#create-user-module-controller]
+==== Create user (Module Controller)
+
+Цей *Module Controller* викликає `Test Fragment`, який відповідає за створення нового користувача в Keycloak.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF Create Keycloak user`.
+
+[NOTE]
+Детальний опис логіки створення користувача дивіться у <<#tf-create-keycloak-user, розділі "TF Create Keycloak user (Test Fragment)">>.
+
+[#auth-module-controller]
+==== Auth (Module Controller)
+
+Цей *Module Controller* викликає `Test Fragment`, який відповідає за повний цикл авторизації користувача на порталі.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF Auth Common`.
+
+[NOTE]
+Детальний опис логіки авторизації дивіться у <<#tf-auth-common, розділі "TF Auth Common (Test Fragment)">>.
+
+[#start-process-module-controller]
+==== Start process (Module Controller)
+
+Цей *Module Controller* викликає `Test Fragment`, який відповідає за імітацію початку бізнес-процесу на порталі.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF Main Process`.
+
+[NOTE]
+Детальний опис логіки основного бізнес-процесу дивіться у <<#tf-main-process, розділі "TF Main Process (Test Fragment)">>.
+
+[#logout-module-controller]
+==== Logout (Module Controller)
+
+Цей *Module Controller* викликає `Test Fragment`, який відповідає за вихід користувача із системи та очищення сесії.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF_Logout`.
+
+[NOTE]
+Детальний опис логіки виходу з системи дивіться у <<#tf-logout, розділі "TF_Logout (Test Fragment)">>.
+
+[#view-results-tree]
+=== View Results Tree
+
+Цей слухач (Listener) використовується для фіксації помилок при виконанні сценарію. Він дозволяє логувати деталі кожного запиту та відповіді, включаючи заголовки, тіло та коди статусів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[View Results Tree]
+
+image:testing:jmeter-methodology/unregistered-role/142143848.jpg[]
+
+*Налаштування шляху для збереження помилок*
+
+*Filename:* `${errorLogPath}`
+
+[WARNING]
+====
+Обов'язково включайте опцію Log/Display Only: Errors перед запуском в non-gui режимі. Ця опція буде логувати тільки помилки.
+====
+
+*Конфігурація Sample Result Save Configuration*
+
+image:testing:jmeter-methodology/unregistered-role/142143939.jpg[]
+
+[#summary-report]
+=== Summary Report
+
+Слухач, який агрегує результати виконання у вигляді таблиці, показуючи загальну кількість запитів, середній час відгуку, відсоток помилок та пропускну здатність (Throughput).
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Summary Report]
+
+image:testing:jmeter-methodology/unregistered-role/142144017.jpg[]
+
+[#backend-listener]
+=== Backend Listener
+
+Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у нашому випадку — InfluxDB.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Backend Listener]
+
+image:testing:jmeter-methodology/unregistered-role/142144052.jpg[]
+
+[TIP]
+Цей елемент повинен знаходитися безпосередньо в корені Test Plan, щоб перехоплювати метрики з усіх Thread Group (включно з підготовчими).
+
+*Основні налаштування Backend Listener*
+
+|===
+|Name |Value
+
+|*Backend Listener implementation*
+|`org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient`
+
+|*influxdbUrl:*
+|`http://influxdb:8086/write?db=jmeter`
+
+|*application:*
+|`${application}` (Ця змінна з User Defined Variables зв'язує результати тесту з конкретним прогоном у Grafana).
+
+|*measurement:*
+|`jmeter`
+
+|*summaryOnly*
+|`false`
+
+|*samplersRegex*
+|`.*`
+
+|*percentiles*
+|`90;95;99`
+
+|*testTitle*
+|`${application}-main-build_${__P(BUILD_ID,unknown)}`
+
+|*eventTags*
+|`${application}, main-test`
+|===
+
+[#test-fragment-get-token]
+=== Get token (Test Fragment)
+
+*Test Fragment* — це спеціальний тип контролера, який знаходиться на рівні з Thread Group, але сам по собі не виконується, поки його не викличе Module Controller або Include Controller. Тут інкапсулюється логіка авторизації для отримання адміністративного токена Keycloak.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+Всередині цього фрагмента знаходиться структура з HTTP-запиту та трьох пост-процесорів:
+
+[#get-token-http-request]
+==== HTTP Request (Отримання токена)
+Запит до Keycloak Admin API для отримання токена доступу (Bearer Token) за допомогою `client_credentials`.
+
+image:testing:jmeter-methodology/unregistered-role/142144202.jpg[]
+
+- *Method:* `POST`
+- *Path:* `/auth/realms/${realm}/protocol/openid-connect/token`
+
+У вкладці Parameters передаються:
+
+- *grant_type:* `client_credentials`
+- *client_id:* `${client_id}`
+- *client_secret:* `${client_secret}`
+
+[#extract-access-token]
+===== Get access token (Regular Expression Extractor)
+
+*Regular Expression Extractor* використовується для витягнення `access_token` з тіла відповіді.
+
+**Отримання `access_token`:**
+
+- *Apply to:* `Main sample only`
+- *Field to check:* `Body`
+- *Name of created variable:* `access_token`
+- *Regular Expression:* `access_token":"(.+?)"`
+- *Template:* `$1$`
+- *Match No.:* `1`
+- *Default Value:* `not_found`
+
+[#extract-expires-in]
+===== expiresIn (JSON Extractor)
+Оскільки відповідь повертається у форматі JSON, можна використати *JSON Extractor*, щоб зберегти час життя токена у локальні змінні потоку.
+
+**Отримання `expiresIn`:**
+
+- *Apply to:* `Main sample only`
+- *Names of created variables:* `expiresIn`
+- *JSON Path expressions:* `$.expires_in`
+- *Default Values:* `300`
+
+[#calculate-token-expiry-time]
+===== Калькуляція терміну дії (JSR223 PostProcessor)
+Keycloak повертає `expires_in` у секундах. Щоб потоки розуміли, коли саме токен "протухне" (і чи потрібно йти за новим), ми обчислюємо абсолютний Unix Timestamp часу його смерті.
+
+- Language: `groovy`
+- Script:
++
+[source,groovy]
+----
+// Беремо секунди життя токена (з JSON Extractor)
+long expiresInSec = vars.get("expiresIn").toLong()
+
+// Розраховуємо час смерті токена (Поточний час + час життя мінус 30 секунд буфера)
+long expiryTimestamp = System.currentTimeMillis() + (expiresInSec * 1000) - 30000
+
+// Зберігаємо цей час у змінну для If Controller
+vars.put("tokenExpiry", String.valueOf(expiryTimestamp))
+----
+
+[IMPORTANT]
+Віднімання 30000 (30 секунд) є критичним буфером. Воно гарантує, що якщо запит почнеться за мить до реального закінчення дії токена, він не "протухне" в польоті через мережеві затримки.
+
+[#tf-auth-common]
+=== TF Auth Common (Test Fragment)
+
+Цей *Test Fragment* інкапсулює загальну логіку авторизації користувача на порталі, включаючи отримання редиректів, обробку куків та отримання токенів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+[#auth-portal-home-page]
+==== Auth: Portal Home Page (HTTP Request)
+Перший запит до домашньої сторінки порталу, який ініціює процес авторизації та отримує URL для Keycloak.
+
+image:testing:jmeter-methodology/unregistered-role/142144415.jpg[]
+
+*Method:* `GET`
+
+*Path:* `/process-list`
+
+***** *Extract Auth URL (Regular Expression Extractor)*
++
+Витягує URL для авторизації Keycloak з заголовка `Location`.
++
+*Name:* RegEx - Location Header (Auth URL)
++
+*Apply to:* Main sample only
++
+*Field to check:* Response Headers
++
+*Name of created variable:* `authUrl`
++
+*Regular Expression:* `(?i)location: (.*)`
++
+*Template:* `$1$`
++
+*Default Value:* `NO_AUTH_URL`
+
+***** *RegEx - OIDC State (Regular Expression Extractor)*
++
+Витягує параметр `state` з URL для авторизації.
++
+*Name:* RegEx - OIDC State
++
+*Apply to:* Main sample only
++
+*Field to check:* Response Headers
++
+*Name of created variable:* `state`
++
+*Regular Expression:* `state=([\w\.\-]+)`
++
+*Template:* `$1$`
++
+*Default Value:* `NO_STATE`
+
+***** *RegEx - Redirect URI (Raw) (Regular Expression Extractor)*
++
+Витягує закодований `redirect_uri` з URL для авторизації.
++
+*Name:* RegEx - Redirect URI (Raw)
++
+*Apply to:* Main sample and sub-samples
++
+*Field to check:* Response Headers
++
+*Name of created variable:* `redirectUriEncoded`
++
+*Regular Expression:* `redirect_uri=([^&]+)`
++
+*Template:* `$1$`
++
+*Default Value:* `NOT_FOUND`
+
+***** *JSR223 - Decode URI*
++
+Декодує `redirect_uri` та зберігає куки балансувальника навантаження.
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+import java.net.URLDecoder;
+
+String encoded = vars.get("redirectUriEncoded");
+
+if (encoded != null && !encoded.equals("NOT_FOUND")) {
+    String decoded = URLDecoder.decode(encoded, "UTF-8");
+    vars.put("redirectUri", decoded);
+    log.info("Decoded Redirect URI: " + decoded);
+}
+
+def cookieList = []
+def lbCookie = ""
+def headers = prev.getResponseHeaders().split("\n")
+
+for (String header : headers) {
+    if (header.toLowerCase().startsWith("set-cookie:")) {
+        def matcher = (header =~ /(?i)set-cookie:\s*([^;\r\n]+)/)
+        if (matcher.find()) {
+            def cookieVal = matcher.group(1).trim()
+            cookieList.add(cookieVal)
+
+            // Якщо кука не починається з "session=", значить це Sticky Session балансувальника
+            if (!cookieVal.toLowerCase().startsWith("session=")) {
+                lbCookie = cookieVal
+                vars.put("lbCookie", lbCookie)
+                log.info("=== Збережено куку балансувальника: " + lbCookie)
+            }
+        }
+    }
+}
+
+if (cookieList.size() > 0) {
+    vars.put("allPortalCookies", cookieList.join("; "))
+}
+----
+
+***** *Regular Expression Extractor (portalSession)*
++
+Витягує `session` куку порталу.
++
+*Apply to:* Main sample and sub-samples
++
+*Field to check:* Response Headers
++
+*Name of created variable:* `portalSession`
++
+*Regular Expression:* `session=([^;]+)`
++
+*Template:* `$1$`
++
+*Default Value:* `NO_SESSION`
+
+[#auth-keycloak-auth-page]
+==== Auth: Keycloak Auth Page (HTTP Request)
+Запит до сторінки авторизації Keycloak.
+
+image:testing:jmeter-methodology/unregistered-role/142173528.jpg[]
+
+*Method:* `GET`
+
+*Path:* `${authUrl}`
+
+
+|===
+|Name |Value |URL Encode? |Content-Type |Include Equals?
+
+|client_id
+|`citizen-portal`
+|
+|text/plain
+|✅
+
+|response_type
+|`code`
+|
+|text/plain
+|✅
+
+|scope
+|`openid`
+|
+|text/plain
+|✅
+
+|redirect_uri
+|`${redirectUri}`
+|✅
+|text/plain
+|✅
+|===
+
+
+***** *CSS - Login Form Action (CSS Selector Extractor)*
++
+Витягує `action` атрибут форми логіну.
++
+image:testing:jmeter-methodology/unregistered-role/142175051.jpg[]
++
+*Name:* `CSS - Login Form Action`
++
+*Apply to:* `Main sample only`
++
+*Name of created variable:* `loginAction`
++
+*CSS/JQuery expression:* `form#kc-form-login`
++
+*Attribute:* `action`
++
+*Match No.:* `1`
+
+***** *Regular Expression Extractor (Auth Session ID)*
++
+Витягує `AUTH_SESSION_ID` куку.
++
+*Apply to:* `Main sample only`
++
+*Field to check:* `Response Headers`
++
+*Name of created variable:* `authSessionId`
++
+*Regular Expression:* `AUTH_SESSION_ID=([^;]+)`
++
+*Template:* `$1$`
++
+*Default Value:* `NOT_FOUND`
+
+[#pause-auth]
+==== Pause (Test Action)
+Пауза для імітації реальної поведінки користувача.
+
+image:testing:jmeter-methodology/unregistered-role/142175430.jpg[]
+
+***** *Uniform Random Timer*
++
+Додає випадкову затримку.
++
+image:testing:jmeter-methodology/unregistered-role/142175509.jpg[]
++
+*Delay:* `2000`
++
+*Random Delay Maximum:* `1000`
+
+[#auth-submit-credentials]
+==== Auth: Submit Credentials (HTTP Request)
+Відправка облікових даних користувача для авторизації.
+
+image:testing:jmeter-methodology/unregistered-role/142175658.jpg[]
+
+*Method:* `POST`
+
+*Path:* `${loginAction}`
+
+*Parameters:*
+
+** `username`: `${userName}`
+
+** `password`: `123`
+
+** `credentialId`: (порожнє)
+
+***** *RegEx - Auth Code (Regular Expression Extractor)*
++
+Витягує `authCode` з заголовка `Location` відповіді.
++
+*Name:* `RegEx - Auth Code`
++
+*Apply to:* `Main sample only`
++
+*Field to check:* `Response Headers`
++
+*Name of created variable:* `authCode`
++
+*Regular Expression:* `code=([^&amp;\r\n]+)`
++
+*Template:* `$1$`
++
+*Match No.:* `1`
+
+***** *HTTP Header Manager*
++
+Передає `AUTH_SESSION_ID` куку.
++
+*Cookie:* `AUTH_SESSION_ID=${authSessionId}`
+
+[#auth-portal-sso-callback]
+==== Auth: Portal SSO Callback (HTTP Request)
+Запит зворотного виклику SSO порталу.
+
+image:testing:jmeter-methodology/unregistered-role/142180150.jpg[]
+
+*Method:* `GET`
+*Path:* `/process-list/`
+
+*Parameters:*
+** `code`: `${authCode}`
+** `state`: `${state}`
+
+***** *HTTP Header Manager*
++
+Передає всі зібрані куки порталу.
++
+*Cookie:* `${allPortalCookies}`
+
+***** *Extract authSession (Regular Expression Extractor)*
++
+Витягує оновлену `session` куку порталу.
++
+*Apply to:* Main sample and sub-samples
++
+*Field to check:* Response Headers
++
+*Name of created variable:* `authSession`
++
+*Regular Expression:* `(?i)set-cookie:\s*session=([^;\r\n]+)`
++
+*Template:* `$1$`
++
+*Match No.:* `1`
++
+*Default Value:* `NO_SESSION`
+
+[#auth-portal-redirect]
+==== Auth: Portal Redirect (HTTP Request)
+Фінальний redirect після успішної авторизації.
+
+image:testing:jmeter-methodology/unregistered-role/142180418.jpg[]
+
+*Method:* `GET`
+*Path:* `/process-list`
+
+***** *HTTP Header Manager*
++
+Передає `session` куку.
++
+*Cookie:* `session=${authSession}`
+
+[#get-dashboard-and-xsrf-token]
+==== Get Dashboard and XSRF Token (Module Controller)
+Викликає *Test Fragment* для отримання дашборду та XSRF токена.
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF Dashboard`.
+
+[NOTE]
+Детальний опис логіки отримання дашборду та XSRF токена дивіться у <<#tf-dashboard, розділі "TF Dashboard (Test Fragment)">>.
+
+[#tf-dashboard]
+=== TF Dashboard (Test Fragment)
+
+Цей *Test Fragment* відповідає за отримання даних дашборду та витягнення XSRF токена, який необхідний для подальших POST-запитів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+image:testing:jmeter-methodology/unregistered-role/145090903.jpg[]
+
+[#header-manager-xsrf]
+==== HTTP Header Manager
+Встановлює заголовки `X-XSRF-TOKEN` та `Cookie` для запитів.
+
+* *X-XSRF-TOKEN:* `${xsrfToken}`
+
+* *Cookie:* `session=${authSession}; ${lbCookie}; XSRF-TOKEN=${xsrfToken}`
+
+[#process-list]
+==== Process list (HTTP Request)
+Запит до списку процесів, який повертає XSRF токен у куках.
+
+image:testing:jmeter-methodology/unregistered-role/145091038.jpg[]
+
+*Method:* `GET`
+*Path:* `/process-list`
+
+***** *Get XSRF Token (Regular Expression Extractor)*
++
+Витягує `XSRF-TOKEN` з куків відповіді.
++
+*Apply to:* Main sample and sub-samples
++
+*Field to check:* Response Headers
++
+*Name of created variable:* `xsrfToken`
++
+*Regular Expression:* `XSRF-TOKEN=([^;]+)`
++
+*Template:* `$1$`
++
+*Default Value:* `EMPTY`
+
+[#get-user-info-module-controller]
+==== Get user info (Module Controller)
+Викликає *Test Fragment* для отримання інформації про користувача.
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `User info`.
+
+[NOTE]
+Детальний опис логіки отримання інформації про користувача дивіться у <<#user-info, розділі "User info (Test Fragment)">>.
+
+[#user-info]
+=== User info (Test Fragment)
+
+Цей *Test Fragment* відповідає за отримання детальної інформації про поточного авторизованого користувача.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+image:testing:jmeter-methodology/unregistered-role/145091300.jpg[]
+
+[#userinfo-http-request]
+==== Userinfo (HTTP Request)
+Запит до ендпоінту `userinfo` для отримання даних користувача.
+
+*Method:* `GET`
+
+*Path:* `/api/userinfo`
+
+***** *JSON Extractor (fullName)*
++
+Витягує повне ім'я користувача з JSON-відповіді.
++
+*Apply to:* Main sample only
++
+*Names of created variables:* `fullName`
++
+*JSON Path expressions:* `$.fullName`
+
+[#tf-main-process]
+=== TF Main Process (Test Fragment)
+
+Цей *Test Fragment* інкапсулює основний бізнес-процес, який виконує користувач на порталі після авторизації.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+image:testing:jmeter-methodology/unregistered-role/145091441.jpg[]
+
+[#header-manager-main-process]
+==== HTTP Header Manager
+Встановлює заголовки `X-XSRF-TOKEN` та `Cookie` для запитів у цьому фрагменті.
+
+*X-XSRF-TOKEN:* `${xsrfToken}`
+
+*Cookie:* `session=${authSession}; ${lbCookie}; XSRF-TOKEN=${xsrfToken}`
+
+[#process-definition]
+==== process-definition (HTTP Request)
+Запит для отримання визначень процесів.
+
+image:testing:jmeter-methodology/unregistered-role/145091533.jpg[]
+
+*Method:* `GET`
+
+*Path:* `${userProcessManagementPath}/process-definition/`
+
+***** *Exctract bpId (JSON Extractor)*
++
+Витягує ID бізнес-процесу (`bpId`) з JSON-відповіді.
++
+*Names of created variables:* `bpId`
++
+*JSON Path expressions:* `$[0].key`
++
+*Default Values:* `NOT_FOUND`
+
+[#process-instances]
+==== process-instances (HTTP Request)
+Запит для отримання екземплярів процесів.
+
+image:testing:jmeter-methodology/unregistered-role/145091658.jpg[]
+
+*Method:* `GET`
+
+*Path:* `api/runtime/process-instances`
+
+*Parameters:*
+
+** `offset`: `0`
+
+** `limit`: `2`
+
+** `sort`: `desc(startTime)`
+
+***** *JSR223 PostProcessor (isAutoStart)*
++
+Визначає, чи потрібно автоматично запускати новий процес, якщо існуючих екземплярів немає.
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+import groovy.json.JsonSlurper
+
+def slurp = { text ->
+    new JsonSlurper().parseText(text.toString())
+}
+
+def data = slurp(prev.getResponseDataAsString())
+def isAutoStart = data.size() == 0
+vars.put('isAutoStart', isAutoStart as String)
+----
+
+[#if-controller-autostart]
+==== If Controller (Автозапуск процесу)
+Виконує дії всередині, якщо `isAutoStart` має значення `true`.
+
+*Expression (must evaluate to true or false):*
+
+`${__groovy(vars.get('isAutoStart') as Boolean)}`
+
+***** *start (HTTP Request)*
++
+Запускає новий екземпляр бізнес-процесу.
++
+*Method:* `POST`
+
+*Path:* `${userProcessManagementPath}/process-definition/${bpId}/start`
+
+****** *Extract process instance id (JSON Extractor)*
++
+Витягує ID запущеного екземпляра процесу.
++
+*Names of created variables:* `processInstanceId`
++
+*JSON Path expressions:* `$.id`
+
+***** *lightweight (HTTP Request)*
++
+Запит для отримання легкої версії завдань.
++
+*Method:* `GET`
++
+*Path:* `${userTaskManagementPath}/task/lightweight`
++
+*Parameters:*
+
+** `firstResult`: `0`
+
+** `maxResults`: `10`
+
+** `sortBy`: `id`
+
+** `sortOrder`: `desc`
+
+** `rootProcessInstanceId`: `${processInstanceId}`
+
+******* *taskId (JSON Extractor)*
++
+Витягує ID завдання.
++
+*Names of created variables:* `taskId`
++
+*JSON Path expressions:* `$[0].id`
+
+***** *taskId (HTTP Request)*
++
+Запит для отримання детальної інформації про завдання за його ID.
++
+*Method:* `GET`
++
+*Path:* `${userTaskManagementPath}/task/${taskId}`
+
+****** *Get form key (JSON Extractor)*
++
+Витягує ключ форми, пов'язаної із завданням.
++
+*Names of created variables:* `formKey`
++
+*JSON Path expressions:* `$.formKey`
+
+***** *formKey (HTTP Request)*
++
+Запит для отримання даних форми за її ключем.
++
+*Method:* `GET`
++
+*Path:* `/api/forms/${formKey}`
+
+***** *userinfo (Module Controller)*
++
+Викликає *Test Fragment* для отримання інформації про користувача.
++
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `User info`.
+
+***** *Create payload (JSR223 Sampler)*
++
+Створює JSON-об'єкт (`payload`) для відправки даних форми.
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+import groovy.json.JsonOutput
+
+def data = [
+	firstName: 'Test',
+	email: 'testmail@mail.com'
+]
+def payload = [data: data]
+vars.put('payload', JsonOutput.toJson(payload))
+log.info("Payload={}", JsonOutput.toJson(payload))
+
+SampleResult.setIgnore()
+----
+
+***** *Pause (Test Action)*
++
+Пауза для імітації реальної поведінки користувача.
+
+******* *Uniform Random Timer*
++
+Додає випадкову затримку.
++
+*Delay:* `2000`
++
+*Random Delay Maximum:* `1000`
+
+***** *complete (HTTP Request)*
++
+Завершує поточне завдання, відправляючи дані форми.
++
+*Method:* `POST`
++
+*Path:* `${userTaskManagementPath}/task/${taskId}/complete`
++
+*Body Data:* `${payload}`
+
+******* *HTTP Header Manager*
++
+Встановлює заголовки `X-Xsrf-Token` та `Content-Type` для запиту.
++
+*X-Xsrf-Token:* `${xsrfToken}`
++
+*Content-Type:* `application/json`
+
+***** *userinfo (Module Controller)*
++
+Викликає *Test Fragment* для отримання інформації про користувача (повторно).
++
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `User info`.
+
+[#tf-logout]
+=== TF_Logout (Test Fragment)
+
+Цей *Test Fragment* відповідає за вихід користувача із системи та очищення всіх пов'язаних змінних та куків.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+image:testing:jmeter-methodology/unregistered-role/145092338.jpg[]
+
+[#logout-http-request]
+==== Logout (HTTP Request)
+Запит для виходу з системи.
+
+*Method:* `GET`
+
+*Path:* `/logout`
+
+***** *JSR223 - Clear Cookie*
++
+Очищає куки та змінні сесії після виходу.
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+if (sampler.getCookieManager() != null) {
+    sampler.getCookieManager().clear()
+    log.info("=== [SESSION CLEAR] HTTP Cookie Manager очищено ===")
+} else {
+    log.warn("Cookie Manager не знайдено у цьому запиті!")
+}
+
+if (sampler.getCacheManager() != null) {
+    sampler.getCacheManager().clear()
+    log.info("=== [SESSION CLEAR] HTTP Cache Manager очищено ===")
+}
+
+vars.remove("xsrfToken")
+vars.remove("authUrl")
+vars.remove("state")
+vars.remove("redirectUriEncoded")
+vars.remove("redirectUri")
+vars.remove("loginAction")
+vars.remove("authCode")
+vars.remove("portalSession")
+vars.remove("allPortalCookies")
+vars.remove("lbCookie")
+
+log.info("=== [SESSION CLEAR] Змінні авторизації видалено. Готові до логіну Провайдера. ===")
+----
+
+[#tf-create-keycloak-user]
+=== TF Create Keycloak user (Test Fragment)
+
+Цей *Test Fragment* інкапсулює логіку створення нового користувача в Keycloak.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+image:testing:jmeter-methodology/unregistered-role/145092433.jpg[]
+
+[#set-isusercreated-tf]
+==== Set isUserCreated (JSR223 Sampler)
+Ініціалізує змінну `isUserCreated` значенням `false`.
+
+*Language:* `groovy`
+
+*Script:*
+[source,groovy]
+----
+vars.put("isUserCreated", "false")
+SampleResult.setIgnore()
+----
+
+[#if-controller-token-expiry-tf]
+==== If Controller (Перевірка токена)
+Перевіряє термін дії токена та викликає його оновлення за потреби.
+
+*Expression (must evaluate to true or false):*
+
+`${__groovy(vars.get('tokenExpiry') == null || System.currentTimeMillis() > (vars.get('tokenExpiry') as long))}`
+
+***** *Get token (Module Controller)*
++
+Викликає *Test Fragment* для отримання нового токена.
++
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `Get token`.
+
+[#while-controller-create-user-tf]
+==== While Controller (Створення користувача)
+Цикл для повторних спроб створення користувача, доки він не буде успішно створений.
+
+*Condition (function or variable):*
+
+`${__groovy(vars.get("isUserCreated") == "false")}`
+
+***** *Create user name (JSR223 Sampler)*
++
+Розбиває повне ім'я на ім'я та прізвище.
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+def fullName = vars.get('fullName')
+def splitted = fullName.split(' ')
+vars.put('lastName', splitted[0])
+vars.put('firstName', splitted[1])
+SampleResult.setIgnore()
+----
+
+***** *Create user (HTTP Request)*
++
+Відправляє запит на створення користувача в Keycloak.
++
+*Method:* `POST`
++
+*Path:* `/auth/admin/realms/${realm}/users`
++
+*Body Data (JSON):*
++
+[source,json]
+----
+{
+  "createdTimestamp": "${__time()}",
+  "username": "${userName}",
+  "enabled": true,
+  "totp": false,
+  "emailVerified": false,
+  "firstName": "${firstName}",
+  "lastName": "${lastName}",
+  "disableableCredentialTypes": [],
+  "requiredActions": [],
+  "notBefore": 0,
+  "access": {
+    "manageGroupMembership": true,
+    "view": true,
+    "mapRoles": true,
+    "impersonate": true,
+    "manage": true
+  },
+  "attributes": {
+    "drfo": ["${drfo}"],
+    "edrpou": ["${edrpou}"],
+    "fullName": ["${fullName}"],
+    "representative": ["${representative}"],
+    "subjectType": ["${subjectType}"]
+  },
+  "realmRoles": ["citizen"],
+  "credentials": [
+    {
+      "type": "password",
+      "value": "123",
+      "temporary": false
+    }
+  ]
+}
+----
+
+****** *HTTP Header Manager*
++
+Встановлює заголовки `Content-Type` та `Authorization`.
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${access_token}`
+
+****** *JSR223 PostProcessor*
++
+Обробляє відповідь на створення користувача, встановлює `isUserCreated` або логує помилку.
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+if (prev.getResponseCode() == '201') {
+    vars.put("isUserCreated", "true")
+    def userName = vars.get("userName")
+    log.info("User {} has been created", userName)
+} else if (prev.getResponseCode() == '409') {
+	vars.put("isUserCreated", "true")
+	log.info("Conflict: {}", prev.getResponseDataAsString())
+	ctx.setRestartNextLoop(true)
+} else {
+    log.warn("Помилка створення юзера. Чекаємо 3 сек і пробуємо знову...")
+    Thread.sleep(3000)
+}
+----
+
+****** *Get user id (Regular Expression Extractor)*
++
+Витягує ID новоствореного користувача з заголовка `Location`.
++
+*Name of created variable:* `created_user_id`
++
+*Regular Expression:* `(?i)location:\s*.+?\/users\/([a-zA-Z0-9\-]+)`
++
+*Template:* `$1$`
+
+****** *Response Assertion*
++
+Перевіряє, що код відповіді є `201` або `409`.
++
+image:testing:jmeter-methodology/unregistered-role/145092806.jpg[]
++
+*Response Field to Test:* `Response Code`
++
+*Pattern Matching Rules:* `Contains`
++
+*Patterns to Test:* `201|409`
+
+***** *Available roles (HTTP Request)*
++
+Отримує список доступних ролей для користувача.
++
+*Method:* `GET`
++
+*Path:* `/auth/admin/realms/${realm}/users/${created_user_id}/role-mappings/realm/available`
+
+****** *HTTP Header Manager*
++
+Встановлює заголовки `Content-Type` та `Authorization`.
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${access_token}`
+
+****** *Put roles (JSR223 PostProcessor)*
++
+Обробляє JSON-відповідь та вибирає ролі для призначення.
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+import groovy.json.*
+
+def roles = prev.getResponseDataAsString()
+def data = new JsonSlurper().parseText(roles.replaceAll("\\\\n", ""))
+def role = vars.get('role')
+
+def user_roles = data.findAll { it.name == role || it.name == 'citizen' }
+
+if (user_roles) {
+    vars.put("user_roles", JsonOutput.toJson(user_roles))
+} else {
+    log.info("user_roles not found")
+}
+----
+
+***** *Add role (HTTP Request)*
++
+Призначає вибрані ролі новоствореному користувачеві.
++
+*Method:* `POST`
++
+*Path:* `/auth/admin/realms/${realm}/users/${created_user_id}/role-mappings/realm`
++
+*Body Data:* `${user_roles}`
+
+****** *HTTP Header Manager*
++
+Встановлює заголовки `Content-Type` та `Authorization`.
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${access_token}`
