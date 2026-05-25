@@ -1,0 +1,571 @@
+= Сценарій "Внесення змін в масову сутність"
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
+
+Цей документ описує технічний процес розробки та автоматизації сценарію навантажувального тестування для функціоналу "Внесення змін в масову сутність". Сценарій імітує повний життєвий цикл обробки бізнес-процесу, що включає ініціацію процесу та очікування його завершення.
+
+[#overview]
+== Огляд сценарію
+Мета цього сценарію — імітувати поведінку офіцера, який ініціює бізнес-процес, що виконується асинхронно, та очікує його завершення шляхом періодичного опитування стану.
+
+Схема роботи сценарію:
+
+. *Ініціалізація:* Налаштування глобальних змінних та функцій.
+. *Авторизація:* Проходження повного циклу авторизації на офіцерському порталі.
+. *Ініціація бізнес-процесу:* Запуск нового екземпляра бізнес-процесу.
+. *Асинхронне очікування:* Періодичне опитування стану процесу до його завершення.
+. *Вихід:* Завершення сесії користувача.
+
+[#prerequisites]
+== Підготовка до розробки
+Поточна документація описує процес створення `**.jmx*` сценарію на прикладі GUI Apache JMeter 5.6.3.
+
+[#jmeter-implementation]
+== Розробка .jmx файлу
+
+Створення скрипта відбувається поетапно.
+
+[#user-defined-variables]
+=== User Defined Variables
+
+. Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[User Defined Variables]
++
+[TIP]
+====
+Переконайтеся, що в дереві тесту елемент *User Defined Variables* підпорядковується кореневому елементу *Test Plan*
+====
+
+. Користувацькі змінні додаються шляхом натискання на кнопку Add в нижній частині екрана.
+image:testing:jmeter-methodology/async-update/145123246.jpg[]
+
+**User Defined Variables**
+
+* *protocol:* `https`
+* *host:* `officer-portal-ck-198-main.apps.krrt-two.ncr.gov.ua`
+* *keyloakServer:* `platform-keycloak.apps.krrt-two.ncr.gov.ua`
+* *dataFactoryPath:* `/api/data-factory`
+* *userTaskManagerPath:* `/officer/api/user-task-management`
+* *testDataDir:* `+${__P(TEST_DATA_DIR, ../test-data)}+`
+* *bpId:* `+${__P(BP_ID,reference-iban-update-process)}+`
+* *errorLogPath:* `+${__P(ERROR_LOG_PATH, ${__groovy(org.apache.jmeter.services.FileServer.getFileServer().getBaseDir())}/../test-data/reference-iban-update-process/out/errors.xml)}+`
+* *application:* `+${__P(APPLICATION, reference-iban-update-process)}+`
+* *threads:* `+${__P(THREADS, 100)}+`
+* *rampUp:* `+${__P(RAMP_UP, ${__groovy( def t = (props.get('THREADS') ?: '100').toInteger(); return t < 20 ? 10 : (int)(t * 0.1) )})}+`
+
+[NOTE]
+====
+`+${__P(KEY, DEFAULT)}+` — це функція JMeter: `+__P = JMeter property+` (параметр запуску JVM / Jenkins / CLI).
+
+Якщо property не заданий, використовується DEFAULT.
+====
+
+[IMPORTANT]
+====
+Змінна `application` передається через *JMeter Backend Listener* в *InfluxDB* і далі використовується *Grafana* для групування метрик.
+
+Вона задає “назву запуску” або “мітку середовища”, щоб різні JMX-тести можна було об’єднати в один загальний запуск у дашборді, навіть якщо вони виконуються окремо.
+
+Завдяки цьому *Grafana* не показує кожен тест як окрему історію, а збирає їх разом під одним ідентифікатором (`application`).
+====
+
+[#csv-users-data]
+=== CSV Data Set Config (Users Data)
+
+*CSV Data Set Config* — це конфігураційний елемент JMeter, який дозволяє читати дані з CSV-файлу та використовувати їх як змінні у тест-плані. Це дозволяє легко параметризувати запити, використовуючи різні набори даних для кожного потоку або ітерації.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[CSV Data Set Config]
+
+image:testing:jmeter-methodology/async-update/145123606.jpg[]
+
+**Значення для CSV Data Set Config:**
+
+* *Filename:* `${testDataDir}/mock-users.csv`
+* *File Encoding:* (порожнє, використовується системне)
+* *Delimiter:* `,`
+* *Variable Names:* `userName,fullname,edrpou,drfo`
+* *Ignore first line:* `false` (оскільки файл не містить заголовка)
+* *Recycle on EOF:* `false` (не починати знову після закінчення файлу)
+* *Stop Thread on EOF:* `true` (зупинити потік, коли дані закінчаться)
+* *Sharing Mode:* `All threads` (кожен потік отримує унікальні дані)
+
+[#setup-thread-group]
+=== setUp Thread Group
+
+*setUp Thread Group* у JMeter виконується *один раз перед запуском основних Thread Group* і використовується для підготовчих операцій. У цьому сценарії він відповідає за ініціалізацію глобальної функції `slurp` для обробки JSON.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[setUp Thread Group]
+
+image:testing:jmeter-methodology/async-update/145123713.jpg[]
+
+**Значення для setUp Thread Group:**
+
+* *Name:* `setUp Thread Group`
+* *Action to be taken after a Sample error:* `Continue`
+** Помилки не зупиняють підготовчий етап.
+* *Number of Threads (users):* `1`
+** Виконується одним потоком.
+* *Ramp-up period (seconds):* `1`
+** Швидкий старт.
+* *Loop Count:* `1`
+** Виконується лише один раз.
+
+[#create-slurp-sampler]
+==== Create slurp (JSR223 Sampler)
+
+Цей *JSR223 Sampler* створює глобальну функцію `slurp` (використовуючи `JsonSlurper` з Groovy), яка дозволяє легко парсити JSON-рядки. Ця функція зберігається у `props` (глобальні властивості JMeter), що робить її доступною для всіх потоків та Test Fragment-ів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[JSR223 Sampler]
+
+image:testing:jmeter-methodology/async-update/145123739.jpg[]
+
+**Значення для Create slurp:**
+
+* *Name:* `Create slurp`
+* *Language:* `groovy`
+* *Script:*
++
+[source,groovy]
+----
+import groovy.json.JsonSlurper
+
+def slurp = { text ->
+    new JsonSlurper().parseText(text.toString())
+}
+
+props.put('slurp', slurp)
+SampleResult.setIgnore()
+----
+
+[#tg-test]
+=== TG_Test (Thread Group)
+
+Ця група потоків відповідає за виконання основного сценарію навантаження, включаючи авторизацію, ініціацію бізнес-процесу, асинхронне очікування його завершення та вихід із системи.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Threads (Users)] -> kbd:[Thread Group]
+
+image:testing:jmeter-methodology/async-update/145123815.jpg[]
+
+**Значення для TG_Test:**
+
+* *Name:* `TG_Test`
+* *Action to be taken after a Sample error:* `Start next loop`
+** Якщо якийсь запит завершився помилкою, поточний потік переходить до наступної ітерації.
+* *Number of Threads (users):* `${threads}`
+** Визначає кількість паралельних потоків, що імітують користувачів. Значення береться зі змінної `threads`.
+* *Ramp-up period (seconds):* `${rampUp}`
+** Час, за який стартують усі потоки. Значення береться зі змінної `rampUp`.
+* *Loop Count:* `-1` (Infinite)
+** Кожен потік виконує ітерації доки не закінчаться дані з CSV або не буде досягнуто умови зупинки.
+
+[#cookie-manager]
+==== Cookie Manager (Clear Iteration)
+
+*Cookie Manager* керує куками HTTP-запитів. Налаштування `Clear Each Iteration` гарантує, що для кожної нової ітерації (нового користувача) сесія починається з чистого аркуша, без куків попереднього користувача.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[HTTP Cookie Manager]
+
+image:testing:jmeter-methodology/async-update/145123909.jpg[]
+
+**Значення для Cookie Manager:**
+
+* *Name:* `Cookie Manager (Clear Iteration)`
+* *Clear cookies each iteration:* `true`
+
+[#defaults-officer-portal]
+==== Defaults - Officer Portal (HTTP Request Defaults)
+
+Цей *HTTP Request Defaults* встановлює базові налаштування для всіх HTTP-запитів, що знаходяться в цій Thread Group. Це допомагає уникнути дублювання інформації (протокол, хост) у кожному окремому запиті.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[HTTP Request Defaults]
+
+image:testing:jmeter-methodology/async-update/145123944.jpg[]
+
+**Значення для Defaults - Officer Portal:**
+
+* *Name:* `Defaults - Officer Portal`
+* *Protocol:* `${protocol}`
+* *Server Name or IP:* `${host}`
+* *Content encoding:* `UTF-8`
+* *Implementation:* `HttpClient4`
+
+[#auth-module-controller-tg]
+==== Auth (Module Controller)
+
+Цей *Module Controller* викликає `Test Fragment`, який відповідає за повний цикл авторизації користувача на офіцерському порталі.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+image:testing:jmeter-methodology/async-update/145124009.jpg[]
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF Auth Common`.
+
+[NOTE]
+Детальний опис логіки авторизації дивіться у <<#tf-auth-common, розділі "TF Auth Common (Test Fragment)">>.
+
+[#initiator-start-bp-module-controller]
+==== Initiator Start BP (Module Controller)
+
+Цей *Module Controller* викликає `Test Fragment`, який відповідає за ініціацію бізнес-процесу та асинхронне очікування його завершення.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF Main Process`.
+
+[NOTE]
+Детальний опис логіки основного бізнес-процесу дивіться у <<#tf-main-process, розділі "TF Main Process (Test Fragment)">>.
+
+[#initiator-logout-module-controller]
+==== Initiator Logout (Module Controller)
+
+Цей *Module Controller* викликає `Test Fragment`, який відповідає за вихід користувача із системи та очищення сесії.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF_Logout`.
+
+[NOTE]
+Детальний опис логіки виходу з системи дивіться у <<#tf-logout, розділі "TF_Logout (Test Fragment)">>.
+
+[#view-results-tree]
+=== View Results Tree
+
+Цей слухач (Listener) використовується для фіксації помилок при виконанні сценарію. Він дозволяє логувати деталі кожного запиту та відповіді, включаючи заголовки, тіло та коди статусів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[View Results Tree]
+
+*Налаштування шляху для збереження помилок*
+
+*Filename:* `${errorLogPath}`
+
+[WARNING]
+====
+Обов'язково включайте опцію Log/Display Only: Errors перед запуском в non-gui режимі. Ця опція буде логувати тільки помилки.
+====
+
+*Конфігурація Sample Result Save Configuration*
+
+image:testing:jmeter-methodology/async-update/145124157.jpg[]
+
+[#aggregate-report]
+=== Aggregate Report
+
+Слухач, який агрегує результати виконання у вигляді таблиці, показуючи загальну кількість запитів, середній час відгуку, відсоток помилок та пропускну здатність (Throughput).
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Aggregate Report]
+
+image:testing:jmeter-methodology/async-update/145124230.jpg[]
+
+[#backend-listener]
+=== Backend Listener
+
+Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у нашому випадку — InfluxDB.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Backend Listener]
+
+image:testing:jmeter-methodology/async-update/145124251.jpg[]
+
+[TIP]
+Цей елемент повинен знаходитися безпосередньо в корені Test Plan, щоб перехоплювати метрики з усіх Thread Group (включно з підготовчими).
+
+*Основні налаштування Backend Listener*
+
+|===
+|Name |Value
+
+|*Backend Listener implementation*
+|`org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient`
+
+|*influxdbUrl:*
+|`http://influxdb:8086/write?db=jmeter`
+
+|*application:*
+|`${application}` (Ця змінна з User Defined Variables зв'язує результати тесту з конкретним прогоном у Grafana).
+
+|*measurement:*
+|`jmeter`
+
+|*summaryOnly*
+|`false`
+
+|*samplersRegex*
+|`.*`
+
+|*percentiles*
+|`90;95;99`
+
+|*testTitle*
+|`${application}-main-build_${__P(BUILD_ID,unknown)}`
+
+|*eventTags*
+|`${application}, main-test`
+|===
+
+[#tf-auth-common]
+=== TF Auth Common (Test Fragment)
+
+Цей *Test Fragment* інкапсулює загальну логіку авторизації користувача на офіцерському порталі, включаючи отримання редиректів, обробку куків та отримання токенів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+*Кроки для створення цього тестового фрагмента відтворені в попередніх розділах:*
+
+* xref:testing:performance-testing/jmeter-methodology/scenarios/unregistered-role.adoc#tf-auth-common[Реєстрація користувача (UNREGISTERED)]
+* xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#tf-auth-common[Реєстрація складної сутності]
+
+[#tf-logout]
+=== TF_Logout (Test Fragment)
+
+Цей *Test Fragment* відповідає за вихід користувача із системи та очищення всіх пов'язаних змінних та куків.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+*Кроки для створення цього тестового фрагмента відтворені в попередніх розділах:*
+
+* xref:testing:performance-testing/jmeter-methodology/scenarios/unregistered-role.adoc#tf-logout[Реєстрація користувача (UNREGISTERED)]
+* xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#tf-logout[Реєстрація складної сутності]
+
+[#tf-dashboard]
+=== TF Dashboard (Test Fragment)
+
+Цей *Test Fragment* відповідає за отримання даних дашборду та витягнення XSRF токена, який необхідний для подальших POST-запитів.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+*Кроки для створення цього тестового фрагмента відтворені в попередніх розділах:*
+
+* xref:testing:performance-testing/jmeter-methodology/scenarios/unregistered-role.adoc#tf-dashboard[Реєстрація користувача (UNREGISTERED)]
+* xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#tf-dashboard[Реєстрація складної сутності]
+
+[#tf-main-process]
+=== TF Main Process (Test Fragment)
+
+Цей *Test Fragment* інкапсулює основний бізнес-процес, який виконує офіцер на порталі після авторизації. Він включає ініціацію процесу та асинхронне очікування його завершення.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+image:testing:jmeter-methodology/async-update/145135003.jpg[]
+
+[#header-manager-main-process]
+==== HTTP Header Manager
+Встановлює заголовки `X-XSRF-TOKEN` та `Cookie` для всіх запитів у цьому фрагменті.
+
+**Headers:**
+[cols="1,1", options="header"]
+|===
+| Name | Value
+| `X-XSRF-TOKEN` | `${xsrfToken}`
+| `Cookie` | `session=${authSession}; ${lbCookie}; XSRF-TOKEN=${xsrfToken}`
+|===
+
+[#step-1]
+==== Step 1 (Simple Controller)
+Перший крок бізнес-процесу: ініціація процесу.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Simple Controller]
+
+***** *userinfo (Module Controller)*
++
+Викликає *Test Fragment* для отримання інформації про користувача.
++
+image:testing:jmeter-methodology/async-update/145135054.jpg[]
++
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `User info`.
+
+***** *Pause (Test Action)*
++
+Пауза для імітації реальної поведінки користувача.
++
+image:testing:jmeter-methodology/async-update/145135132.jpg[]
+
+****** *Uniform Random Timer*
++
+Додає випадкову затримку.
++
+image:testing:jmeter-methodology/async-update/145135157.jpg[]
++
+*Delay:* `2000`
++
+*Random Delay Maximum:* `1000`
+
+***** *start (HTTP Request)*
++
+Запускає новий екземпляр бізнес-процесу за його ID (`bpId`).
++
+image:testing:jmeter-methodology/async-update/145135228.jpg[]
++
+*Method:* `POST`
++
+*Path:* `/officer/api/user-process-management/process-definition/${bpId}/start`
+
+****** *Extract process instance id (JSON PostProcessor)*
++
+*JSON PostProcessor* витягує ID запущеного екземпляра процесу (`processInstanceId`) з JSON-відповіді.
++
+image:testing:jmeter-methodology/async-update/145135304.jpg[]
++
+**Отримання `processInstanceId`:**
+
+* *Apply to:* `Main sample only`
+* *Names of created variables:* `processInstanceId`
+* *JSON Path expressions:* `$.id`
+* *Match No.:* `1`
+
+****** *HTTP Header Manager*
++
+Цей *HTTP Header Manager* додає `X-XSRF-TOKEN` до запиту.
++
+image:testing:jmeter-methodology/async-update/145135339.jpg[]
++
+**Headers:**
++
+[cols="1,1", options="header"]
+|===
+| Name | Value
+| `X-XSRF-TOKEN` | `${xsrfToken}`
+|===
+
+****** *JSR223 PreProcessor*
++
+Цей *JSR223 PreProcessor* оновлює `xsrfToken` у змінних JMeter, витягуючи його з `Cookie Manager`. Це необхідно, оскільки XSRF токен може змінюватися після деяких запитів.
++
+image:testing:jmeter-methodology/async-update/145135404.jpg[]
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+import org.apache.jmeter.protocol.http.control.CookieManager
+
+CookieManager manager = sampler.getCookieManager()
+if (manager != null) {
+    for (int i = 0; i < manager.getCookieCount(); i++) {
+        if (manager.get(i).getName().equals("XSRF-TOKEN")) {
+            def latestToken = manager.get(i).getValue()
+            vars.put("xsrfToken", latestToken)
+            log.info("=== [XSRF SYNC] Оновлено токен із Cookie Manager: " + latestToken)
+            break
+        }
+    }
+} else {
+    log.warn("Cookie Manager не знайдено!")
+}
+----
+
+***** *lightweight (HTTP Request)*
++
+Запит для отримання легкої версії завдань, пов'язаних з щойно запущеним процесом.
++
+*Method:* `GET`
++
+*Path:* `${userTaskManagerPath}/task/lightweight`
++
+*Parameters:*
++
+[cols="1,1", options="header"]
+|===
+| Name | Value
+| `firstResult` | `0`
+| `maxResults` | `10`
+| `sortBy` | `id`
+| `sortOrder` | `desc`
+| `rootProcessInstanceId` | `${processInstanceId}`
+|===
+
+***** *runtime-process-instances (HTTP Request)*
++
+Запит для отримання екземплярів процесів. Використовується для перевірки стану процесу.
++
+*Method:* `GET`
++
+*Path:* `/api/runtime/process-instances`
++
+*Parameters:*
++
+[cols="1,1", options="header"]
+|===
+| Name | Value
+| `offset` | `0`
+| `limit` | `11`
+| `sort` | `desc(startTime)`
+|===
+
+****** *Get resp length (JSON PostProcessor)*
++
+*JSON PostProcessor* витягує всю JSON-відповідь у змінну `arrayLength`. Це дозволяє перевірити, чи є екземпляри процесів.
++
+**Отримання `arrayLength`:**
+
+* *Apply to:* `Main sample only`
+* *Names of created variables:* `arrayLength`
+* *JSON Path expressions:* `$`
+* *Match No.:* `1`
+* *Default Value:* `[]`
+
+***** *While Controller*
++
+Цей *While Controller* забезпечує асинхронне очікування завершення процесу. Він продовжує виконувати вкладені запити, доки змінна `arrayLength` не стане порожньою (тобто, поки процес не зникне зі списку активних).
++
+image:testing:jmeter-methodology/async-update/145135524.jpg[]
++
+*Condition (function or variable):*
++
+`${__groovy(vars.get('arrayLength') != '[]')}`
+
+****** *Pause (Test Action)*
++
+Пауза між спробами опитування стану процесу.
+
+******* *Uniform Random Timer*
++
+Додає випадкову затримку.
++
+*Delay:* `10000` (10 секунд)
++
+*Random Delay Maximum:* `3000` (додатково до 3 секунд)
+
+****** *runtime-process-instances (HTTP Request)*
++
+Повторний запит для отримання екземплярів процесів для перевірки стану.
++
+*Method:* `GET`
++
+*Path:* `/api/runtime/process-instances`
++
+*Parameters:*
++
+[cols="1,1", options="header"]
+|===
+| Name | Value
+| `offset` | `0`
+| `limit` | `11`
+| `sort` | `desc(startTime)`
+|===
+
+******* *Get resp length (JSON PostProcessor)*
++
+*JSON PostProcessor* повторно витягує всю JSON-відповідь у змінну `arrayLength` для оновлення умови `While Controller`.
++
+**Отримання `arrayLength`:**
+
+* *Apply to:* `Main sample only`
+* *Names of created variables:* `arrayLength`
+* *JSON Path expressions:* `$`
+* *Match No.:* `1`
+* *Default Value:* `[]`
+
+[#user-info]
+=== User info (Test Fragment)
+
+Цей *Test Fragment* відповідає за отримання детальної інформації про поточного авторизованого користувача.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+image:testing:jmeter-methodology/async-update/145135656.jpg[]
+
+*Кроки для створення цього тестового фрагмента відтворені в попередніх розділах:*
+
+* xref:testing:performance-testing/jmeter-methodology/scenarios/unregistered-role.adoc#user-info[Реєстрація користувача (UNREGISTERED)]
+* xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#user-info[Реєстрація складної сутності]
