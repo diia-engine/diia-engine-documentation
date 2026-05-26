@@ -153,22 +153,22 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 Загальний флоу підготовки виглядає наступним чином:
 
 1. **Генерація тестових даних (Gradle):** Запускається відповідна Gradle-таска, яка генерує масив тестових користувачів. Результатом виконання цього кроку є створення архіву `mock-users.tar.gz`.
-> !!! 🔗 <<лінк на сторінку: генерація тестових даних та робота з Gradle>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-data-generation[Генерація тестових даних через Gradle та Groovy]
 
 2. **Оновлення мок-сервісу:** Згенеровані дані використовуються для патчингу `ConfigMap` мок-сервісу, щоб зовнішні інтеграції під час тесту працювали коректно.
-> !!! 🔗 <<лінк на сторінку: оновлення ConfigMap для мок-сервісів>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-patch-configmap[Patch ConfigMap у тестовому середовищі]
 
 3. **Очищення середовища Keycloak (JMeter):** Запускається допоміжний `jmx` скрипт, який видаляє старих тестових користувачів у Keycloak для уникнення конфліктів унікальності (наприклад, дублікатів email або РНОКПП).
-> !!! 🔗 <<лінк на сторінку: jmx скрипт видалення користувачів>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#jmxdeletekeyclokofficers-task[jmxDeleteKeycloakOfficers]
 
 4. **Створення користувачів у Keycloak (JMeter):** Запускається інший допоміжний `jmx` скрипт, який виконує масове створення нових користувачів-чиновників (officers) у Keycloak на основі згенерованих раніше даних.
-> !!! 🔗 <<лінк на сторінку: jmx скрипт створення користувачів>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#jmxdeletekeyclokofficers-task[jmxCreateKeycloakOfficers]
 
 5. **Формування плану виконання (Execution Plan):** На основі створених користувачів генерується файл `execution-plan.csv`, який буде використовуватися головним тестом для розподілу навантаження між потоками.
-> !!! 🔗 <<лінк на сторінку: генерація execution-plan.csv>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#groovygenerateexecutionplan-task[groovyGenerateExecutionPlan]
 
 6. **Запуск головного тесту:** Тільки після успішного виконання всіх вищезазначених кроків пайплайн запускає основний навантажувальний скрипт.
-> !!! 🔗 <<лінк на сторінку: моделювання та запуск головного jmx тесту>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-jmeter-run[Запуск основного JMeter Test Plan]
 
 [#bp-config-and-rbac-setup]
 == Конфігурація бізнес-процесів та RBAC доступ

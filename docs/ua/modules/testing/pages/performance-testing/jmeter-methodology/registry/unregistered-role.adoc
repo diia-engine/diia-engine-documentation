@@ -19,11 +19,11 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 1. **Keycloak:**
 - Тестові користувачі будуть згенеровані за допомогою Gradle task.
 
-> !!! 🔗 <<лінк на сторінку інструкцій з Gradle task>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-data-generation[Генерація тестових даних через Gradle та Groovy]
 
 - Тестові користувачі будуть завантажені в Keycloak за допомогою JMeter feature-unregistered-role.jmx
 
-> !!! 🔗 <<лінк на сторінку інструкцій з моделюванням тесту>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-jmeter-run[Запуск основного JMeter Test Plan]
 
 [#bp-config-and-rbac-setup]
 == Конфігурація бізнес-процесів та RBAC доступ

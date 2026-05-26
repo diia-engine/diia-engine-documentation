@@ -126,19 +126,19 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 Оскільки ініціатором масового оновлення є чиновник (Officer), перед запуском основного тесту пайплайн проходить наступні кроки для підготовки середовища:
 
 1. **Генерація користувачів (Gradle):** Виконання таски для генерації необхідної кількості унікальних чиновників.
-> !!! 🔗 <<лінк на сторінку: генерація тестових даних та робота з Gradle>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-data-generation[Генерація тестових даних через Gradle та Groovy]
 
 2. **Оновлення мок-сервісу:** Патчинг `ConfigMap` мок-сервісу для коректної інтеграції з нашими згенерованими даними.
-> !!! 🔗 <<лінк на сторінку: оновлення ConfigMap для мок-сервісів>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-patch-configmap[Patch ConfigMap у тестовому середовищі]
 
 3. **Очищення середовища Keycloak (JMeter):** Видалення попередніх тестових користувачів через `jmx` скрипт для запобігання конфліктам.
-> !!! 🔗 <<лінк на сторінку: jmx скрипт видалення користувачів>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#jmxdeletekeyclokofficers-task[jmxDeleteKeycloakOfficers]
 
 4. **Створення користувачів у Keycloak (JMeter):** Завантаження нових чиновників у Keycloak через відповідний `jmx` скрипт.
-> !!! 🔗 <<лінк на сторінку: jmx скрипт створення користувачів>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#jmxdeletekeyclokofficers-task[jmxCreateKeycloakOfficers]
 
 5. **Запуск головного тесту:** Тільки після завершення підготовки запускається основний JMX скрипт для генерації асинхронного навантаження.
-> !!! 🔗 <<лінк на сторінку: моделювання та запуск головного jmx тесту>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-jmeter-run[Запуск основного JMeter Test Plan]
 
 [#bp-config-and-rbac-setup]
 == Конфігурація бізнес-процесів та RBAC доступ

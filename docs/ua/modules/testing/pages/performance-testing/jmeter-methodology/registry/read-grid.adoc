@@ -33,7 +33,7 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 
 Згенерований масив даних передаватиметься єдиним великим пейлоадом. Це дозволяє **імітувати ручне заповнення великої кількості рядків** у компоненті Edit Grid реальним користувачем та створює цільове навантаження на сервіс `form-submission-validation`.
 
-> !!! 🔗 <<лінк на сторінку: генерація масивів даних у JMX та робота з Gradle task>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-data-generation[Генерація тестових даних через Gradle та Groovy]
 
 [#integration-prerequisites]
 == Інтеграційні передумови та пайплайн
@@ -41,19 +41,19 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 Тестування ініціюється від імені чиновника (Officer). Пайплайн підготовки до запуску основного тесту є стандартизованим і складається з наступних кроків:
 
 1. **Генерація користувачів (Gradle):** Створення пулу унікальних тестових чиновників (officers).
-> !!! 🔗 <<лінк на сторінку: генерація тестових даних та робота з Gradle>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-data-generation[Генерація тестових даних через Gradle та Groovy]
 
 2. **Оновлення мок-сервісу:** Патчинг `ConfigMap` мок-сервісу згенерованими даними для забезпечення стабільної інтеграції.
-> !!! 🔗 <<лінк на сторінку: оновлення ConfigMap для мок-сервісів>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-patch-configmap[Patch ConfigMap у тестовому середовищі]
 
 3. **Очищення середовища Keycloak (JMeter):** Видалення існуючих тестових користувачів у Keycloak для уникнення дублікатів.
-> !!! 🔗 <<лінк на сторінку: jmx скрипт видалення користувачів>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#jmxdeletekeyclokofficers-task[jmxDeleteKeycloakOfficers]
 
 4. **Створення користувачів у Keycloak (JMeter):** Масове створення підготовлених чиновників у Keycloak.
-> !!! 🔗 <<лінк на сторінку: jmx скрипт створення користувачів>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#jmxdeletekeyclokofficers-task[jmxCreateKeycloakOfficers]
 
 5. **Запуск головного тесту:** Виконання JMX-сценарію, який надсилає масивні пейлоади в ініційований бізнес-процес.
-> !!! 🔗 <<лінк на сторінку: моделювання та запуск головного jmx тесту>>
+xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-jmeter-run[Запуск основного JMeter Test Plan]
 
 [#bp-config-and-rbac-setup]
 == Конфігурація бізнес-процесів та RBAC доступ
