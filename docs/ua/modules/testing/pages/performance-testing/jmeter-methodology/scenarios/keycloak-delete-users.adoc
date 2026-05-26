@@ -177,6 +177,108 @@ image:testing:jmeter-methodology/delete-keycloak-users/142091923.jpg[]
 [NOTE]
 Детальний опис того, як саме налаштований запит за токеном і як обробляється відповідь, дивіться у <<#test-fragment-get-token, розділі "Get token (Test Fragment)">>.
 
+[#while-controller-fetch-users]
+==== While Controller (Збір користувачів)
+
+Використовується для циклічного збору ID користувачів з Keycloak, доки не будуть отримані всі користувачі, що відповідають критеріям пошуку.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[While Controller]
+
+image:testing:jmeter-methodology/delete-keycloak-users/146111805.jpg[]
+
+*Condition (function or variable):*
+
+`${__groovy(vars.get('keepFetching') == 'true')}`
+
+Цикл триватиме доти, доки змінна `keepFetching` має значення `true`.
+
+***** *Counter*
++
+*Counter* — це конфігураційний елемент, який генерує послідовні числа, починаючи з заданого стартового значення. У цьому випадку він використовується для керування параметром `offset` при пагінації запитів до Keycloak.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[Counter]
++
+image:testing:jmeter-methodology/delete-keycloak-users/146111850.jpg[]
++
+*Start:* `0`
++
+*Increment:* `1000`
++
+*Reference Name:* `offset`
++
+*Track Counter Independently for each User:* `false`
+
+***** *Search users (HTTP Request)*
++
+Цей запит виконує пошук користувачів у Keycloak за певними критеріями та з використанням пагінації.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[HTTP Request]
++
+image:testing:jmeter-methodology/delete-keycloak-users/146111935.jpg[]
++
+*Method:* `GET`
++
+*Path:* `/auth/admin/realms/${realm}/users`
++
+*Parameters:*
+** `search`: `perf-test-officer-` (префікс для пошуку тестових користувачів)
+
+** `first`: `${offset}` (поточне зміщення для пагінації)
+** `max`: `1000` (максимальна кількість користувачів за запит)
+** `briefRepresentation`: `true` (отримати скорочене представлення користувачів)
+
+****** *JSON Extractor (fetchedIds)*
++
+*JSON Extractor* використовується для витягнення ID користувачів з JSON-відповіді.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Post-Processor] -> kbd:[JSON Extractor]
++
+image:testing:jmeter-methodology/delete-keycloak-users/146112043.jpg[]
++
+*Names of created variables:* `fetchedIds`
++
+*JSON Path expressions:* `$[*].id`
++
+*Match No.:* `-1` (витягти всі відповідності)
+
+****** *JSR223 PostProcessor*
++
+Цей *JSR223 PostProcessor* обробляє отримані ID користувачів, додає їх до глобальної черги `usersQueue` та перевіряє, чи потрібно продовжувати збір користувачів.
++
+image:testing:jmeter-methodology/delete-keycloak-users/146112137.jpg[]
++
+*Language:* `groovy`
++
+*Script:*
++
+[source,groovy]
+----
+def countStr = vars.get("fetchedIds_matchNr")
+int count = countStr != null ? countStr.toInteger() : 0
+def queue = props.get("usersQueue")
+
+if (count > 0) {
+    for (int i = 1; i <= count; i++) {
+        queue.add(vars.get("fetchedIds_" + i))
+    }
+    log.info("=== Додано в чергу: " + count + " юзерів. Загалом у черзі: " + queue.size())
+}
+
+// Якщо Keycloak повернув менше 1000 юзерів (або 0) — ми дійшли до кінця, зупиняємо While Controller
+if (count < 1000) {
+    vars.put("keepFetching", "false")
+    log.info("=== Збір завершено. Загальна кількість для видалення: " + queue.size())
+}
+----
+
+****** *HTTP Header Manager*
++
+Необхідно додати `HTTP Header Manager` як дочірній елемент до `Search users`, щоб передати токен авторизації.
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${access_token}`
+
 [#thread-group]
 === Thread Group
 
