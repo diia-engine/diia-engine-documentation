@@ -23,6 +23,10 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 └── gradle.properties     # Глобальні змінні та властивості проєкту
 ----
 
+****
+https://github.com/diia-engine/perf-tests-methodology[*Github:* Репозиторій з прикладами тестів і інфраструктурою]
+****
+
 [#base-dirs]
 == Автоматизація та пайплайни (CI/CD Jenkins)
 
