@@ -85,6 +85,7 @@ image:testing:jmeter-methodology/nested-entity/145102016.jpg[]
 * *Delimiter:* `,`
 * *Variable Names:* `userName,lastName,firstName,secondName,birthday,orderType,orderNumber,orderDate,file`
 * *Ignore first line:* `false` (оскільки файл не містить заголовка)
+* *Allow quoted data:* `false` (значення в лапках не обробляються спеціально)
 * *Recycle on EOF:* `false` (не починати знову після закінчення файлу)
 * *Stop Thread on EOF:* `true` (зупинити потік, коли дані закінчаться)
 * *Sharing Mode:* `All threads` (кожен потік отримує унікальні дані)
@@ -187,7 +188,6 @@ image:testing:jmeter-methodology/nested-entity/145111925.jpg[]
 * *Protocol:* `${protocol}`
 * *Server Name or IP:* `${host}`
 * *Content encoding:* `UTF-8`
-* *Implementation:* `HttpClient4`
 
 [#auth-module-controller-tg]
 ==== Auth (Module Controller)
@@ -259,7 +259,7 @@ image:testing:jmeter-methodology/nested-entity/145112224.jpg[]
 [#backend-listener]
 === Backend Listener
 
-Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у нашому випадку — InfluxDB.
+Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у даному випадку — InfluxDB.
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Backend Listener]
 
@@ -275,6 +275,12 @@ image:testing:jmeter-methodology/nested-entity/145112252.jpg[]
 
 |*Backend Listener implementation*
 |`org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient`
+
+|*Async Queue size*
+|`5000`
+
+|*influxdbMetricsSender*
+|`org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender`
 
 |*influxdbUrl:*
 |`http://influxdb:8086/write?db=jmeter`
@@ -337,6 +343,7 @@ image:testing:jmeter-methodology/nested-entity/145112505.jpg[]
 * *Default Value:* `NO_AUTH_URL`
 
 ***** *RegEx - OIDC State*
+***** *RegEx - OIDC State*
 +
 *Regular Expression Extractor* витягує параметр `state` з URL для авторизації.
 +
@@ -349,7 +356,6 @@ image:testing:jmeter-methodology/nested-entity/145112547.jpg[]
 * *Name of created variable:* `state`
 * *Regular Expression:* `state=([\w\.\-]+)`
 * *Template:* `$1$`
-* *Match No.:* `1`
 * *Default Value:* `NO_STATE`
 
 ***** *RegEx - Redirect URI (Raw)*

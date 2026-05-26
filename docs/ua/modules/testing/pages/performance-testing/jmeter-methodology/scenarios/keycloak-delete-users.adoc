@@ -11,7 +11,7 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 
 Схема роботи сценарію:
 
-. *Авторизація:* Отримання Bearer Token.
+. *Авторизація:* Отримання Bearer Token через Keycloak Admin API для виконання адміністративних операцій.
 . *Підготовка черги на видалення:* Ініціалізація і заповнення черги ID користувачів на видалення.
 . *Видалення:* Виконання `DELETE` запиту до Keycloak Admin API для кожного цільового користувача.
 
@@ -41,20 +41,21 @@ image:testing:jmeter-methodology/delete-keycloak-users/141141744.jpg[]
 [cols="1,1", options="header"]
 |===
 | Name | Value
-| keycloack_url | ${__P(KEYCLOAK_URL,platform-keycloak.apps.krrt-two.ncr.gov.ua)}
-| protocol | ${__P(PROTOCOL,https)}
-| port | ${__P(PORT,443)}
-| officer_client_id | ${__P(LOGIN,bpms-user-management)}
-| officer_client_secret | ${__P(PASSWORD,<Secret для bpms-user-management>)}
-| officer_realm | ${__P(OFFICER_REALM,ck-198-officer-portal)}
-| application | ${__P(APPLICATION, UNDEFINED)}
+| keycloack_url | `${__P(KEYCLOAK_URL,platform-keycloak.apps.krrt-two.ncr.gov.ua)}`
+| protocol | `${__P(PROTOCOL,https)}`
+| port | `${__P(PORT,443)}`
+| officer_client_id | `${__P(LOGIN,bpms-user-management)}`
+| officer_client_secret | `${__P(PASSWORD,<Secret для bpms-user-management>)}`
+| user_count | `${__P(KEYCLOAK_USERS_COUNT_PER_REALM,1)}`
+| officer_realm | `${__P(OFFICER_REALM,ck-198-officer-portal)}`
+| application | `${__P(APPLICATION, UNDEFINED)}`
 |===
 
 [NOTE]
 ====
-`+${__P(KEY, DEFAULT)}+` — це функція JMeter: `+__P = JMeter property+` (параметр запуску JVM / Jenkins / CLI).
-
-Якщо property не заданий, використовується DEFAULT.
+`+${__P(KEY, DEFAULT)}+` — це функція JMeter, яка використовується для читання параметрів, які передаються JMeter під час запуску (через JVM, Jenkins або CLI), де
+KEY — назва параметра, який ви передаєте JMeter при запуску.
+DEFAULT — значення, яке буде використано, якщо параметр не був переданий.
 ====
 [TIP]
 ====
@@ -279,6 +280,139 @@ if (count < 1000) {
 +
 *Authorization:* `Bearer ${access_token}`
 
+[#while-controller]
+==== While controller
+
+Використовується для підтримки безперервного циклу виконання запитів, доки черга користувачів не стане порожньою.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[While Controller]
+
+*Condition (function or variable):*
+
+`${__groovy(vars.get('keepFetching') == 'true')}`
+
+Цикл триватиме доти, доки локальна змінна потоку `keepFetching == true`.
+
+* **Counter**
++
+Цей елемент використовується для безпечного (thread‑safe) отримання індексу наступного користувача з глобальної черги. Кожен потік отримує своє значення лічильника, що дозволяє уникнути ситуацій, коли два потоки намагаються видалити одного й того ж користувача.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Config Element] -> kbd:[Counter]
++
+- *Starting value:* 0
++
+Початкове значення лічильника: перша ітерація While Controller почне роботу з елемента черги з індексом 0.
++
+- *Increment:* 1000
++
+Значення, на яке збільшується лічильник після кожного використання. Інкремент 1000 гарантує, що кожен потік отримує свій унікальний діапазон індексів, навіть якщо виконується багато ітерацій.
++
+- *Exported Variable Name:* offset
++
+Змінна, в яку JMeter записує поточне значення лічильника.
+
+* **Search users (HTTP Request)**
++
+Виконує пошук користувачів у Keycloak за заданими параметрами, щоб отримати список облікових записів. Отримані ідентифікатори користувачів передаються на наступний етап сценарію — видалення.
++
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[HTTP Request]
++
+*Method:* `GET`
++
+*Path:* `/auth/admin/realms/${officer_realm}/users`
++
+*Follow redirects:* `true`
++
+*Use KeepAlive:* `true`
++
+У вкладці Parameters передаються:
+
+- *search:* `perf-test-officer-`
++
+Шукає всіх користувачів, у яких username починається з цього префікса.
++
+- *first:* `${offset}`
++
+Індекс першого користувача, з якого починається вибірка, генерується Counter‑ом, щоб кожен потік працював зі своєю частиною списку.
++
+- *max:* `1000`
++
+Максимальна кількість користувачів, яку Keycloak поверне за один запит.
++
+- *briefRepresentation:* `true`
++
+Повертає скорочену інформацію про користувачів, що зменшує навантаження на Keycloak і прискорює тест.
++
+
+[TIP]
+====
+*Use KeepAlive* використовує постійне HTTP з’єднання, що зменшує затримки та навантаження.
+
+*Follow redirects* дозволяє JMeter автоматично переходити за редіректами, якщо вони виникнуть.
+====
+
+[#SON-Extractor]
+* **JSON Extractor**
++
+JSON Extractor використовується для того, щоб витягнути всі ID користувачів з JSON, які були знайдені попереднім запитом Search users (HTTP Request).
++
+**Отримання `списку ID користувачів`:**
+
+- *Apply to:* `Main sample only`
++
+Обробляється тільки основна відповідь HTTP-запиту.
++
+- *Names of created variables:* `fetchedIds`
++
+Це ім’я змінної, у яку JMeter збере всі знайдені ID.
+- *JSON Path expressions:* `$[*].id`
++
+Це шлях до всіх полів id у масиві JSON.
+- *Match No. (0 for Random):* `-1`
++
+Значення -1 означає витягнути всі збіги, а не один.
+
+[#JSR223-PostProcessor]
+* **JSR223 PostProcessor**
++
+JSR223 PostProcessor збирає всі знайдені ID користувачів і додає їх у глобальну чергу для подальшого видалення. Він також визначає, коли припинити пошук, керуючи змінною keepFetching, яка зупиняє While Controller.
+
+- Language: groovy
+- Script:
++
+[source,groovy]
+----
+def countStr = vars.get("fetchedIds_matchNr")
+int count = countStr != null ? countStr.toInteger() : 0
+def queue = props.get("usersQueue")
+
+if (count > 0) {
+    for (int i = 1; i <= count; i++) {
+        queue.add(vars.get("fetchedIds_" + i))
+    }
+    log.info("=== Додано в чергу: " + count + " юзерів. Загалом у черзі: " + queue.size())
+}
+
+// Якщо Keycloak повернув менше 1000 юзерів (або 0) — ми дійшли до кінця, зупиняємо While Controller
+if (count < 1000) {
+    vars.put("keepFetching", "false")
+    log.info("=== Збір завершено. Загальна кількість для видалення: " + queue.size())
+}
+----
+
+
+* **HTTP Header Manager**
++
+Необхідно додати `HTTP Header Manager` як дочірній елемент до `Search users`, щоб передати токен авторизації.
++
+*Content-Type:* `application/json`
++
+*Authorization:* `Bearer ${accessToken}`
+
+* **Counter**
++
+Створюється для ізоляції лічильника між різними етапами сценарію. Він не містить власних налаштувань, оскільки використовується як службовий контейнер для майбутнього розширення логіки.
+
 [#thread-group]
 === Thread Group
 
@@ -453,6 +587,9 @@ Backend Listener відповідає за асинхронну передачу
 
 |*Backend Listener implementation*
 |`org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient`
+
+|*influxdbMetricsSender*
+|`org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender`
 
 |*influxdbUrl:*
 |`http://influxdb:8086/write?db=jmeter`

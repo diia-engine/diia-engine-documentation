@@ -7,7 +7,7 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 
 [#overview]
 == Огляд сценарію
-Мета цього сценарію — імітувати поведінку незареєстрованого користувача, який проходить процес авторизації, виконує певні дії на порталі та виходить із системи. Сценарій також включає підготовчі етапи для створення та видалення тестових користувачів.
+Мета цього сценарію — імітувати поведінку незареєстрованого користувача, який проходить процес авторизації, виконує певні дії на порталі та виходить із кабінету. Сценарій також включає підготовчі етапи для створення та видалення тестових користувачів.
 
 Схема роботи сценарію:
 
@@ -42,6 +42,8 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 [IMPORTANT]
 ====
 Оскільки працює два `setUp Thread Group`, JMeter їх запустить одночасно і вони будуть виконуватись паралельно. Щоб забезпечити виконання цих груп потоків чітко послідовно, необхідно в налаштуваннях `Test Plan` увімкнути опцію `*Run Thread Groups consecutively (i.e. one at a time)*`
+
+image:testing:jmeter-methodology/unregistered-role/Unregistered-3.1.jpg[]
 ====
 
 [#user-defined-variables]
@@ -77,9 +79,11 @@ image:testing:jmeter-methodology/unregistered-role/142140300.jpg[]
 
 [NOTE]
 ====
-`+${__P(KEY, DEFAULT)}+` — це функція JMeter: `+__P = JMeter property+` (параметр запуску JVM / Jenkins / CLI).
+`+${__P(KEY, DEFAULT)}+` — це функція JMeter, яка використовується для читання параметрів, які передаються JMeter під час запуску (через JVM, Jenkins або CLI), де
 
-Якщо property не заданий, використовується DEFAULT.
+KEY — назва параметра, який ви передаєте JMeter при запуску.
+
+DEFAULT — значення, яке буде використано, якщо параметр не був переданий.
 ====
 [TIP]
 ====
@@ -178,6 +182,8 @@ SampleResult.setIgnore()
 [TIP]
 ====
 `*vars.put("keepFetching", "true")*` — створюється звичайна локальна змінна потоку. Ця змінна потрібна для керування циклом, наприклад поки `keepFetching == true` -- цикл продовжується.
+
+`*SampleResult.setIgnore()*` використовується, щоб позначити результат виконання елемента як "ігнорований": даний SampleResult не буде врахований у статистиці.
 ====
 
 [#get-token-module-controller]
@@ -238,7 +244,9 @@ image:testing:jmeter-methodology/unregistered-role/142142758.jpg[]
 *Path:* `/auth/admin/realms/${realm}/users`
 +
 *Parameters:*
+
 ** `search`: `perf-test-citizen-` (префікс для пошуку тестових користувачів)
+
 ** `first`: `${offset}` (поточне зміщення для пагінації)
 ** `max`: `1000` (максимальна кількість користувачів за запит)
 ** `briefRepresentation`: `true` (отримати скорочене представлення користувачів)
@@ -323,6 +331,8 @@ image:testing:jmeter-methodology/unregistered-role/142143110.jpg[]
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[While Controller]
 
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.5.1.jpg[]
+
 *Condition (function or variable):*
 
 `${__groovy(props.get('usersQueue') != null && !props.get('usersQueue').isEmpty())}`
@@ -334,6 +344,8 @@ image:testing:jmeter-methodology/unregistered-role/142143110.jpg[]
 Цей скрипт відповідає за безпечне (thread-safe) вилучення наступного ID користувача з глобальної черги та передачу його у змінну потоку для подальшого використання у запиті на видалення.
 +
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Sampler] -> kbd:[JSR223 Sampler]
++
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.5.1.2.jpg[]
 +
 *Language:* `groovy`
 +
@@ -363,6 +375,8 @@ SampleResult.setIgnore()
 +
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[If Controller]
 +
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.5.1.3.jpg[]
++
 *Name*: `If idToDelete is not empty`
 +
 *Expression (must evaluate to true or false):*
@@ -376,6 +390,8 @@ SampleResult.setIgnore()
 Цей контролер перевіряє, чи закінчився термін дії поточного токена доступу, і чи потрібно звернутися до Keycloak за новим.
 +
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[If Controller]
++
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.5.1.4.jpg[]
 +
 *Expression (must evaluate to true or false):*
 +
@@ -393,6 +409,8 @@ SampleResult.setIgnore()
 Якщо попередня умова (`If Controller`) виконується, викликається `Module Controller`, який перенаправляє виконання до існуючого `Test Fragment` для отримання нового токена.
 +
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
++
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.5.1.5.jpg[]
 +
 У вікні налаштувань необхідно розгорнути дерево тест-плану і вибрати цільовий `Test Fragment` -> `Get token`.
 
@@ -412,6 +430,8 @@ image:testing:jmeter-methodology/unregistered-role/142143443.jpg[]
 +
 Необхідно додати `HTTP Header Manager` як дочірній елемент до `Delete user`, щоб передати токен авторизації.
 +
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.5.1.6.jpg[]
++
 *Content-Type:* `application/json`
 +
 *Authorization:* `Bearer ${access_token}`
@@ -419,6 +439,8 @@ image:testing:jmeter-methodology/unregistered-role/142143443.jpg[]
 ******* *JSR223 PreProcessor*
 +
 Логування в консоль.
++
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.5.1.7.jpg[]
 +
 [source,groovy]
 ----
@@ -447,7 +469,7 @@ image:testing:jmeter-methodology/unregistered-role/142143540.jpg[]
 ** Кожен потік виконує ітерації доки не закінчаться дані з CSV або не буде досягнуто умови зупинки.
 
 [#csv-keycloak-users-main]
-==== CSV Data Set Config
+==== CSV Keycloak users (CSV Data Set Config)
 
 *CSV Data Set Config* дозволяє читати дані з CSV-файлу та використовувати їх як змінні у тест-плані.
 
@@ -462,6 +484,7 @@ image:testing:jmeter-methodology/unregistered-role/142143648.jpg[]
 * *Delimiter:* `,`
 * *Variable Names:* `userName,fullName,edrpou,drfo,representative,subjectType,role`
 * *Ignore first line:* `true` (якщо CSV містить заголовок)
+* *Allow quoted data:* `false` (значення в лапках не обробляються спеціально)
 * *Recycle on EOF:* `false` (не починати знову після закінчення файлу)
 * *Stop Thread on EOF:* `true` (зупинити потік, коли дані закінчаться)
 * *Sharing Mode:* `All threads` (кожен потік отримує унікальні дані)
@@ -472,6 +495,8 @@ image:testing:jmeter-methodology/unregistered-role/142143648.jpg[]
 Цей *Module Controller* викликає `Test Fragment`, який відповідає за створення нового користувача в Keycloak.
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.6.2.jpg[]
 
 У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF Create Keycloak user`.
 
@@ -485,6 +510,8 @@ image:testing:jmeter-methodology/unregistered-role/142143648.jpg[]
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
 
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.6.3.jpg[]
+
 У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF Auth Common`.
 
 [NOTE]
@@ -497,6 +524,8 @@ image:testing:jmeter-methodology/unregistered-role/142143648.jpg[]
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
 
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.6.3.jpg[]
+
 У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF Main Process`.
 
 [NOTE]
@@ -508,6 +537,8 @@ image:testing:jmeter-methodology/unregistered-role/142143648.jpg[]
 Цей *Module Controller* викликає `Test Fragment`, який відповідає за вихід користувача із системи та очищення сесії.
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Logic Controller] -> kbd:[Module Controller]
+
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.6.5.jpg[]
 
 У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `TF_Logout`.
 
@@ -548,7 +579,7 @@ image:testing:jmeter-methodology/unregistered-role/142144017.jpg[]
 [#backend-listener]
 === Backend Listener
 
-Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у нашому випадку — InfluxDB.
+Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у даному випадку — InfluxDB.
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Backend Listener]
 
@@ -564,6 +595,9 @@ image:testing:jmeter-methodology/unregistered-role/142144052.jpg[]
 
 |*Backend Listener implementation*
 |`org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient`
+
+|*influxdbMetricsSender*
+|`org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender`
 
 |*influxdbUrl:*
 |`http://influxdb:8086/write?db=jmeter`
@@ -642,7 +676,7 @@ image:testing:jmeter-methodology/unregistered-role/142144202.jpg[]
 
 [#calculate-token-expiry-time]
 ===== Калькуляція терміну дії (JSR223 PostProcessor)
-Keycloak повертає `expires_in` у секундах. Щоб потоки розуміли, коли саме токен "протухне" (і чи потрібно йти за новим), ми обчислюємо абсолютний Unix Timestamp часу його смерті.
+Keycloak повертає `expires_in` у секундах. Щоб потоки розуміли, коли саме токен стане недійсним (і чи потрібно запитувати новий), обчислюється абсолютний Unix Timestamp моменту закінчення дії токену.
 
 - Language: `groovy`
 - Script:
@@ -652,7 +686,7 @@ Keycloak повертає `expires_in` у секундах. Щоб потоки 
 // Беремо секунди життя токена (з JSON Extractor)
 long expiresInSec = vars.get("expiresIn").toLong()
 
-// Розраховуємо час смерті токена (Поточний час + час життя мінус 30 секунд буфера)
+// Розраховуємо час закінчення дії токена (Поточний час + час життя мінус 30 секунд буфера)
 long expiryTimestamp = System.currentTimeMillis() + (expiresInSec * 1000) - 30000
 
 // Зберігаємо цей час у змінну для If Controller
@@ -679,7 +713,7 @@ image:testing:jmeter-methodology/unregistered-role/142144415.jpg[]
 
 *Path:* `/process-list`
 
-***** *Extract Auth URL (Regular Expression Extractor)*
+***** *RegEx - Location Header (Auth URL) (Regular Expression Extractor)*
 +
 Витягує URL для авторизації Keycloak з заголовка `Location`.
 +
@@ -805,6 +839,7 @@ image:testing:jmeter-methodology/unregistered-role/142173528.jpg[]
 
 *Path:* `${authUrl}`
 
+*Use KeepAlive:* `true`
 
 |===
 |Name |Value |URL Encode? |Content-Type |Include Equals?
@@ -895,6 +930,8 @@ image:testing:jmeter-methodology/unregistered-role/142175658.jpg[]
 
 *Path:* `${loginAction}`
 
+*Use KeepAlive:* `true`
+
 *Parameters:*
 
 ** `username`: `${userName}`
@@ -937,8 +974,10 @@ image:testing:jmeter-methodology/unregistered-role/142180150.jpg[]
 *Path:* `/process-list/`
 
 *Parameters:*
-** `code`: `${authCode}`
-** `state`: `${state}`
+
+** *code*: `${authCode}`
+
+** *state*: `${state}`
 
 ***** *HTTP Header Manager*
 +
@@ -1065,6 +1104,10 @@ image:testing:jmeter-methodology/unregistered-role/145091300.jpg[]
 *Names of created variables:* `fullName`
 +
 *JSON Path expressions:* `$.fullName`
++
+*Match No.:* `1`
++
+*JDefault Values:* `EMPTY`
 
 [#tf-main-process]
 === TF Main Process (Test Fragment)
@@ -1100,6 +1143,8 @@ image:testing:jmeter-methodology/unregistered-role/145091533.jpg[]
 *Names of created variables:* `bpId`
 +
 *JSON Path expressions:* `$[0].key`
++
+*Match No.:* `1`
 +
 *Default Values:* `NOT_FOUND`
 
@@ -1146,6 +1191,8 @@ vars.put('isAutoStart', isAutoStart as String)
 ==== If Controller (Автозапуск процесу)
 Виконує дії всередині, якщо `isAutoStart` має значення `true`.
 
+image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.14.4.jpg[]
+
 *Expression (must evaluate to true or false):*
 
 `${__groovy(vars.get('isAutoStart') as Boolean)}`
@@ -1155,7 +1202,7 @@ vars.put('isAutoStart', isAutoStart as String)
 Запускає новий екземпляр бізнес-процесу.
 +
 *Method:* `POST`
-
++
 *Path:* `${userProcessManagementPath}/process-definition/${bpId}/start`
 
 ****** *Extract process instance id (JSON Extractor)*
@@ -1165,6 +1212,12 @@ vars.put('isAutoStart', isAutoStart as String)
 *Names of created variables:* `processInstanceId`
 +
 *JSON Path expressions:* `$.id`
+
+****** *HTTP Header Manager*
++
+Встановлює заголовок `X-Xsrf-Token` для запиту.
++
+*X-Xsrf-Token:* `${xsrfToken}`
 
 ***** *lightweight (HTTP Request)*
 +

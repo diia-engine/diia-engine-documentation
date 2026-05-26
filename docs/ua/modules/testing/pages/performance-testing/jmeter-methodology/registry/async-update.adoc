@@ -147,7 +147,7 @@ xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-jmet
 
 [cols="1,1", options="header"]
 |===
-| Параметр | Опис
+| Параметр | Значення
 | Process Definition ID | `reference-iban-update-process`
 | Process Definition Name | `Async BP update. Оновлення IBAN`
 2+| RBAC

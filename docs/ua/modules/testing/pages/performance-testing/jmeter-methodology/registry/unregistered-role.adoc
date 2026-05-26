@@ -14,7 +14,7 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 [#integration-prerequisites]
 == Інтеграційні передумови
 
-Процес реєстрації передбачає взаємодію із зовнішніми компонентами (Keycloak).
+Процес реєстрації передбачає взаємодію із зовнішнім компонентом Keycloak, який відповідає за автентифікацію користувачів, видачу токенів доступу та перевірку їхньої валідності під час подальших запитів до сервісів Платформи.
 
 1. **Keycloak:**
 - Тестові користувачі будуть згенеровані за допомогою Gradle task.
@@ -28,18 +28,25 @@ xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-jmet
 [#bp-config-and-rbac-setup]
 == Конфігурація бізнес-процесів та RBAC доступ
 
-Платформа повинна мати розгорнуту дефініцію бізнес-процесу реєстрації.
+Платформа повинна мати розгорнуту дефініцію бізнес-процесу реєстрації, яка використовується для автоматичного старту процесу після автентифікації користувача з роллю UNREGISTERED. Нижче наведено ключові параметри, які мають бути налаштовані.
 
-[cols="1,1", options="header"]
+[cols="1,1,1", options="header"]
 |===
-| Параметр | Опис
-| Process Definition ID | `feature-unregistered-role`
-| Process Definition Name | `Процес для перевірки автоматичного старту після автентифікації користувача з роллю UNREGISTERED`
-2+| RBAC
-| bp-auth/citizen.yml | `unregistered-individual`
-| bp-auth/citizen.yml | `unregistered-legal`
-| bp-auth/citizen.yml | `unregistered-entrepreneur`
+| Параметр | Значення | Опис
+| Process Definition ID | `feature-unregistered-role` | Унікальний ідентифікатор процесу, який використовується сервісами Платформи для запуску бізнес‑процесу реєстрації
+| Process Definition Name | `Процес для перевірки автоматичного старту після автентифікації користувача з роллю UNREGISTERED` | Людинозрозуміла назва процесу, що описує його призначення
+3+| RBAC
+| bp-auth/citizen.yml | `unregistered-individual` | Налаштування доступу для фізичних осіб, які ще не зареєстровані
+| bp-auth/citizen.yml | `unregistered-legal` | Налаштування доступу для юридичних осіб у статусі UNREGISTERED
+| bp-auth/citizen.yml | `unregistered-entrepreneur` | Налаштування доступу для ФОП у статусі UNREGISTERED
 |===
+
+[TIP]
+====
+*Process Definition ID* та *Process Definition Name* — це ключові атрибути, за якими Платформа ідентифікує бізнес‑процес та ініціює його виконання після успішної автентифікації користувача.
+
+*RBAC‑налаштування* визначають, які саме ролі мають право запускати цей процес.
+====
 
 [#rbac-setup]
 === Налаштування RBAC

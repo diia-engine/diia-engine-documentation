@@ -177,7 +177,7 @@ xref:testing:performance-testing/jmeter-methodology/pipelines.adoc#pipeline-jmet
 
 [cols="1,1", options="header"]
 |===
-| Параметр | Опис
+| Параметр | Значення
 | Process Definition ID | `feature-nested-entity-test-process`
 | Process Definition Name | `Процес для перевірки збереження декількох сутностей в рамках однієї транзакції - nested entity`
 2+| RBAC

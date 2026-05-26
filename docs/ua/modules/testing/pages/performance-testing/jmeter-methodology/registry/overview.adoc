@@ -69,7 +69,7 @@ data-model/
 2. **Оптимізація:** Запуск `analyze.sql`. Цей крок є критичним — оновлення статистики системних каталогів PostgreSQL після створення таблиць перед створенням індексів чи умов пошуку мінімізує ризики неефективних планів виконання запитів.
 3. **Розширення:** Виконання `addColumns.xml`.
 4. **Формування логіки:** Створення композитних сутностей та налаштування часткових оновлень: `createCompositeEntities.xml` і `createPartialUpdates.xml`. Виконання тільки на операційному інстансі: `context="pub"`.
-5. **Наповнення:** Виконання `populateTables.xml`. Виконання тільки на операційному інстансі і заборона виконання в пайплайні `code-review`.
+5. **Наповнення:** Виконання `populateTables.xml`. Виконання тільки на операційному інстансі і заборона виконання в пайплайні code-review: `context="pub and !code-review"`.
 6. **Індексація:** Створення умов пошуку (`createSearchConditions.xml`).
 
 .Приклад файлу `main-liquibase.xml`
@@ -251,8 +251,8 @@ roles:
 == Підготовка регламента реєстра для тестових сценаріїв
 
 * xref:testing:performance-testing/jmeter-methodology/registry/unregistered-role.adoc[Реєстрація користувача (UNREGISTERED)]
-* xref:testing:performance-testing/jmeter-methodology/registry/nested-entity.adoc[Реєстрація складної сутності]
+* xref:testing:performance-testing/jmeter-methodology/registry/nested-entity.adoc[Реєстрація складної сутності (Nested Entity)]
 * xref:testing:performance-testing/jmeter-methodology/registry/async-update.adoc[Асинхронне оновлення сутностей]
-* xref:testing:performance-testing/jmeter-methodology/registry/read-grid.adoc[Читання великих масивів даних]
-* xref:testing:performance-testing/jmeter-methodology/registry/file-upload.adoc[Завантаження файлів]
-* xref:testing:performance-testing/jmeter-methodology/registry/excerpt-generation.adoc[Генерація витягів]
+* xref:testing:performance-testing/jmeter-methodology/registry/read-grid.adoc[Перегляд великих масивів даних]
+* xref:testing:performance-testing/jmeter-methodology/registry/file-upload.adoc[Завантаження файлів від користувача]
+* xref:testing:performance-testing/jmeter-methodology/registry/excerpt-generation.adoc[Генерація складних витягів]

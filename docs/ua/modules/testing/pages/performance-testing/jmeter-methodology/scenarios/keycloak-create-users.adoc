@@ -42,20 +42,20 @@ image:testing:jmeter-methodology/create-keycloak-users/142121307.jpg[]
 [cols="1,1", options="header"]
 |===
 | Name | Value
-| keycloack_url | ${__P(KEYCLOAK_URL,platform-keycloak.apps.krrt-two.ncr.gov.ua)}
-| officer_user_name | ${__P(REALMS_LIST,perf-test-officer-)}
-| citizen_user_name | ${__P(REALMS_LIST,perf-test-citizen-)}
-| protocol | ${__P(PROTOCOL,https)}
-| port | ${__P(PORT,443)}
-| officer_client_id | ${__P(LOGIN,bpms-user-management)}
-| officer_client_secret | ${__P(PASSWORD,<Secret для bpms-user-management>)}
-| users_count | ${__P(KEYCLOAK_USERS_COUNT_PER_REALM,1)}
-| officer_realm | ${__P(OFFICER_REALM,ck-198-officer-portal)}
-| citizen_realm | ${__P(CITIZEN_REALM,ck-198-citizen-portal)}
-| user_index | 0
-| BaseDir | ${__groovy(org.apache.jmeter.services.FileServer.getFileServer().getBaseDir())}
-| testDataDir | ${__P(TEST_DATA_DIR, ../../../test-data)}
-| application | ${__P(APPLICATION, UNDEFINED)}
+| keycloack_url | `${__P(KEYCLOAK_URL,platform-keycloak.apps.krrt-two.ncr.gov.ua)}`
+| officer_user_name | `${__P(REALMS_LIST,perf-test-officer-)}`
+| citizen_user_name | `${__P(REALMS_LIST,perf-test-citizen-)}`
+| protocol | `${__P(PROTOCOL,https)}`
+| port | `${__P(PORT,443)}`
+| officer_client_id | `${__P(LOGIN,bpms-user-management)}`
+| officer_client_secret | `${__P(PASSWORD,<Secret для bpms-user-management>)}`
+| users_count | `${__P(KEYCLOAK_USERS_COUNT_PER_REALM,1)}`
+| officer_realm | `${__P(OFFICER_REALM,ck-198-officer-portal)}`
+| citizen_realm | `${__P(CITIZEN_REALM,ck-198-citizen-portal)}`
+| user_index | `0`
+| BaseDir | `${__groovy(org.apache.jmeter.services.FileServer.getFileServer().getBaseDir())}`
+| testDataDir | `${__P(TEST_DATA_DIR, ../../../test-data)}`
+| application | `${__P(APPLICATION, UNDEFINED)}`
 |===
 
 [NOTE]
@@ -128,7 +128,7 @@ image:testing:jmeter-methodology/create-keycloak-users/142121547.jpg[]
 ** Кожен потік виконує ітерації доки не закінчаться дані з CSV або не буде досягнуто умови зупинки.
 
 [#csv-keycloak-users]
-==== CSV Data Set Config
+==== CSV Keycloak users (CSV Data Set Config)
 
 *CSV Data Set Config* — це конфігураційний елемент JMeter, який дозволяє читати дані з CSV-файлу та використовувати їх як змінні у тест-плані. Це дозволяє легко параметризувати запити, використовуючи різні набори даних для кожного потоку або ітерації.
 
@@ -144,6 +144,7 @@ image:testing:jmeter-methodology/create-keycloak-users/142121750.jpg[]
 * *Delimiter:* `,`
 * *Variable Names:* `userName,fullName,edrpou,drfo`
 * *Ignore first line:* `true` (якщо CSV містить заголовок)
+* *Allow quoted data:* `false` (чи потрібно інтерпретувати дані, взяті в лапки, як окремі значення)
 * *Recycle on EOF:* `false` (не починати знову після закінчення файлу)
 * *Stop Thread on EOF:* `true` (зупинити потік, коли дані закінчаться)
 * *Sharing Mode:* `All threads` (кожен потік отримує унікальні дані)
@@ -298,7 +299,7 @@ image:testing:jmeter-methodology/create-keycloak-users/142122401.jpg[]
 
 ****** *JSR223 PostProcessor*
 +
-Цей *JSR223 PostProcessor* перевіряє код відповіді після спроби створення користувача. Якщо код відповіді `201` (Created), змінна `isUserCreated` встановлюється на `true`, і цикл завершується. В іншому випадку, логується попередження, і потік чекає 3 секунди перед повторною спробою.
+Цей *JSR223 PostProcessor* перевіряє код відповіді після спроби створення користувача. Якщо код відповіді `201` (Created), змінна `isUserCreated` встановлюється на `true`, і ітерація завершується. В іншому випадку, логується попередження, і потік чекає 3 секунди перед повторною спробою.
 +
 image:testing:jmeter-methodology/create-keycloak-users/142122452.jpg[]
 +
@@ -468,7 +469,7 @@ image:testing:jmeter-methodology/create-keycloak-users/142123313.jpg[]
 [#backend-listener]
 === Backend Listener
 
-Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у нашому випадку — InfluxDB.
+Backend Listener відповідає за асинхронну передачу зібраних метрик тестування (час відгуку, кількість помилок, пропускна здатність) до зовнішньої бази даних часових рядів (Time-Series Database), у даному випадку — InfluxDB.
 
 Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Listener] -> kbd:[Backend Listener]
 
@@ -568,7 +569,7 @@ image:testing:jmeter-methodology/create-keycloak-users/142123640.jpg[]
 
 [#calculate-token-expiry-time]
 ===== Калькуляція терміну дії (JSR223 PostProcessor)
-Keycloak повертає expires_in у секундах. Щоб потоки розуміли, коли саме токен "протухне" (і чи потрібно йти за новим), ми обчислюємо абсолютний Unix Timestamp часу його смерті.
+Keycloak повертає `expires_in` у секундах. Щоб потоки розуміли, коли саме токен стане недійсним (і чи потрібно запитувати новий), обчислюється абсолютний Unix Timestamp моменту закінчення дії токену.
 
 image:testing:jmeter-methodology/create-keycloak-users/142123733.jpg[]
 
@@ -580,7 +581,7 @@ image:testing:jmeter-methodology/create-keycloak-users/142123733.jpg[]
 // Беремо секунди життя токена (з JSON Extractor)
 long expiresInSec = vars.get("expiresIn").toLong()
 
-// Розраховуємо час смерті токена (Поточний час + час життя мінус 30 секунд буфера)
+// Розраховуємо час закінчення дії токена (Поточний час + час життя мінус 30 секунд буфера)
 long expiryTimestamp = System.currentTimeMillis() + (expiresInSec * 1000) - 30000
 
 // Зберігаємо цей час у змінну для If Controller

@@ -87,6 +87,7 @@ image:testing:jmeter-methodology/file-upload/145152617.jpg[]
 * *Delimiter:* `,`
 * *Variable Names:* `userName,fullName,edrpou,drfo`
 * *Ignore first line:* `false` (оскільки файл не містить заголовка)
+* *Allow quoted data:* `false` (значення в лапках не обробляються спеціально)
 * *Recycle on EOF:* `false` (не починати знову після закінчення файлу)
 * *Stop Thread on EOF:* `true` (зупинити потік, коли дані закінчаться)
 * *Sharing Mode:* `All threads` (кожен потік отримує унікальні дані)
@@ -277,6 +278,12 @@ image:testing:jmeter-methodology/file-upload/145154706.jpg[]
 
 |*Backend Listener implementation*
 |`org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient`
+
+|*Async Queue size*
+|`5000`
+
+|*influxdbMetricsSender:*
+|`org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender`
 
 |*influxdbUrl:*
 |`http://influxdb:8086/write?db=jmeter`
@@ -510,6 +517,8 @@ image:testing:jmeter-methodology/file-upload/145155116.jpg[]
 +
 *Use multipart/form-data for POST:* `true`
 +
+*Browser-compatible headers:* `true`
++
 *Files Upload:*
 +
 [cols="1,1,1", options="header"]
@@ -607,6 +616,8 @@ log.warn("=== [УВАГА] Cookie Manager не знайдено навіть у 
 +
 *Use multipart/form-data for POST:* `true`
 +
+*Browser-compatible headers:* `true`
++
 *Files Upload:*
 +
 [cols="1,1,1", options="header"]
@@ -703,6 +714,8 @@ log.warn("=== [УВАГА] Cookie Manager не знайдено навіть у 
 *Path:* `/documents/${processInstanceId}/${taskId}/files`
 +
 *Use multipart/form-data for POST:* `true`
++
+*Browser-compatible headers:* `true`
 +
 *Files Upload:*
 +
