@@ -19,6 +19,7 @@
 ***** xref:testing:performance-testing/jmeter-methodology/scenarios/read-grid.adoc[Перегляд великих масивів даних]
 ***** xref:testing:performance-testing/jmeter-methodology/scenarios/file-upload.adoc[Завантаження файлів]
 ***** xref:testing:performance-testing/jmeter-methodology/scenarios/excerpt-generation.adoc[Генерація витягів]
+**** xref:testing:performance-testing/jmeter-methodology/pipelines.adoc[Налаштування Jenkins і запуск тестів]
 **** xref:testing:performance-testing/jmeter-methodology/infra-setup.adoc[Інфраструктура та CI/CD]
 *** xref:testing:performance-testing/perf-report/perf-report-overview.adoc[]
 **** xref:testing:performance-testing/perf-report/1-9-2/perf-test-1-9-2.adoc[]
