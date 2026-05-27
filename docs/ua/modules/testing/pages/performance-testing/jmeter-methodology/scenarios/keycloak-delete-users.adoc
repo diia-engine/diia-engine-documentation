@@ -18,6 +18,11 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 [#prerequisites]
 == Підготовка до розробки
 Поточна документація описує процес створення `**.jmx*` сценарію на прикладі GUI Apache JMeter 5.6.3.
+===
+[NOTE]
+====
+Всі компоненти сценарію описані нижче у порядку відображення у середовищі JMeter. Тому, ознайомлюючись з елементами типу Test Fragment, майте на увазі що порядок їх використання в процесі може відрізнятися від порядку розміщення у списку даної інструкції.
+====
 
 [#jmeter-implementation]
 == Розробка .jmx файлу
@@ -241,7 +246,11 @@ image:testing:jmeter-methodology/delete-keycloak-users/146112043.jpg[]
 *JSON Path expressions:* `$[*].id`
 +
 *Match No.:* `-1` (витягти всі відповідності)
-
++
+[TIP]
+====
+JMeter створює в результаті змінну *fetchedIds_matchNr* - яка містить кількість знайдених відповідностей та змінні *fetchedIds_XXX*, де XXX = 1..1000, які містять знайдені результати (ID користувачів)
+====
 ****** *JSR223 PostProcessor*
 +
 Цей *JSR223 PostProcessor* обробляє отримані ID користувачів, додає їх до глобальної черги `usersQueue` та перевіряє, чи потрібно продовжувати збір користувачів.
