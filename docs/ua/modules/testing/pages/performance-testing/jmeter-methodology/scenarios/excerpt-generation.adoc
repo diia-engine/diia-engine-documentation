@@ -87,6 +87,7 @@ image:testing:jmeter-methodology/excerpt-generation/145161959.jpg[]
 * *Delimiter:* `,`
 * *Variable Names:* `userName,fullname,edrpou,drfo`
 * *Ignore first line:* `false` (оскільки файл не містить заголовка)
+* *Allow quoted data:* `false` (чи потрібно інтерпретувати дані, взяті в лапки, як окремі значення)
 * *Recycle on EOF:* `false` (не починати знову після закінчення файлу)
 * *Stop Thread on EOF:* `true` (зупинити потік, коли дані закінчаться)
 * *Sharing Mode:* `All threads` (кожен потік отримує унікальні дані)
@@ -278,6 +279,12 @@ image:testing:jmeter-methodology/excerpt-generation/145162553.jpg[]
 |*Backend Listener implementation*
 |`org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender`
 
+|*Async Queue size*
+|`5000`
+
+|*influxdbMetricsSender*
+|`org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender`
+
 |*influxdbUrl:*
 |`http://influxdb:8086/write?db=jmeter`
 
@@ -336,17 +343,6 @@ image:testing:jmeter-methodology/excerpt-generation/145162553.jpg[]
 
 * xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#tf-dashboard[Реєстрація складної сутності]
 
-[#user-info]
-=== User info (Test Fragment)
-
-Цей *Test Fragment* відповідає за отримання детальної інформації про поточного авторизованого користувача.
-
-Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
-
-*Кроки для створення цього тестового фрагмента відтворені в попередніх розділах:*
-
-* xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#user-info[Реєстрація складної сутності]
-
 [#tf-main-process]
 === TF Main Process (Test Fragment)
 
@@ -400,11 +396,11 @@ image:testing:jmeter-methodology/excerpt-generation/145162834.jpg[]
 +
 *Path:* `/officer/api/user-process-management/process-definition/${bpId}/start`
 
-****** *Extract process instance id (JSON PostProcessor)*
+****** *Extract process instance id (JSON Extractor)*
 +
-*JSON PostProcessor* витягує ID запущеного екземпляра процесу (`processInstanceId`) з JSON-відповіді.
+*JSON Extractor* дістає ID запущеного екземпляра процесу (`processInstanceId`) з JSON-відповіді.
 +
-**Налаштування JSON PostProcessor:**
+**Налаштування JSON Extractor:**
 +
 [cols="1,1", options="header"]
 |===
@@ -482,11 +478,11 @@ if (manager != null) {
 | `rootProcessInstanceId` | `${processInstanceId}`
 |===
 
-****** *taskId (JSON PostProcessor)*
+****** *taskId (JSON Extractor)*
 +
-*JSON PostProcessor* витягує ID завдання (`taskId`) з JSON-відповіді.
+*JSON Extractor* дістає ID завдання (`taskId`) з JSON-відповіді.
 +
-**Налаштування JSON PostProcessor:**
+**Налаштування JSON Extractor:**
 +
 [cols="1,1", options="header"]
 |===
@@ -508,11 +504,11 @@ _Примітка: Використовується шлях `$[0].id`, оскі
 +
 *Path:* `${userTaskManagerPath}/task/${taskId}`
 
-****** *Get form key (JSON PostProcessor)*
+****** *Get form key (JSON Extractor)*
 +
-*JSON PostProcessor* витягує ключ форми (`formKey`), пов'язаної із завданням.
+*JSON Extractor* дістає ключ форми (`formKey`), пов'язаної із завданням.
 +
-**Налаштування JSON PostProcessor:**
+**Налаштування JSON Extractor:**
 +
 [cols="1,1", options="header"]
 |===
@@ -544,6 +540,16 @@ vars.put("formData", prev.getResponseDataAsString())
 *Method:* `GET`
 +
 *Path:* `/officer/api/forms/${formKey}`
++
+*Parameters:* відсутні.
+
+***** *userinfo (Module Controller)*
++
+Викликає *Test Fragment* для отримання інформації про користувача.
++
+image:testing:jmeter-methodology/excerpt-generation/excerpt.jpg[]
++
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `User info`.
 
 ***** *Create payload (JSR223 Sampler)*
 +
@@ -654,9 +660,9 @@ image:testing:jmeter-methodology/excerpt-generation/145163807.jpg[]
 | `rootProcessInstanceId` | `${processInstanceId}`
 |===
 
-****** *taskId (JSON PostProcessor)*
+****** *taskId (JSON Extractor)*
 +
-*JSON PostProcessor* витягує ID завдання (`taskId`) з JSON-відповіді.
+*JSON Extractor* дістає ID завдання (`taskId`) з JSON-відповіді.
 +
 **Отримання `taskId`:**
 
@@ -684,11 +690,11 @@ image:testing:jmeter-methodology/excerpt-generation/145163807.jpg[]
 | `sort` | `desc(startTime)`
 |===
 
-****** *Get resp length (JSON PostProcessor)*
+****** *Get resp length (JSON Extractor)*
 +
-*JSON PostProcessor* витягує довжину масиву відповіді, щоб визначити, чи є ще активні процеси.
+*JSON Extractor* дістає довжину масиву відповіді, щоб визначити, чи є ще активні процеси.
 +
-**Налаштування JSON PostProcessor:**
+**Налаштування JSON Extractor:**
 +
 [cols="1,1", options="header"]
 |===
@@ -715,6 +721,8 @@ image:testing:jmeter-methodology/excerpt-generation/145163844.jpg[]
 ****** *Pause (Flow Control Action)*
 +
 Пауза між спробами опитування стану процесу. Використовує *Flow Control Action* для витримки інтервалу між запитами.
++
+image:testing:jmeter-methodology/excerpt-generation/excerpt 2.jpg[]
 
 ******* *Uniform Random Timer*
 +
@@ -742,11 +750,11 @@ image:testing:jmeter-methodology/excerpt-generation/145163844.jpg[]
 | `sort` | `desc(startTime)`
 |===
 
-******* *Get resp length (JSON PostProcessor)*
+******* *Get resp length (JSON Extractor)*
 +
-*JSON PostProcessor* витягує довжину масиву відповіді, щоб визначити, чи є ще активні процеси.
+*JSON Extractor* дістає довжину масиву відповіді, щоб визначити, чи є ще активні процеси.
 +
-**Налаштування JSON PostProcessor:**
+**Налаштування JSON Extractor:**
 +
 [cols="1,1", options="header"]
 |===
@@ -776,11 +784,11 @@ image:testing:jmeter-methodology/excerpt-generation/145163844.jpg[]
 | `sort` | `desc(startTime)`
 |===
 
-****** *Extract excerpt id (JSON PostProcessor)*
+****** *Extract excerpt id (JSON Extractor)*
 +
-*JSON PostProcessor* витягує ID витягу (`excerptId`), пов'язаного із завершеним процесом.
+*JSON Extractor* дістає ID витягу (`excerptId`), пов'язаного із завершеним процесом.
 +
-**Налаштування JSON PostProcessor:**
+**Налаштування JSON Extractor:**
 +
 [cols="1,1", options="header"]
 |===
@@ -803,6 +811,8 @@ _Примітка: Використовується фільтр по `processIn
 *Path:* `/api/excerpts/${excerptId}`
 +
 *Advanced:* kbd:[Advanced] -> Optional Tasks -> `Save response as MD5 hash? = True`
++
+image:testing:jmeter-methodology/excerpt-generation/excerpt 3.jpg[]
 +
 [IMPORTANT]
 ====
@@ -838,6 +848,18 @@ image:testing:jmeter-methodology/excerpt-generation/145164601.jpg[]
 |===
 | Поле | Значення
 | *Apply to* | `Main sample only`
+| *Response Size Field to Test* | `Full Response`
 | *Size is* | `Greater than`
 | *Size in bytes* | `1000`
 |===
+
+[#user-info]
+=== User info (Test Fragment)
+
+Цей *Test Fragment* відповідає за отримання детальної інформації про поточного авторизованого користувача.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+*Кроки для створення цього тестового фрагмента відтворені в попередніх розділах:*
+
+* xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#user-info[Реєстрація складної сутності]

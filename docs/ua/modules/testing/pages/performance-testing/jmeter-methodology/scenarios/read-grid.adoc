@@ -85,6 +85,7 @@ image:testing:jmeter-methodology/read-grid/145143410.jpg[]
 * *Delimiter:* `,`
 * *Variable Names:* `userName,fullname,edrpou,drfo`
 * *Ignore first line:* `true`
+* *Allow quoted data:* `false` (чи потрібно інтерпретувати дані, взяті в лапки, як окремі значення)
 * *Recycle on EOF:* `false` (не починати знову після закінчення файлу)
 * *Stop Thread on EOF:* `true` (зупинити потік, коли дані закінчаться)
 * *Sharing Mode:* `All threads` (кожен потік отримує унікальні дані)
@@ -235,6 +236,9 @@ image:testing:jmeter-methodology/read-grid/145144311.jpg[]
 |*Backend Listener implementation*
 |`org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient`
 
+|*Async Queue size*
+|`5000`
+
 |*influxdbMetricsSender*
 |`org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender`
 
@@ -298,18 +302,6 @@ image:testing:jmeter-methodology/read-grid/145144311.jpg[]
 
 * xref:testing:performance-testing/jmeter-methodology/scenarios/unregistered-role.adoc#tf-dashboard[Реєстрація користувача (UNREGISTERED)]
 * xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#tf-dashboard[Реєстрація складної сутності]
-
-[#user-info]
-=== User info (Test Fragment)
-
-Цей *Test Fragment* відповідає за отримання детальної інформації про поточного авторизованого користувача.
-
-Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
-
-*Кроки для створення цього тестового фрагмента відтворені в попередніх розділах:*
-
-* xref:testing:performance-testing/jmeter-methodology/scenarios/unregistered-role.adoc#user-info[Реєстрація користувача (UNREGISTERED)]
-* xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#user-info[Реєстрація складної сутності]
 
 [#tf-main-process]
 === TF Main Process (Test Fragment)
@@ -451,6 +443,8 @@ if (manager != null) {
 
 ** *taskId (JSON Extractor)*
 +
+Екстрактор читає тіло відповіді основного HTTP-запиту `lightweight`. JSONPath `$[0].id` бере ідентифікатор першої задачі, а `NOT_FOUND` робить проблему пошуку задачі видимою в наступних запитах.
++
 [cols="1,1", options="header"]
 |===
 | Поле | Значення
@@ -460,8 +454,6 @@ if (manager != null) {
 | *Match No.* | `1`
 | *Default Values* | `NOT_FOUND`
 |===
-+
-Екстрактор читає тіло відповіді основного HTTP-запиту `lightweight`. JSONPath `$[0].id` бере ідентифікатор першої задачі, а `NOT_FOUND` робить проблему пошуку задачі видимою в наступних запитах.
 
 * *taskId (HTTP Request)*
 +
@@ -634,3 +626,19 @@ SampleResult.setIgnore()
 * *userinfo (Module Controller)*
 +
 Повторний виклик `User info` завершує крок перевіркою доступності сесії та користувацького контексту після виконання основного бізнес-процесу.
+Викликає Test Fragment для отримання інформації про користувача.
++
+У вікні налаштувань розгорніть дерево тест-плану і виберіть цільовий `Test Fragment` -> `User info`.
+
+
+[#user-info]
+=== User info (Test Fragment)
+
+Цей *Test Fragment* відповідає за отримання детальної інформації про поточного авторизованого користувача.
+
+Додати елемент слід натиснувши kbd:[Edit] -> kbd:[Add] -> kbd:[Test Fragment] -> kbd:[Test Fragment]
+
+*Кроки для створення цього тестового фрагмента відтворені в попередніх розділах:*
+
+* xref:testing:performance-testing/jmeter-methodology/scenarios/unregistered-role.adoc#user-info[Реєстрація користувача (UNREGISTERED)]
+* xref:testing:performance-testing/jmeter-methodology/scenarios/nested-entity.adoc#user-info[Реєстрація складної сутності]
