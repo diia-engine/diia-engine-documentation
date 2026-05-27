@@ -1,0 +1,238 @@
+= Підготовка цільового оточення
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+:sectlinks:
+
+Для налаштування реєстру для навантажувального тестування виконуються наступні дії:
+
+== Створення Config Map для тестових користувачів [[stvorennia-config-map-dlia-testovykh-korystuvachiv]]
+
+У консолі OpenShift створюється Config Map у просторі імен реєстру з назвою `sign-widget-mock-users-archive.
+
+* *Binary Data:*
+** *Key:* `mock-users.tar.gz`
+** *Value:* `<Архів mock-users.tar.gz>`
++
+[IMPORTANT]
+====
+Файл архіву необхідно додавати виключно до секції Binary Data. Це забезпечує коректну обробку бінарних даних.
+====
+
+== Оновлення Deployment `sign-widget-mock` [[onovlennia-deployment-sign-widget-mock]]
+
+У консолі OpenShift виконується заміна YAML-конфігурації для *Deployment* `sign-widget-mock` на наступну:
+
+[source, yaml]
+----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sign-widget-mock
+  labels:
+    app: sign-widget-mock
+    app.kubernetes.io/instance: sign-widget-mock
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: sign-widget-mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sign-widget-mock
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  template:
+    metadata:
+      labels:
+        app: sign-widget-mock
+        app.kubernetes.io/instance: sign-widget-mock
+        app.kubernetes.io/name: sign-widget-mock
+      annotations:
+        sidecar.istio.io/inject: 'false'
+    spec:
+      serviceAccountName: sign-widget-mock
+      volumes:
+        - name: sign-widget-mock-nginx-config
+          configMap:
+            name: sign-widget-mock-nginx-config
+        - name: compressed-archive
+          configMap:
+            name: sign-widget-mock-users-archive
+        - name: generated-data
+          emptyDir: {}
+
+      initContainers:
+        - name: config-generator
+          image: alpine:latest
+          volumeMounts:
+            - name: compressed-archive
+              mountPath: /tmp/archive
+            - name: generated-data
+              mountPath: /mnt/out
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+
+              echo "1. Unpacking CSV from archive..."
+              tar -xzf /tmp/archive/mock-users.tar.gz -C /tmp
+
+              echo "2. Running AWK magic..."
+
+              awk -F, '
+              BEGIN {
+                js = "/mnt/out/users.js.new"
+                yml = "/mnt/out/isolation-predefined-users.yml"
+                print "var MOCK_USERS = {" > js
+                print "predefined-users:" > yml
+                first = 1
+              }
+              NR > 1 {
+                if (NF < 4) {
+                  print "ERROR: not enough columns in line " NR > "/dev/stderr"
+                  next
+                }
+
+                u = $1
+                full = $2
+                ed = $3
+                dr = $4
+
+                gsub(/^["'\''"]+|["'\''"]+$/, "", u)
+                gsub(/^["'\''"]+|["'\''"]+$/, "", full)
+                gsub(/^["'\''"]+|["'\''"]+$/, "", ed)
+                gsub(/^["'\''"]+|["'\''"]+$/, "", dr)
+
+                # JS entry
+                if (!first) { print "," > js }
+                first = 0
+                printf "  \"[%s.dat]\": {\n    \"drfo\": \"%s\",\n    \"edrpou\": \"%s\",\n    \"fullName\": \"%s\"\n  }", u, dr, ed, full > js
+
+                # YAML entry
+                printf "  \x27[%s.dat]\x27:\n    drfo: \"%s\"\n    edrpou: \"%s\"\n    fullName: \"%s\"\n", u, dr, ed, full > yml
+              }
+              END {
+                print "\n};" > js
+              }' /tmp/mock-users.csv
+
+              mv /mnt/out/users.js.new /mnt/out/users.js
+
+              echo "3. Done! Reality check:"
+              ls -lh /mnt/out/
+
+      containers:
+        - name: sign-widget-mock
+          image: docker-registry.control-plane-nexus.svc:5004/control-plane/sign-widget-mock-1-9-8:1.9.8.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: ui
+              containerPort: 8080
+              protocol: TCP
+          resources: {}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          volumeMounts:
+            - name: sign-widget-mock-nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: generated-data
+              mountPath: /usr/share/nginx/html/users.js
+              subPath: users.js
+            - name: generated-data
+              mountPath: /usr/share/nginx/html/isolation-predefined-users.yml
+              subPath: isolation-predefined-users.yml
+----
+
+== Налаштування реєстру після створення Config Map [[nalashtuvannia-reiestru-pislia-stvorennia-config-map]]
+
+Після створення Config Map виконуються наступні кроки:
+
+=== Копіювання посилання на сервіс `sign-widget-mock` [[kopiuvannia-posylannia-na-servis-sign-widget-mock]]
+
+У розділі *Networking* -> *Routes* знаходиться сервіс `sign-widget-mock`, після чого копіюється його посилання. Приклад посилання:
+
+`https://sign-widget-mock.example.com`
+
+=== Вставка посилання у секцію "Кабінет надавача послуг" [[vstavka-posylannia-u-sektsiiu-kabinet-nadavacha-posluh]]
+
+Для редагування реєстру, у секції *Кабінет надавача послуг* вставляється скопійоване посилання у поле *Посилання*.
+
+image:testing:jmeter-methodology/147162452.jpg[]
+
+=== Вставка посилання у секцію "Кабінет отримувача послуг" [[vstavka-posylannia-u-sektsiiu-kabinet-otrymuvacha-posluh]]
+
+У секції *Кабінет отримувача послуг* також вставляється це посилання у поле *Посилання*.
+
+=== Підтвердження змін [[pidtverdzhennia-zmin]]
+
+Натискається кнопка *Підтвердити*. Після цього здійснюється перехід до розділу *Запити на оновлення* загальних налаштувань реєстру, де відкривається відповідний запит та підтверджуються зміни.
+
+=== Очікування завершення збірки MASTER-Build [[ochikuvannia-zavershennia-zbirky-master-build]]
+
+Очікується завершення збірки *MASTER-Build* реєстру. Цей процес може тривати декілька хвилин.
+
+== Додавання змінної `caIsolation` до файлу `values.yml` [[dodavannia-zminnoi-caisolation-do-failu-values-yml]]
+
+У репозиторії реєстру в *Control Plane Gerrit*, у файлі `values.yml` додається змінна `caIsolation` з наступним значенням:
+----
+caIsolation: true
+----
+
+[NOTE]
+====
+Цей параметр додається на першому рівні ієрархії файлу для коректного застосування.
+====
+
+== Налаштування автентифікації через браузер у консолі OpenShift [[nalashtuvannia-avtentyfikatsii-cherez-brauzer-u-konsoli-openshift]]
+
+Налаштування автентифікації через браузер у консолі *OpenShift* виконується наступним чином:
+
+=== Вибір Keycloak Realms `officer-portal` [[vybir-keycloak-realms-officer-portal]]
+
+За допомогою функції пошуку знаходиться сутність *Keycloak Realms* для реєстру, після чого обирається `officer-portal`.
+image:testing:jmeter-methodology/147163125.jpg[]
+
+=== Зміна значень `browser-flow` та `loginTheme` [[zmina-znachen-browser-flow-ta-logintheme]]
+
+Змінюються наступні значення:
+
+* *browser-flow:* `browser`
+* *loginTheme:* `keycloak`
+image:testing:jmeter-methodology/147163506.jpg[]
+
+=== Перевірка рівномірного розподілу ресурсів [[perevirka-rivnomirnoho-rozpodilu-resursiv]]
+
+Необхідно переконатися, що ресурси розподілені рівномірно.
+
+Якщо реєстр розгорнутий на кількох машинах, перевіряється рівномірність розподілу подів з найбільшим навантаженням на CPU та пам’ять.
+
+До критичних подів, що потребують уваги, належать: `bpms`, `operational-instance`, `kafka-cluster`, `registry-rest-api`.
+
+Перевірка розподілу ресурсів може бути виконана на дашборді *Grafana* у секції *Kubernetes -> Compute Resources -> Node (Pods)*.
+
+[NOTE]
+====
+Нерівномірний розподіл ресурсів може призвести до обмежень продуктивності (нестачі CPU або пам’яті) на окремих вузлах, що негативно вплине на результати тестування.
+
+Для уникнення цієї проблеми рекомендується збалансувати навантаження шляхом видалення вузла, на якому поди розподілені нерівномірно, або перерозподілу подів вручну.
+====

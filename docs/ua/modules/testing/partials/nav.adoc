@@ -3,6 +3,7 @@
 ** xref:testing:functional-testing/functional-testing.adoc[Функціональне тестування]
 ** xref:testing:performance-testing/performance-testing.adoc[Тестування продуктивності]
 *** xref:testing:performance-testing/jmeter-methodology/overview.adoc[Методологія навантажувального тестування (JMeter)]
+**** xref:testing:performance-testing/jmeter-methodology/target-env-setup.adoc[Підготовка цільового оточення]
 **** xref:testing:performance-testing/jmeter-methodology/registry/overview.adoc[Регламент тестового реєстру]
 ***** xref:testing:performance-testing/jmeter-methodology/registry/unregistered-role.adoc[Реєстрація користувача (UNREGISTERED)]
 ***** xref:testing:performance-testing/jmeter-methodology/registry/nested-entity.adoc[Реєстрація складної сутності]
