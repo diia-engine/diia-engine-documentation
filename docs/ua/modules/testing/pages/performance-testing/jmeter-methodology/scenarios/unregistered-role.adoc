@@ -1231,7 +1231,7 @@ image:testing:jmeter-methodology/unregistered-role/Unregistered - 3.14.4.jpg[]
 
 ***** *lightweight (HTTP Request)*
 +
-Запит для отримання легкої версії завдань.
+Запит для отримання списку завдань (з мінімумом даних).
 +
 *Method:* `GET`
 +
