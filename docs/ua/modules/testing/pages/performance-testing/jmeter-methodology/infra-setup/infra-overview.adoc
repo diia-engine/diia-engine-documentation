@@ -1,0 +1,127 @@
+// docs/ua/modules/testing/pages/performance-testing/jmeter-methodology/infra-setup/infra-overview.adoc
+= Опис інфраструктури та CI/CD для навантажувального тестування
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+:sectlinks:
+
+Цей розділ описує інфраструктуру та процеси CI-CD, що використовуються для навантажувального тестування на платформі реєстрів.
+
+[#general-architecture]
+== Загальна архітектура
+
+Для навантажувального тестування використовується наступний перелік інструментів:
+
+* Jenkins
+* JMeter
+* InfluxDB
+* Grafana
+* Traefik
+
+Дані компоненти описані як окремі сервіси в інструменті Docker compose. 
+
+[#infra-directory-structure]
+== Опис структури директорії `infra/`
+
+`infra` - це директорія, що містить всі конфігураційні файли для запуску інфраструктури навантажувального тестування.
+Вона має наступну структуру:
+
+[source,text]
+----
+infra
+├── grafana/
+│   ├── dashboards/
+│       └── jmeter_id5496.json
+│   ├── grafana_data/
+│   ├── provisioning/
+│       ├── dashboards/
+│       │   └── dashboard.yaml
+│       └── datasources/
+│           └── datasource.yaml
+│   ├── .env_grafana_example
+│   └── .env_grafana
+├── influxdb/
+│   ├── influxdb_data/
+│   ├── .env_influxdb_example
+│   └── .env_influxdb
+├── jenkins/
+│   ├── jenkins_home/
+│   ├── .env_jenkins_example
+│   ├── .env_jenkins
+│   ├── github_ssh_key
+│   ├── jenkins_setup.sh
+│   ├── jenkins.yaml
+│   ├── kube_ca_cert
+│   ├── kube_token
+│   └── trigger_seed.groovy
+├── jmeter/
+│   ├── jmeter_workspace/
+│   ├── .env_jmeter_agent_example
+│   ├── .env_jmeter_agent
+│   ├── apache-jmeter-5.6.3.zip
+│   ├── cmdrunner-2.3.jar
+│   ├── eu-sign-1.3.184.jar
+│   ├── jmeter_agent.sh
+│   ├── jmeter-plugins-manager-1.9.jar
+│   ├── jmeter.Dockerfile
+│   └── PluginsManagerCMD.sh
+├── setup_okd/
+│   ├── jenkins-jmeter-role.yml
+│   ├── mock-users.tar.gz (містить mock-users.csv - тестові згенеровані користувачі)
+│   ├── setup_cm.sh
+│   └── setup_sa.sh
+├── sign-widget-mock/ (сервіс емуляції цифрового підпису)
+│   ├── deploy-templates/ 
+│   └── ... (інші файли репозиторію)
+├── traefik/
+│   ├── dynamic.yaml
+│   └── traefik.yaml
+├── cleanup.sh
+├── docker-compose.yaml
+├── README.md
+├── start.sh
+└── stop.sh
+----
+
+
+== Опис конфігураційних файлів та директорій в структурі `infra/`
+
+=== Опис директорій:
+
+* `grafana_data` - директорія для зберігання даних Grafana (створюється автоматично при першому запуску інфраструктури)
+* `influxdb_data` - директорія для зберігання даних InfluxDB (створюється автоматично при першому запуску інфраструктури)
+* `jenkins_home` - директорія для зберігання даних Jenkins (створюється автоматично при першому запуску інфраструктури)
+* `jmeter_workspace` - директорія для зберігання даних JMeter (створюється автоматично при першому запуску інфраструктури)
+* `setup_okd` - директорія містить скрипт для створення сервісного облікового запису (Service Accounts) в кластері OKD та ConfigMaps ресурс з даними користувачів (Mock-users) для навантажувальних тестів.
+* `traefik` - директорія містить конфігураційні для Traefik.
+
+
+=== Опис файлів:
+
+Файли шаблонів змінних оточень для сервісів:
+
+* `.env_grafana_example` - приклад файлу `.env_grafana`
+* `.env_influxdb_example` - приклад файлу `.env_influxdb`
+* `.env_jenkins_example` - приклад файлу `.env_jenkins`
+* `.env_jmeter_agent_example` - приклад файлу `.env_jmeter_agent`
+
+Файли опису змінних оточень сервісів. Створюються перед запуском інфраструктури і заповнюються на основі відповідних шаблонів описаних вище:
+
+* `.env_grafana` - файл для конфігурації Grafana
+* `.env_influxdb` - файл для конфігурації InfluxDB
+* `.env_jenkins` - файл для конфігурації Jenkins
+* `.env_jmeter_agent` - файл для конфігурації JMeter
+
+Інші файли:
+
+* `cleanup.sh` - скрипт для очищення інфраструктури
+* `docker-compose.yaml` - файл для запуску інфраструктури за допомогою Docker Compose
+* `start.sh` - скрипт для запуску інфраструктури
+* `stop.sh` - скрипт для зупинки інфраструктури
+
+
+
+
+
+[NOTE]
+====
+Детальний опис 
+====

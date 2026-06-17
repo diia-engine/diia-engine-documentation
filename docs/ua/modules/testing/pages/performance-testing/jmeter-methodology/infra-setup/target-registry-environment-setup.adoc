@@ -1,6 +1,6 @@
+// docs/ua/modules/testing/pages/performance-testing/jmeter-methodology/infra-setup/target-registry-environment-setup.adoc'
 = Підготовка цільового оточення
 include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
-
 :sectlinks:
 
 Для налаштування реєстру для навантажувального тестування виконуються наступні дії:
