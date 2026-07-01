@@ -15,12 +15,12 @@ include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc
 psql
 \c camunda
 
-COPY (select ae.id_ "process-instance-id", arv.text_ "start-form-document-key" from act_ru_execution ae left join act_ru_variable arv on ae.id_ = arv.proc_inst_id_ and arv.name_ in ('start_form_ceph_key', 'start_message_payload_storage_key') where ae.parent_id_ is null) TO '/var/tmp/process_instance_ids.csv' csv header;
+COPY (select ae.id_ "process-instance-id", arv.text_ "start-form-document-key" from act_ru_execution ae left join act_ru_variable arv on ae.id_ = arv.proc_inst_id_ and arv.name_ in ('start_form_ceph_key', 'start_message_payload_storage_key') where ae.parent_id_ is null) TO '/tmp/process_instance_ids.csv' csv header;
 ----
 
 . *Копіювання згенерованого CSV-файлу на локальну машину*.
 +
-Після генерації файлу _/tmp/process_instance_ids.csv_, скопіюйте його на локальну машину за допомогою наступної команди:
+Після генерації файлу /tmp/process_instance_ids.csv_, скопіюйте його на локальну машину за допомогою наступної команди:
 +
 [source,kubectl]
 ----
@@ -66,6 +66,9 @@ java -jar storage-cleanup-cli.jar
          --redis-removal-output-csv-file=<arg>
          --removal-batch-size=<arg>
          --log-output=<arg>
+         --removal-limit=<arg>
+         --do-not-remove-after-timestamp=<arg>
+
 ----
 
 == Опис параметрів утиліти
@@ -109,6 +112,26 @@ TIP: Необов'язково, якщо надано Ceph URL.
 * `--removal-batch-size=<значення>`: розмір пакета для операцій видалення. _За замовчуванням: 1000_.
 
 * `--log-output=<шлях>`: шлях до файлу з логами, що створюється після виконання утиліти. За замовчуванням: `s3-storage-cleanup-cli.log`.
+
+* `--removal-limit=<значення>`: максимальна кількість об'єктів, які можуть бути фактично видалені під час одного запуску утиліти. Обмеження є глобальним та застосовується одночасно до Ceph і Redis.
++
+TIP: Необов'язково.
+
+* `--do-not-remove-after-timestamp=<значення>`: забороняє видалення об'єктів Ceph, дата останньої модифікації яких є новішою за вказаний момент часу. Параметр використовується як додатковий механізм захисту від випадкового видалення нещодавно створених або змінених документів.
++
+TIP: Необов'язково.
+
+== Особливості обробки великих обсягів даних
+
+Обробка Ceph та Redis виконується у потоковому режимі.
+
+Під час роботи утиліта:
+
+* не накопичує у пам'яті всі об'єкти Ceph;
+* не накопичує у пам'яті всі ключі Redis;
+* не накопичує у пам'яті повний перелік кандидатів на видалення.
+* Кандидати на видалення формуються під час обробки та одразу записуються до audit CSV-файлів.
+* Ceph-об'єкти зчитуються сторінками за допомогою механізму пагінації S3, а Redis-ключі — за допомогою команди SCAN.
 
 == Додаткові інструкції
 
