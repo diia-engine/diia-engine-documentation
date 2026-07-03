@@ -3815,8 +3815,9 @@
 <li><a href="#_огляд">1. Огляд</a></li>
 <li><a href="#_кроки_для_видалення_документів">2. Кроки для видалення документів</a></li>
 <li><a href="#_опис_параметрів_утиліти">3. Опис параметрів утиліти</a></li>
-<li><a href="#_додаткові_інструкції">4. Додаткові інструкції</a></li>
-<li><a href="#_повязані_сторінки">5. Пов&#8217;язані сторінки</a></li>
+<li><a href="#_особливості_обробки_великих_обсягів_даних">4. Особливості обробки великих обсягів даних</a></li>
+<li><a href="#_додаткові_інструкції">5. Додаткові інструкції</a></li>
+<li><a href="#_повязані_сторінки">6. Пов&#8217;язані сторінки</a></li>
 </ul>
 </div>
 <div class="sect1">
@@ -3842,14 +3843,14 @@
 <pre class="highlightjs highlight"><code class="language-sql hljs" data-lang="sql">psql
 \c camunda
 
-COPY (select ae.id_ "process-instance-id", arv.text_ "start-form-document-key" from act_ru_execution ae left join act_ru_variable arv on ae.id_ = arv.proc_inst_id_ and arv.name_ in ('start_form_ceph_key', 'start_message_payload_storage_key') where ae.parent_id_ is null) TO '/var/tmp/process_instance_ids.csv' csv header;</code></pre>
+COPY (select ae.id_ "process-instance-id", arv.text_ "start-form-document-key" from act_ru_execution ae left join act_ru_variable arv on ae.id_ = arv.proc_inst_id_ and arv.name_ in ('start_form_ceph_key', 'start_message_payload_storage_key') where ae.parent_id_ is null) TO '/tmp/process_instance_ids.csv' csv header;</code></pre>
 </div>
 </div>
 </li>
 <li>
 <p><strong>Копіювання згенерованого CSV-файлу на локальну машину</strong>.</p>
 <div class="paragraph">
-<p>Після генерації файлу <em>/tmp/process_instance_ids.csv</em>, скопіюйте його на локальну машину за допомогою наступної команди:</p>
+<p>Після генерації файлу /tmp/process_instance_ids.csv_, скопіюйте його на локальну машину за допомогою наступної команди:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3909,7 +3910,9 @@ COPY (select ae.id_ "process-instance-id", arv.text_ "start-form-document-key" f
          --redis-secret=&lt;arg&gt;
          --redis-removal-output-csv-file=&lt;arg&gt;
          --removal-batch-size=&lt;arg&gt;
-         --log-output=&lt;arg&gt;</code></pre>
+         --log-output=&lt;arg&gt;
+         --removal-limit=&lt;arg&gt;
+         --do-not-remove-after-timestamp=&lt;arg&gt;</code></pre>
 </div>
 </div>
 </li>
@@ -4036,12 +4039,72 @@ COPY (select ae.id_ "process-instance-id", arv.text_ "start-form-document-key" f
 <li>
 <p><code>--log-output=&lt;шлях&gt;</code>: шлях до файлу з логами, що створюється після виконання утиліти. За замовчуванням: <code>s3-storage-cleanup-cli.log</code>.</p>
 </li>
+<li>
+<p><code>--removal-limit=&lt;значення&gt;</code>: максимальна кількість об&#8217;єктів, які можуть бути фактично видалені під час одного запуску утиліти. Обмеження є глобальним та застосовується одночасно до Ceph і Redis.</p>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="ПІДКАЗКА"></i>
+</td>
+<td class="content">
+Необов&#8217;язково.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p><code>--do-not-remove-after-timestamp=&lt;значення&gt;</code>: забороняє видалення об&#8217;єктів Ceph, дата останньої модифікації яких є новішою за вказаний момент часу. Параметр використовується як додатковий механізм захисту від випадкового видалення нещодавно створених або змінених документів.</p>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="ПІДКАЗКА"></i>
+</td>
+<td class="content">
+Необов&#8217;язково.
+</td>
+</tr>
+</table>
+</div>
+</li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_додаткові_інструкції"><a class="anchor" href="#_додаткові_інструкції"></a><a class="link" href="#_додаткові_інструкції">4. Додаткові інструкції</a></h2>
+<h2 id="_особливості_обробки_великих_обсягів_даних"><a class="anchor" href="#_особливості_обробки_великих_обсягів_даних"></a><a class="link" href="#_особливості_обробки_великих_обсягів_даних">4. Особливості обробки великих обсягів даних</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Обробка Ceph та Redis виконується у потоковому режимі.</p>
+</div>
+<div class="paragraph">
+<p>Під час роботи утиліта:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>не накопичує у пам&#8217;яті всі об&#8217;єкти Ceph;</p>
+</li>
+<li>
+<p>не накопичує у пам&#8217;яті всі ключі Redis;</p>
+</li>
+<li>
+<p>не накопичує у пам&#8217;яті повний перелік кандидатів на видалення.</p>
+</li>
+<li>
+<p>Кандидати на видалення формуються під час обробки та одразу записуються до audit CSV-файлів.</p>
+</li>
+<li>
+<p>Ceph-об&#8217;єкти зчитуються сторінками за допомогою механізму пагінації S3, а Redis-ключі — за допомогою команди SCAN.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_додаткові_інструкції"><a class="anchor" href="#_додаткові_інструкції"></a><a class="link" href="#_додаткові_інструкції">5. Додаткові інструкції</a></h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -4056,7 +4119,7 @@ COPY (select ae.id_ "process-instance-id", arv.text_ "start-form-document-key" f
 </div>
 </div>
 <div class="sect1">
-<h2 id="_повязані_сторінки"><a class="anchor" href="#_повязані_сторінки"></a><a class="link" href="#_повязані_сторінки">5. Пов&#8217;язані сторінки</a></h2>
+<h2 id="_повязані_сторінки"><a class="anchor" href="#_повязані_сторінки"></a><a class="link" href="#_повязані_сторінки">6. Пов&#8217;язані сторінки</a></h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
