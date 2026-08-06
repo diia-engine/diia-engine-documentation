@@ -1,0 +1,37 @@
+= Реалізація кнопки автоматичного logout
+
+
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+Кнопка для автоматичного logout (виходу із системи) зазвичай використовується для того, щоб користувач міг після виконання бізнес-процесу швидко завершити свою сесію і вийти з акаунта (на приклад, після успішного онборингу на Платформі):
+
+image:bp-modeling/forms/logout2.png[]
+
+Для налаштування кнопки перейдіть у вкладку Conditional і в полі Advanced Conditional вставте наступний код:
+
+
+    instance.on('submit', function(e) {
+        let currentUrl = window.location.href;
+        let getNewUrl = (url, isOfficer) => {
+        const regex = /^(https?:\/\/[^/]+)(\/)(.+)$/;
+        let newUrl = url.replace(regex, '$1');
+    //генерації нового URL
+    return (isOfficer) ? newUrl + '/officer/logout' : newUrl + '/logout'
+  }
+  let newUrl = getNewUrl(currentUrl, currentUrl.includes('officer'));
+  console.log('New url: ' + newUrl);
+  console.log('Do logout');
+  // Емітація події завершення відправки форми
+  instance.emit('submitDone', {}, true);
+  // Після успішної емітації, перенаправлення на інший URL
+  setTimeout(() => {
+ 		 window.location.href = newUrl;
+  	}, 1000); // Наприклад, через секунду
+  });
+
+
+image:bp-modeling/forms/logout1.png[]
+
+[NOTE]
+Використовуйте файл xref:bp-modeling/forms/add-validation.json[add-validation.json] для прикладу створення валідацій на полях форми.
+
