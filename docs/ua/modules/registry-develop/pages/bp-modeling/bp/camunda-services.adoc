@@ -1,0 +1,264 @@
+= Моніторинг процесів за допомогою сервісів Camunda
+include::platform:ROOT:partial$templates/document-attributes/default-set-ua.adoc[]
+
+
+
+
+== Загальний опис сервісів Camunda
+
+Платформа надає можливість створити окремий бізнес-процес для перегляду та аналізу статистики виконання інших бізнес-процесів. Такий процес реалізується за допомогою сервісів Camunda та дозволяє отримувати інформацію про активні та завершені інстанси, переглядати деталізовану інформацію про конкретний процес, змінювати виконавця задачі та завершувати активний процес.
+
+Основні сервіси Camunda:
+
+. *Runtime Service:* надає доступ до активних бізнес-процесів, використовується для отримання списку активних процесів, роботи з екземплярами процесів, завершення процесу вручну.
+
+
+. *Task Service:* дозволяє керувати задачами бізнес-процесу, використовується для отримання активних задач за ID процесу, отримання виконавця задачі, зміни виконавця задачі, доступу до змінних задачі.
+
+
+. *History Service:* дозволяє отримувати історичну  інформацію про бізнес-процесів, використовується для перегляду завершених процесів та задач, тривалості їх виконання та ініціатора бізнес-процесу.
+
+. *RepositoryService:* дозволяє отримувати метадані бізнес-процесів:  назву, ключ, ідентифікатор визначення процесу тощо.
+
+. *Form Service:* використовується для роботи з формами, пов’язаними із задачами та процесами.
+
+
+== Логіка та структура аналітичного бізнес-процесу “Відображення статистики по БП”
+
+Бізнес-процес “Відображення статистики по БП” та відповідні форми доступні до завантаження за посиланнями:
+
+
+xref:registry-develop/attachments/bp-modeling/bp/camunda-services/reopen-test-bp.bpmn[reopen-test-bp.bpmn],
+xref:registry-develop/attachments/bp-modeling/bp/camunda-services/information-about-instances.json[information-about-instances.json],
+xref:registry-develop/attachments/bp-modeling/bp/camunda-services/process-instance-details.json[process-instance-details.json],
+xref:registry-develop/attachments/bp-modeling/bp/camunda-services/choose-officer-to-update.json[choose-officer-to-update.json],
+xref:registry-develop/attachments/bp-modeling/bp/camunda-services/bp-delete-success.json[bp-delete-success.json].
+
+
+=== Загальний опис бізнес-процесу
+
+В результаті виконання процесу, користувач зможе продивлятися загальну інформацію про кількість активних та завершених процесів, відфільтрувати інформацію по назві конкретного бізнес-процесу, який був хоч раз запущений, подивитися детальну інформацію по кожному запущенному чи завершенному бізнес-процесу.
+
+Основні кроки при створенні аналітичного бізнес-процесу:
+
+
+image:registry-develop:bp-modeling/bp/camunda-services/camunda-services1.png[]
+
+
+
+
+=== Формування загальної статистики
+
+У скриптовій задачі “Виявлення запущених та завершених інстансів” ініціалізуються сервіси Camunda (historyService, repositoryService, runtimeService та taskService) та отримуються списки активних та завершених бізнес-процесів (completedProcesses та processInstances). Для активних процесів визначаються основні параметри процесу (назва, ідентифікатор, ініціатор та бізнес-ключ процеса), визначаються задачі процесу та їх виконавець, присвоюється статус “активний”. Для завершених процесів отримується інформація про параметри процесу (назва, час початку та завершення, тривалість, бізнес-ключ) і встановлюється статус “завершений”.
+
+Нижче наведена скорочена версія Groovy-коду, що демонструє саме роботу з Camunda API:
+
+----
+//Ініціалізація сервісів Camunda
+def historyService = execution.getProcessEngine().getHistoryService()
+def repositoryService = execution.getProcessEngine().getRepositoryService()
+def runtimeService = execution.getProcessEngine().getRuntimeService()
+def taskService = execution.getProcessEngine().getTaskService();
+
+
+//Список завершенных процесів
+def completedProcesses = historyService.createHistoricProcessInstanceQuery()
+    .finished()
+    .list()
+
+
+//Список активних процесів
+def processInstances = runtimeService.createProcessInstanceQuery()
+    .list()
+…
+//Обробка активних процесів для отримання даних про процес
+processInstances.each { processInstance ->
+    //Повертає ID бізнес-процесу
+    def processDefinitionId = processInstance.getProcessDefinitionId()
+
+
+    //Створює запит на отримання даних про визначення процесу
+    def processDefinition = repositoryService.createProcessDefinitionQuery()
+        .processDefinitionId(processDefinitionId)
+        .singleResult()
+
+
+    def processName = processDefinition.getName()
+    def processId = processInstance.getId()
+    def processDefinitionKey = processDefinition.getKey()
+    def businessKey = processInstance.getBusinessKey()
+
+
+    //Використовується історичний сервіс для доступу до історії процесу
+    def historicProcessInstance = historyService.createHistoricProcessInstanceQuery()
+        .processInstanceId(processDefinitionId)
+        .singleResult();
+
+
+    def startTime = historyService.createHistoricProcessInstanceQuery()
+        .processInstanceId(processId)
+        .singleResult()
+        .getStartTime()
+
+
+    def startUserId = historyService.createHistoricProcessInstanceQuery()
+        .processInstanceId(processId)
+        .singleResult()
+        .getStartUserId()
+
+
+…
+
+
+    //Отримання інформації про останню активну задачу
+    def tasks = taskService.createTaskQuery()
+        .processInstanceId(processId)
+        .active()
+        .list();
+
+    //Отримання виконавця задачі
+    def assignee
+    tasks.each { task ->
+        assignee = task.getAssignee()
+    }
+…
+}
+
+
+//Обробка завершенних процесів для отримання даних про процес
+completedProcesses.each { historicProcess ->
+    def processName = historicProcess.getProcessDefinitionName()
+    def startTime = historicProcess.getStartTime()
+    def endTime = historicProcess.getEndTime()
+    def duration = historicProcess.getDurationInMillis()
+    def instatceId = historicProcess.getId()
+    def userId = historicProcess.getStartUserId()
+    def businessKey = historicProcess.getBusinessKey()
+
+
+    def processDefinition = repositoryService.createProcessDefinitionQuery()
+        .processDefinitionId(historicProcess.getProcessDefinitionId())
+        .singleResult()
+
+
+    def processDefinitionKey = processDefinition.getKey()
+
+
+   …
+}
+…
+
+----
+
+Після виводу payload на форму отримуємо загальну статистику по бізнес-процесам, де за замовчуванням виводиться список усіх бізнес-процесів з зазначенням fullName виконавця активного бізнес-процесу (або fullName ініціатора для завершених бізнес-процесів), статус процесу, дату запуску процесу та дату завершення процесу (якщо вона є).
+
+
+image:registry-develop:bp-modeling/bp/camunda-services/camunda-services2.jpg[]
+
+
+
+=== Перегляд деталізованої інформації про процес
+
+Для кожного бізнес-процесу можливо продивитися детальну інформацію. Для цього необхідно обрати процес, натиснути на 3 крапки і обрати функцію “Деталі процесу”. Для активного та завершеного процесів ця інформація буде відрізнятися оскільки після завершення задачі всі дані цієї задачі стають недоступними (так як це тимчасові змінні, які зберігаються лише пока задача активна).
+Для отримання даних про бізнес процес в скриптову задачу “Підготувати данні” додаємо код, нижче наведена скорочена версія Groovy-коду:
+
+----
+…
+//Ініціалізація сервісів Camunda
+def repositoryService = execution.getProcessEngine().getRepositoryService()
+def runtimeService = execution.getProcessEngine().getRuntimeService()
+def formService = execution.getProcessEngine().getFormService()
+def taskService = execution.getProcessEngine().getTaskService()
+…
+def result = submission('InformationAboutInstance').formData.prop('statistics').elements()[0]
+
+
+def instanceId = result.prop('processId').value()
+def status = result.prop('status').value()
+def sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm")
+…
+//Для активних процесів отримання даних про активну задачу та всі завершенні задачі
+if (status.equals("активний")) {
+//Доступ до останньої активної задачі
+def tasks = taskService.createTaskQuery()
+        .processInstanceId(instanceId)
+        .active()
+        .list();
+
+
+//Доступ до завершенных задач через HistoryService
+def completedTasks = historyService.createHistoricTaskInstanceQuery()
+        .processInstanceId(instanceId)
+        .finished()
+        .list();
+
+
+completedTaskInfo = completedTasks.collect { task ->
+def date1 = sdf.format(task.startTime)
+def date2 = sdf.format(task.endTime)
+        [
+            "taskId"        : task.id,
+            "taskNameCompleted"      : task.name,
+            "assignee1"      : findFullName(task.assignee, officers),
+            "taskStartDateCompleted" : date1,
+            "endStartDateCompleted" : date2,
+            "taskKeyCompleted" : task.taskDefinitionKey
+        ]
+}
+
+
+tasks.each { task ->
+        taskId = task.getId()
+        taskName = task.getName()
+        assignee = findFullName(task.getAssignee(), officers)
+        taskDefinitionKey = task.getTaskDefinitionKey()
+        def dateS = sdf.format(task.getCreateTime())
+        startTimeTask = dateS
+}
+
+
+//Доступ до всіх змінних активної задачі
+def variables = taskService.getVariables(taskId)
+
+
+//Дані, які вводяться на формі, зберігаються в Ceph, дістати самі змінні і їх значення неможливо, можна отримати лише посилання на Ceph, де зберігаються змінні
+vars = variables["start_form_ceph_key"]
+}
+…
+
+----
+
+Тепер при перегляді детальної інформації про активний процес буде відображатися форма:
+
+image:registry-develop:bp-modeling/bp/camunda-services/camunda-services3.jpg[]
+
+Для завершеного процесу:
+
+image:registry-develop:bp-modeling/bp/camunda-services/camunda-services4.png[]
+
+Для активного бізнес-процесу на сторінці детального перегляду інформації про процес можливо обрати 2 додаткові опції:
+
+1. Заміна виконавця задачі бізнес-процеса
+2. Завершити бізнес-процес
+
+==== Заміна виконавця задачі бізнес-процесу
+Для заміни виконавця задачі запущеного бізнес процесу на формі з детальною інформацією про процес необхідно натиснути кнопку “Змінити виконавця” і у новій формі обрати офіцера із випадаючого списку та натиснути кнопку “Підтвердити”:
+
+image:registry-develop:bp-modeling/bp/camunda-services/camunda-services5.png[]
+
+Після успішного виконання заміни виконавця на основній формі в EditGrid відобразиться вже оновлений призначений виконавець задачі:
+
+image:registry-develop:bp-modeling/bp/camunda-services/camunda-services6.png[]
+
+
+
+==== Завершити бізнес-процес
+
+Для завершення запущений бізнес-процес на формі з детальною інформацією про процес необхідно натиснути кнопку “Завершити процес” після чого на новій формі відобразиться інформаційне повідомлення, що обраний бізнес-процес був завершений:
+
+image:registry-develop:bp-modeling/bp/camunda-services/camunda-services7.png[]
+
+На основній формі в EditGrid дані про бізнес-процес будуть відображатись зі статусом “завершений” після усіх активних процесів:
+
+image:registry-develop:bp-modeling/bp/camunda-services/camunda-services8.png[]
+
