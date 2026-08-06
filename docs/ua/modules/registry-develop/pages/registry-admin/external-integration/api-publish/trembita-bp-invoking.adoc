@@ -16,6 +16,34 @@ Whitelisting налаштовується на рівні конфігураці
 
 . Для того, щоб інші реєстри на Платформі або зовнішні системи могли звернутися до бізнес-процесів вашого реєстру через ШБО "Трембіта", виконайте передумови, описані на сторінці xref:registry-admin/external-integration/api-publish/rest-soap-api-expose.adoc[].
 
+=== Отримання WSDL-файлу для bp-webservice-gateway
+
+. Перейдіть до консолі OpenShift (OKD) та знайдіть pod `*bp-webservice-gateway*`.
+. Відкрийте термінал відповідного pod’а.
+. Виконайте команду для отримання WSDL-файлу.
+
+[NOTE]
+Оскільки опис схем може містити досить великий обсяг інформації, виконується стискання *`gzip`* з подальшим перетворенням результату у рядок формату *`Base64`*.
+----
+wget -qO - http://localhost:8080/ws/bpWebservice.wsdl | gzip | base64 | tr -d '\n'
+----
+
+=== Декодування WSDL-файлу
+
+. У локальному терміналі виконайте команду для декодування та розпакування WSDL-файлу:
+----
+echo "[BASE64_STRING]" | base64 -d | gunzip > service.wsdl
+----
+*Для Windows (PowerShell)*
+
+У PowerShell виконайте наступні команди:
+----
+$str = "[BASE64_STRING]"
+$bytes = [System.Convert]::FromBase64String($str)
+[System.IO.File]::WriteAllBytes("service.wsdl.gz", $bytes)
+----
+Після цього розпакуйте файл service.wsdl.gz будь-яким архіватором, що підтримує формат gzip (наприклад, 7-Zip).
+
 == Налаштування ШБО
 
 NOTE: Налаштування показано на прикладі створення точки доступу до бізнес-процесу у реєстрі атестованих лабораторій.
@@ -117,14 +145,14 @@ image:registry-develop:registry-admin/external-integration/api-publish/bp/trembi
 		<xro:client iden:objectType="SUBSYSTEM">
 			<iden:xRoadInstance>SEVDEIR-TEST</iden:xRoadInstance>
 			<iden:memberClass>GOV</iden:memberClass>
-			<iden:memberCode> Код Учасника </iden:memberCode>
+			<iden:memberCode> *Код Учасника* </iden:memberCode>
 			<!--Optional:-->
 			<iden:subsystemCode>DDMTest_cons</iden:subsystemCode>
 		</xro:client>
 		<xro:service iden:objectType="SERVICE">
 			<iden:xRoadInstance>SEVDEIR-TEST</iden:xRoadInstance>
 			<iden:memberClass>GOV</iden:memberClass>
-			<iden:memberCode> Код Учасника </iden:memberCode>
+			<iden:memberCode> *Код Учасника* </iden:memberCode>
 			<!--Optional:-->
 			<iden:subsystemCode>DDMTest_cons</iden:subsystemCode>
 			<iden:serviceCode>startBp</iden:serviceCode>
